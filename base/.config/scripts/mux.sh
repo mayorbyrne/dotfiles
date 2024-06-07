@@ -45,8 +45,6 @@ echo "NAME: $PROJECT_NAME";
 echo "PORT: $PORT";
 echo "COMMAND: $COMMAND";
 
-exit 1
-
 SESSIONNAME="$PROJECT_NAME"
 
 tmux has-session -t $SESSIONNAME &> /dev/null
@@ -64,7 +62,7 @@ if [ $? != 0 ]
     tmux split-window -v -t $SESSIONNAME
     tmux send-keys -t $SESSIONNAME "cd ~/Documents/$PROJECT_NAME/" C-m
     tmux send-keys -t $SESSIONNAME "clear" C-m
-    tmux send-keys -t $SESSIONNAME "$COMMAND:$PORT" C-m 
+    tmux send-keys -t $SESSIONNAME "$COMMAND" C-m
     tmux select-pane -t 0
 fi
 
