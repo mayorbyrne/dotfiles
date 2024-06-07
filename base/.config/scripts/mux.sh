@@ -31,12 +31,12 @@ then
   COMMAND=$COMMAND:$PORT
 fi
 
-if [[ ${COMMAND:0:2} == "npx" ]]
+if [[ ${COMMAND:0:3} == "npx" ]]
 then
   COMMAND="$COMMAND -l $PORT"
 fi
 
-if [[ ${COMMAND:0:2} == "npm" ]]
+if [[ ${COMMAND:0:3} == "npm" ]]
 then
   COMMAND="PORT=$PORT $COMMAND"
 fi
