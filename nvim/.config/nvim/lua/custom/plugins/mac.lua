@@ -171,14 +171,8 @@ return {
     'nvim-tree/nvim-web-devicons',
   },
   {
-    'folke/trouble.nvim',
-    opts = {
-      -- your configuration comes here
-      mode = 'document_diagnostics',
-      icons = false,
-      -- or leave it empty to use the default settings
-      -- refer to the configuration section below
-    },
+    "mayorbyrne/trouble.nvim",
+    branch = "v2",
   },
   {
     'echasnovski/mini.map',
