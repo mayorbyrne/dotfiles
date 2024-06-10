@@ -26,7 +26,7 @@ if [[ $COMMAND == "" ]]
     echo "Command not specified, defaulting to 'webdev serve web'"
 fi
 
-if [[ ${COMMAND:0:5} == "webdev" ]]
+if [[ ${COMMAND:0:6} == "webdev" ]]
 then
   COMMAND=$COMMAND:$PORT
 fi
