@@ -21,3 +21,4 @@ source ~/git-prompt.sh
 precmd() {
  __posh_git_ps1 '$fg[green]%~$fg[white]' ' $ '
 }
+export PATH="/usr/local/sbin:$PATH"
