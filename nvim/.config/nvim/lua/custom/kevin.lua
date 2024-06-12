@@ -106,16 +106,8 @@ vim.keymap.set('n', '<leader>gi', ':Git<CR>', { desc = "Git Fugitive" })
 
 vim.keymap.set("n", "<leader>xx", ':Trouble diagnostics<CR>', { desc = "Trouble Open" })
 vim.keymap.set("n", "<leader>xc", function() require("trouble").close() end, { desc = "Trouble Close" })
-vim.keymap.set("n", "<leader>xw", function() require("trouble").toggle("workspace_diagnostics") end, { desc = "Trouble Workspace" })
-vim.keymap.set("n", "<leader>xd", function() require("trouble").toggle("document_diagnostics") end, { desc = "Trouble Document" })
-vim.keymap.set("n", "<leader>xq", function() require("trouble").toggle("quickfix") end, { desc = "Trouble Quickfix" })
-vim.keymap.set("n", "<leader>xl", function() require("trouble").toggle("loclist") end, { desc = "Trouble Loclist" })
 vim.keymap.set("n", "<leader>xp", function() require("trouble").prev() end, { desc = "Trouble Previous" })
--- vim.keymap.set("n", "<leader>xp", function() require("trouble").prev({skip_groups = true, jump = true}) end, { desc = "Trouble Previous" })
 vim.keymap.set("n", "<leader>xn", function() require("trouble").next() end, { desc = "Trouble Next" })
-vim.keymap.set("n", "gR", function() require("trouble").toggle("lsp_references") end, { desc = "Trouble LSP References" })
-
-local actions = require('telescope.actions')
 
 vim.keymap.set('n', '<leader>qq', ':copen<CR>', { desc = "Quickfix Open" })
 vim.keymap.set('n', '<leader>qo', ':copen<CR>', { desc = "Quickfix Open" })
