@@ -171,9 +171,28 @@ return {
     'nvim-tree/nvim-web-devicons',
   },
   {
-    "mayorbyrne/trouble.nvim",
-    branch = "v2",
-  },
+    "folke/trouble.nvim",
+    config = function()
+      require('trouble').setup {
+        icons = {
+          indent = {
+            middle = " ",
+            last = " ",
+            top = " ",
+            ws = "│  ",
+          },
+        },
+        modes = {
+          diagnostics = {
+            focus = true,
+            groups = {
+              { "filename", format = "{file_icon} {basename:Title} {count}" },
+            },
+          },
+        }
+      }
+  end
+},
   {
     'echasnovski/mini.map',
     version = false,
