@@ -105,9 +105,9 @@ vim.keymap.set('n', '<leader>kg', ':VimuxRunCommand "lazygit"<CR>')
 vim.keymap.set('n', '<leader>gi', ':Git<CR>', { desc = "Git Fugitive" })
 
 vim.keymap.set("n", "<leader>xx", ':Trouble diagnostics<CR>', { desc = "Trouble Open" })
-vim.keymap.set("n", "<leader>xc", function() require("trouble").close() end, { desc = "Trouble Close" })
-vim.keymap.set("n", "<leader>xp", function() require("trouble").prev() end, { desc = "Trouble Previous" })
-vim.keymap.set("n", "<leader>xn", function() require("trouble").next() end, { desc = "Trouble Next" })
+vim.keymap.set("n", "<leader>xc", ':Trouble close<CR>', { desc = "Trouble Close" })
+vim.keymap.set("n", "<leader>xp", ':Trouble prev<CR>', { desc = "Trouble Previous" })
+vim.keymap.set("n", "<leader>xn", ':Trouble next<CR>', { desc = "Trouble Next" })
 
 vim.keymap.set('n', '<leader>qq', ':copen<CR>', { desc = "Quickfix Open" })
 vim.keymap.set('n', '<leader>qo', ':copen<CR>', { desc = "Quickfix Open" })
