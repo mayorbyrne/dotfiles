@@ -117,6 +117,9 @@ vim.keymap.set('n', '<leader>qp', ':cprev<CR>', { desc = "Quickfix Previous" })
 vim.keymap.set('n', '<leader>qf', ':cfirst<CR>', { desc = "Quickfix First" })
 vim.keymap.set('n', '<leader>ql', ':clast<CR>', { desc = "Quickfix Last" })
 
+vim.keymap.set('n', '<leader>lr', ':LspRestart<CR>', { desc = "LSP Restart" })
+vim.keymap.set('n', '<leader>li', ':LspInfo<CR>', { desc = "LSP Info" })
+
 local editCfg = require("custom.mac")
 
 return {
