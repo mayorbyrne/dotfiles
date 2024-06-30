@@ -12,10 +12,10 @@ vim.g.minimap_width = 10
 vim.g.minimap_auto_start = 1
 vim.g.minimap_auto_start_win_enter = 1
 
-vim.o.softtabstop = 2
-vim.o.shiftwidth = 2
-vim.o.expandtab = false
-vim.o.tabstop = 2
+vim.g.softtabstop = 2
+vim.g.shiftwidth = 2
+vim.g.expandtab = false
+vim.g.tabstop = 2
 
 vim.cmd([[
 let g:lsc_auto_map = {

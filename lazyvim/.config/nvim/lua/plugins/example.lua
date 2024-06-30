@@ -2,6 +2,9 @@
 -- stylua: ignore
 if true then return {
   {
+    'tpope/vim-sleuth', -- Detect tabstop and shiftwidth automatically
+  },
+  {
     "nvim-lspconfig",
     opts = {
       inlay_hints = { enabled = false },
