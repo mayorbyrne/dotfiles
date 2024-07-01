@@ -91,7 +91,7 @@ vim.g.copilot_no_tab_map = true
 vim.keymap.set("n", "<leader>dd", ":Dashboard<CR>")
 vim.keymap.set("n", "<leader>dr", ":Telescope oldfiles<CR>")
 vim.keymap.set("n", "<leader>pp", ":Prettier<CR>")
-vim.keymap.set("n", "<leader>ee", ":Telescope file_browser<CR>")
+-- vim.keymap.set("n", "<leader>ee", ":Telescope file_browser<CR>")
 
 vim.keymap.set("n", "<leader>bn", ":bn<CR>")
 vim.keymap.set("n", "<leader>bp", ":bp<CR>")
