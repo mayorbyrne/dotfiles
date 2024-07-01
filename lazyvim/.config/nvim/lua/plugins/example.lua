@@ -26,15 +26,6 @@ if true then
       },
     },
     {
-      "stevearc/conform.nvim",
-      formatters = {
-        stylua = {
-          indent_type = "Spaces",
-          indent_width = 2,
-        },
-      },
-    },
-    {
 
       "Pocco81/auto-save.nvim",
       config = function()

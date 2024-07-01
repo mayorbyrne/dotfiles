@@ -18,3 +18,16 @@ lspconfig.dartls.setup({
     },
   },
 })
+
+require("conform").setup({
+  formatters_by_ft = {
+    ["markdown"] = { "prettier" },
+    ["markdown.mdx"] = { "prettier" },
+  },
+  formatters = {
+    stylua = {
+      indent_type = "Spaces",
+      indent_width = 2,
+    },
+  },
+})
