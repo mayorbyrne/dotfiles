@@ -12,4 +12,9 @@ local lspconfig = require("lspconfig")
 lspconfig.dartls.setup({
   capabilities = capabilities,
   -- on_attach = on_attach
+  settings = {
+    dart = {
+      lineLength = 300,
+    },
+  },
 })
