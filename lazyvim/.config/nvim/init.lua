@@ -23,6 +23,17 @@ require("conform").setup({
   formatters_by_ft = {
     ["markdown"] = { "prettier" },
     ["markdown.mdx"] = { "prettier" },
+    ["typescript"] = { "prettier" },
+    ["css"] = { "prettier" },
+    ["graphql"] = { "prettier" },
+    ["html"] = { "prettier" },
+    ["javascript"] = { "prettier" },
+    ["javascriptreact"] = { "prettier" },
+    ["json"] = { "prettier" },
+    ["less"] = { "prettier" },
+    ["scss"] = { "prettier" },
+    ["typescriptreact"] = { "prettier" },
+    ["yaml"] = { "prettier" },
   },
   formatters = {
     stylua = {
