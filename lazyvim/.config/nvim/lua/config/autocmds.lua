@@ -3,5 +3,5 @@
 -- Add any additional autocmds here
 
 vim.api.nvim_create_autocmd("FileType", {
-  command = "set formatoptions=tcqj",
+  command = "set formatoptions=tcqjr",
 })
