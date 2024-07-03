@@ -16,7 +16,7 @@ vim.g.softtabstop = 2
 vim.g.shiftwidth = 2
 vim.g.expandtab = false
 vim.g.tabstop = 2
-vim.o.scrolloff = 999
+vim.o.scrolloff = 16
 
 vim.cmd([[
 let g:lsc_auto_map = {
