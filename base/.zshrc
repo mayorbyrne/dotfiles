@@ -17,6 +17,9 @@ export NVM_DIR="$HOME/.nvm"
 export PATH=$HOME/.npm-global/bin:$HOME/Desktop/dart-sdk/bin:$HOME/.config/scripts:$PATH
 source ~/git-prompt.sh
 
+# Set up fzf key bindings and fuzzy completion
+source <(fzf --zsh)
+
 precmd() {
  __posh_git_ps1 '$fg[green]%~$fg[white]' ' $ '
 }
