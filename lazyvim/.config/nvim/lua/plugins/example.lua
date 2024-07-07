@@ -2,11 +2,23 @@
 if true then
   return {
     {
-      "tpope/vim-sleuth", -- Detect tabstop and shiftwidth automatically
+      "supermaven-inc/supermaven-nvim",
+      config = function()
+        require("supermaven-nvim").setup({
+          disable_keymaps = true,
+        })
+
+        local completion_preview = require("supermaven-nvim.completion_preview")
+        vim.keymap.set("i", "<c-j>", completion_preview.on_accept_suggestion, {noremap = true, silent = true })
+        vim.keymap.set("i", "<c-]>", completion_preview.on_dispose_inlay, { noremap = true, silent = true })
+      end,
     },
     {
-      "github/copilot.vim",
+      "tpope/vim-sleuth", -- Detect tabstop and shiftwidth automatically
     },
+    -- {
+    --   "github/copilot.vim",
+    -- },
     { "numToStr/Comment.nvim", opts = {} },
     {
       "nvim-neo-tree/neo-tree.nvim",
