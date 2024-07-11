@@ -1,5 +1,6 @@
 return {
-	{
-		'tpope/vim-sleuth',
-	},
+	-- {
+	-- 	'tpope/vim-sleuth',
+	-- 	opts = {},
+	-- },
 }
