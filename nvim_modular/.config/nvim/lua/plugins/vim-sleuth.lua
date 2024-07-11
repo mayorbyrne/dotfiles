@@ -1,6 +1,7 @@
 return {
-	-- {
-	-- 	'tpope/vim-sleuth',
-	-- 	opts = {},
-	-- },
+  {
+    "tpope/vim-sleuth",
+    config = function()
+    end,
+  },
 }
