@@ -1,5 +1,5 @@
 return {
-  {
-    'jose-elias-alvarez/null-ls.nvim',
-  },
+  -- {
+  --   'jose-elias-alvarez/null-ls.nvim',
+  -- },
 }

@@ -1,6 +1,6 @@
 return {
-    {
-      "preservim/vimux",
-      config = function() end,
-    },
+	{
+		"preservim/vimux",
+		config = function() end,
+	},
 }
