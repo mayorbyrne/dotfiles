@@ -1,10 +1,14 @@
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 --
 -- [[ Basic Keymaps ]]
-vim.keymap.set("n", "d", '"_d', {})
-vim.keymap.set("v", "d", '"_d', {})
-vim.keymap.set("n", "c", '"_c', {})
-vim.keymap.set("v", "c", '"_c', {})
+vim.keymap.set('n', 'd', '"_d', {})
+vim.keymap.set('v', 'd', '"_d', {})
+vim.keymap.set('n', 'c', '"_c', {})
+vim.keymap.set('v', 'c', '"_c', {})
+vim.keymap.set('n', 'diw', '"_diw', {})
+vim.keymap.set('v', 'diw', '"_diw', {})
+vim.keymap.set('n', 'ciw', '"_ciw', {})
+vim.keymap.set('v', 'ciw', '"_ciw', {})
 
 -- do not map c or d in SELECT mode
 vim.keymap.set("s", "c", "c", {})
