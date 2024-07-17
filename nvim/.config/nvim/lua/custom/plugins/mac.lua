@@ -16,11 +16,6 @@ local kevin = require 'custom.kevin'
 
 return {
   {
-     "m4xshen/hardtime.nvim",
-     dependencies = { "MunifTanjim/nui.nvim", "nvim-lua/plenary.nvim" },
-     opts = {}
-  },
-  {
     'nvim-pack/nvim-spectre',
     config = function()
       vim.keymap.set('n', '<leader>S', '<cmd>lua require("spectre").toggle()<CR>', {
@@ -288,5 +283,45 @@ return {
     config = function()
       require('colorizer').setup()
     end,
-  }
+  },
+  {
+    "stevearc/conform.nvim",
+    config = function()
+      require("conform").setup({
+
+        formatters_by_ft = {
+          ["markdown"] = { "prettier" },
+          ["markdown.mdx"] = { "prettier" },
+          ["typescript"] = { "prettier" },
+          ["css"] = { "prettier" },
+          ["graphql"] = { "prettier" },
+          ["html"] = { "prettier" },
+          ["javascript"] = { "prettier" },
+          ["javascriptreact"] = { "prettier" },
+          ["json"] = { "prettier" },
+          ["less"] = { "prettier" },
+          ["lua"] = { "stylua" },
+          ["scss"] = { "prettier" },
+          ["typescriptreact"] = { "prettier" },
+          ["yaml"] = { "prettier" },
+          ["dart"] = { "dart" },
+        },
+        formatters = {
+          stylua = {
+            args = { "--config-path", "~/.config/nvim/stylua.toml" },
+          },
+          dart = {
+            command = "dart",
+            args = { "format", "--line-length", "300" },
+          },
+        },
+      })
+
+      local formatCode = function()
+        require("conform").format({ async = true, lsp_format = "fallback" })
+      end
+
+      vim.keymap.set("n", "<leader>cf", formatCode, { desc = "Format code" })
+    end,
+  },
 }
