@@ -305,6 +305,7 @@ return {
           ["typescriptreact"] = { "prettier" },
           ["yaml"] = { "prettier" },
           ["dart"] = { "dart" },
+          ["vue"] = { "prettier" },
         },
         formatters = {
           stylua = {
