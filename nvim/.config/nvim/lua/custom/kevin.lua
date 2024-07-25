@@ -88,7 +88,7 @@ vim.g.copilot_no_tab_map = true
 vim.keymap.set('n', '<leader>dd', ':Dashboard<CR>')
 vim.keymap.set('n', '<leader>dr', ':Telescope oldfiles<CR>')
 vim.keymap.set('n', '<leader>pp', ':Prettier<CR>')
-vim.keymap.set('n', '<leader>ee', ':Telescope file_browser<CR>')
+-- vim.keymap.set('n', '<leader>ee', ':Telescope file_browser<CR>')
 
 vim.keymap.set('n', '<leader>bn', ':bn<CR>')
 vim.keymap.set('n', '<leader>bp', ':bp<CR>')
@@ -107,6 +107,8 @@ vim.cmd('ca q bd!')
 vim.keymap.set('n', '<leader>kb', ':VimuxRunCommand "webdev serve"<CR>')
 vim.keymap.set('n', '<leader>kg', ':VimuxRunCommand "lazygit"<CR>')
 vim.keymap.set('n', '<leader>gi', ':Git<CR>', { desc = "Git Fugitive" })
+
+vim.keymap.set('n', '<leader>e', ':lua vim.diagnostic.open_float(0, {scope="line"})<CR>', { desc = "Line Diagnostics" })
 
 vim.keymap.set("n", "<leader>xx", ':Trouble diagnostics<CR>', { desc = "Trouble Open" })
 vim.keymap.set("n", "<leader>xc", ':Trouble close<CR>', { desc = "Trouble Close" })
