@@ -351,4 +351,5 @@ return {
   --     vim.keymap.set("", "<leader>cf", formatCode, { desc = "Format code" })
   --   end,
   -- },
+  { "catppuccin/nvim",   name = "catppuccin", priority = 1000 }
 }
