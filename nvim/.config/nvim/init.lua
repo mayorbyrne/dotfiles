@@ -730,7 +730,11 @@ require("lazy").setup({
       })
 
       -- No need to set `hybridMode` to `true` as it's the default value
-      lspconfig.volar.setup({})
+      lspconfig.volar.setup({
+        setting = {
+          singleAttributePerLine = true,
+        },
+      })
     end,
   },
 
