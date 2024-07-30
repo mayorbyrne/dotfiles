@@ -21,6 +21,7 @@ config.colors = {
 }
 
 config.font = wezterm.font("Fira Code", { weight = "Bold" })
+config.font_size = 14.0
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 -- and finally, return the configuration to wezterm
