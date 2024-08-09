@@ -7,6 +7,8 @@ local config = wezterm.config_builder()
 -- This is where you actually apply your config choices
 
 config.hide_tab_bar_if_only_one_tab = true
+-- Use the defaults as a base
+config.hyperlink_rules = wezterm.default_hyperlink_rules()
 
 -- For example, changing the color scheme:
 config.color_scheme = "Dark+"
