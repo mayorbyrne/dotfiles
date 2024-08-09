@@ -361,6 +361,11 @@ return {
     priority = 1000,
     config = function()
       require("catppuccin").setup({
+        custom_highlights = function()
+          return {
+            Comment = { fg = "#7DAB79" },
+          }
+        end,
         color_overrides = {
           mocha = {
             base = "#000000",
@@ -370,6 +375,13 @@ return {
         },
       })
       vim.cmd.colorscheme("catppuccin")
+    end,
+  },
+  {
+    "mayorbyrne/dart-sdk-updates.nvim",
+    ft = "dart",
+    config = function()
+      require("dart-sdk-updates").setup()
     end,
   },
 }
