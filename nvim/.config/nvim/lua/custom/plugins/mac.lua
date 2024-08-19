@@ -378,10 +378,10 @@ return {
     end,
   },
   {
-    "mayorbyrne/dart-sdk-updates.nvim",
+    "mayorbyrne/dart-checkForSdkUpdates.nvim",
     ft = "dart",
     config = function()
-      require("dart-sdk-updates").setup()
+      require("dart-checkForSdkUpdates").setup()
     end,
   },
 }
