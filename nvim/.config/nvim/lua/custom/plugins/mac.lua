@@ -384,4 +384,16 @@ return {
       require("dart-checkForSdkUpdates").setup()
     end,
   },
+  {
+    "ibhagwan/fzf-lua",
+    config = function()
+      require("fzf-lua").setup({
+        winopts = {
+          fullscreen = true,
+          preview = {
+            horizontal = "right:20%",
+	} } })
+      vim.keymap.set("n", "<c-P>", "<cmd>lua require('fzf-lua').files()<CR>", { silent = true })
+    end,
+  },
 }
