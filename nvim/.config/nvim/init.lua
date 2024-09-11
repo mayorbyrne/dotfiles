@@ -697,7 +697,7 @@ require("lazy").setup({
         }, -- on_attach = on_attach
       })
 
-      lspconfig.tsserver.setup({
+      lspconfig.ts_ls.setup({
         init_options = {
           plugins = {
             {
