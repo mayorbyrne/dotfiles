@@ -396,4 +396,11 @@ return {
       vim.keymap.set("n", "<c-P>", "<cmd>lua require('fzf-lua').files()<CR>", { silent = true })
     end,
   },
+  {
+    'windwp/nvim-autopairs',
+    event = "InsertEnter",
+    config = true
+    -- use opts = {} for passing setup options
+    -- this is equivalent to setup({}) function
+  }
 }
