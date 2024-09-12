@@ -16,6 +16,7 @@ config.color_scheme = "Dark+"
 -- The default background color
 config.colors = {
   background = "black",
+  cursor_bg = "#ffd900",
 }
 
 config.font = wezterm.font("Fira Code", { weight = "Bold" })
