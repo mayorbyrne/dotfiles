@@ -17,7 +17,7 @@ return {
     desc_hl = 'DiagnosticHint',
     key = 'r',
     key_format = ' %s', -- remove default surrounding `[]`
-    action = 'Telescope oldfiles',
+    action = 'require("fzf-lua").oldfiles()',
   },
   {
     icon = ' ',

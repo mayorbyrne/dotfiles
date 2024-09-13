@@ -426,59 +426,40 @@ require("lazy").setup({
 
       -- See `:help telescope.builtin`
       local builtin = require("telescope.builtin")
-      vim.keymap.set("n", "<leader>sh", builtin.help_tags, {
+      vim.keymap.set("n", "<leader>sh", "<cmd>lua require('fzf-lua').help_tags()<CR>", {
         desc = "[S]earch [H]elp",
       })
-      vim.keymap.set("n", "<leader>sk", builtin.keymaps, {
+      vim.keymap.set("n", "<leader>sk", "<cmd>lua require('fzf-lua').keymaps()<CR>", {
         desc = "[S]earch [K]eymaps",
       })
-      vim.keymap.set("n", "<leader>sf", builtin.find_files, {
+      vim.keymap.set("n", "<leader>sf", "<cmd>lua require('fzf-lua').files()<CR>", {
         desc = "[S]earch [F]iles",
       })
-      vim.keymap.set("n", "<leader>ss", builtin.builtin, {
-        desc = "[S]earch [S]elect Telescope",
+      vim.keymap.set("n", "<leader>ss", "<cmd>lua require('fzf-lua').tmux_buffers()<CR>", {
+        desc = "[S]earch [S]elect Buffers",
       })
-      vim.keymap.set("n", "<leader>sw", builtin.grep_string, {
+      vim.keymap.set("n", "<leader>sw", "<cmd>lua require('fzf-lua').grep_cword()<CR>", {
         desc = "[S]earch current [W]ord",
       })
-      vim.keymap.set("n", "<leader>sg", builtin.live_grep, {
+      vim.keymap.set("n", "<leader>sg", "<cmd> lua require('fzf-lua').grep({ search='' })<CR>", {
+        silent = true,
         desc = "[S]earch by [G]rep",
       })
-      vim.keymap.set("n", "<leader>sd", builtin.diagnostics, {
+      vim.keymap.set("n", "<leader>sd", "<cmd> lua require('fzf-lua').diagnostics_workspace()<CR>", {
         desc = "[S]earch [D]iagnostics",
       })
-      vim.keymap.set("n", "<leader>sr", builtin.resume, {
+      vim.keymap.set("n", "<leader>sr", "<cmd> lua require('fzf-lua').resume()<CR>", {
         desc = "[S]earch [R]esume",
       })
-      vim.keymap.set("n", "<leader>s.", builtin.oldfiles, {
+      vim.keymap.set("n", "<leader>s.",  "<cmd> lua require('fzf-lua').oldfiles()<CR>", {
         desc = '[S]earch Recent Files ("." for repeat)',
       })
-      vim.keymap.set("n", "<leader><leader>", builtin.buffers, {
+      vim.keymap.set("n", "<leader><leader>", "<cmd> lua require('fzf-lua').buffers()<CR>", {
         desc = "[ ] Find existing buffers",
       })
 
-      -- Slightly advanced example of overriding default behavior and theme
-      vim.keymap.set("n", "<leader>/", function()
-        -- You can pass additional configuration to Telescope to change the theme, layout, etc.
-        builtin.current_buffer_fuzzy_find(require("telescope.themes").get_dropdown({
-          winblend = 10,
-          previewer = false,
-        }))
-      end, { desc = "[/] Fuzzily search in current buffer" })
-
-      -- It's also possible to pass additional configuration options.
-      --  See `:help telescope.builtin.live_grep()` for information about particular keys
-      vim.keymap.set("n", "<leader>s/", function()
-        builtin.live_grep({
-          grep_open_files = true,
-          prompt_title = "Live Grep in Open Files",
-        })
-      end, { desc = "[S]earch [/] in Open Files" })
-
       -- Shortcut for searching your Neovim configuration files
-      vim.keymap.set("n", "<leader>sn", function()
-        builtin.find_files({ cwd = vim.fn.stdpath("config") })
-      end, { desc = "[S]earch [N]eovim files" })
+      vim.keymap.set("n", "<leader>sn", "<cmd>lua require('fzf-lua').files({ cwd = '~/dotfiles/nvim/.config/nvim/' })<CR>", { desc = "[S]earch [N]eovim files" })
     end,
   },
 
@@ -716,7 +697,7 @@ require("lazy").setup({
         }, -- on_attach = on_attach
       })
 
-      lspconfig.tsserver.setup({
+      lspconfig.ts_ls.setup({
         init_options = {
           plugins = {
             {
@@ -737,7 +718,6 @@ require("lazy").setup({
       })
     end,
   },
-
   { -- Autocompletion
     "hrsh7th/nvim-cmp",
     event = "InsertEnter",
@@ -778,6 +758,33 @@ require("lazy").setup({
       local cmp = require("cmp")
       local luasnip = require("luasnip")
       luasnip.config.setup({})
+      local kind_icons = {
+        Text = '󰉿',
+        Method = 'm',
+        Function = '󰊕',
+        Constructor = '',
+        Field = '',
+        Variable = '󰆧',
+        Class = '󰌗',
+        Interface = '',
+        Module = '',
+        Property = '',
+        Unit = '',
+        Value = '󰎠',
+        Enum = '',
+        Keyword = '󰌋',
+        Snippet = '',
+        Color = '󰏘',
+        File = '󰈙',
+        Reference = '',
+        Folder = '󰉋',
+        EnumMember = '',
+        Constant = '󰇽',
+        Struct = '',
+        Event = '',
+        Operator = '󰆕',
+        TypeParameter = '󰊄',
+      }
 
       cmp.setup({
         snippet = {
@@ -847,6 +854,19 @@ require("lazy").setup({
           { name = "nvim_lsp" },
           { name = "luasnip" },
           { name = "path" },
+        },
+        formatting = {
+          fields = { 'kind', 'abbr', 'menu' },
+          format = function(entry, vim_item)
+            vim_item.kind = string.format('%s', kind_icons[vim_item.kind])
+            vim_item.menu = ({
+              nvim_lsp = '[LSP]',
+              luasnip = '[Snippet]',
+              buffer = '[Buffer]',
+              path = '[Path]',
+            })[entry.source.name]
+            return vim_item
+          end,
         },
       })
     end,
@@ -919,7 +939,7 @@ require("lazy").setup({
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     opts = {
-      ensure_installed = { "bash", "c", "diff", "html", "lua", "luadoc", "markdown", "vim", "vimdoc" },
+      ensure_installed = { 'bash', 'c', 'csv', 'dart', 'diff', 'elixir', 'gitcommit', 'heex', 'html', 'javascript', 'json', 'lua', 'luadoc', 'markdown', 'query', 'tmux', 'typescript', 'vim', 'vimdoc', 'vue', 'markdown_inline', 'python' },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
