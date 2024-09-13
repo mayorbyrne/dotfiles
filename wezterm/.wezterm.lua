@@ -15,7 +15,7 @@ config.color_scheme = "Dark+"
 
 -- The default background color
 config.colors = {
-  background = "black",
+  background = "#1c1c1c",
   cursor_bg = "#ffd900",
 }
 
