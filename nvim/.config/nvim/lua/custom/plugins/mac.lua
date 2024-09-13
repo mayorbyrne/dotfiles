@@ -414,5 +414,10 @@ return {
     config = true
     -- use opts = {} for passing setup options
     -- this is equivalent to setup({}) function
+  },
+  {
+    'https://gitlab.com/HiPhish/rainbow-delimiters.nvim',
+    config = function()
+    end,
   }
 }
