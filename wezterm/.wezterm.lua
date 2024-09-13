@@ -16,6 +16,7 @@ config.color_scheme = "Dark+"
 -- The default background color
 config.colors = {
   background = "black",
+  cursor_bg = "#ffd900",
 }
 
 config.font = wezterm.font("Fira Code", { weight = "Bold" })
@@ -44,5 +45,10 @@ wezterm.on("gui-startup", function(cmd)
   window:gui_window():set_position(active.x, active.y)
   window:gui_window():set_inner_size(active.width, active.height)
 end)
+
+config.default_cursor_style = "BlinkingBlock"
+config.cursor_blink_rate = 500
+config.cursor_blink_ease_in = "Constant"
+config.cursor_blink_ease_out = "Constant"
 
 return config
