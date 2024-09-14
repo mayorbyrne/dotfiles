@@ -416,8 +416,27 @@ return {
     -- this is equivalent to setup({}) function
   },
   {
-    'https://gitlab.com/HiPhish/rainbow-delimiters.nvim',
+    'HiPhish/rainbow-delimiters.nvim',
     config = function()
+      vim.api.nvim_set_hl(0, 'RainbowDelimiterYellow', { fg = "#FFFF00", ctermfg = "White" })
+      vim.api.nvim_set_hl(0, 'RainbowDelimiterRed', {fg = '#ff00ff', ctermfg= 'White' })
+      vim.api.nvim_set_hl(0, 'RainbowDelimiterBlue', { fg = "#0000FF", ctermfg = "White" })
+
+      -- This module contains a number of default definitions
+      local rainbow_delimiters = require("rainbow-delimiters")
+
+      -- This sets up the colorized brackets ala vscode
+      vim.g.rainbow_delimiters = {
+        highlight = {
+          "RainbowDelimiterYellow",
+          "RainbowDelimiterRed",
+          "RainbowDelimiterBlue",
+          -- "RainbowDelimiterOrange",
+          -- "RainbowDelimiterGreen",
+          -- "RainbowDelimiterViolet",
+          -- "RainbowDelimiterCyan",
+        },
+      }
     end,
   }
 }
