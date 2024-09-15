@@ -19,7 +19,7 @@ config.colors = {
   cursor_bg = "#ffd900",
 }
 
-config.font = wezterm.font("Fira Code", { weight = "DemiBold" })
+config.font = wezterm.font("Monaspace Neon Var", { weight = "Black", stretch = "Normal" })
 config.font_size = 12
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
