@@ -438,5 +438,29 @@ return {
         },
       }
     end,
+  },
+  {
+    "nvim-tree/nvim-tree.lua",
+    config = function()
+      require("nvim-tree").setup({
+        diagnostics = {
+          enable = true,
+          show_on_dirs = true,
+        },
+        sort = {
+          sorter = "case_sensitive",
+        },
+        view = {
+          width = 30,
+          side = "right",
+        },
+        renderer = {
+          group_empty = true,
+        },
+        filters = {
+          dotfiles = true,
+        },
+      })
+    end
   }
 }

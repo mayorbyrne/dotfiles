@@ -1,3 +1,7 @@
+-- disable netrw at the very start of your init.lua
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 --[[
 
 =====================================================================
@@ -312,7 +316,7 @@ require("lazy").setup({
         ["<leader>r"] = { name = "[R]ename", _ = "which_key_ignore" },
         ["<leader>s"] = { name = "[S]earch", _ = "which_key_ignore" },
         ["<leader>w"] = { name = "[W]orkspace", _ = "which_key_ignore" },
-        ["<leader>t"] = { name = "[T]oggle", _ = "which_key_ignore" },
+        ["<leader>t"] = { name = "Nvim[T]ree", _ = "which_key_ignore" },
         ["<leader>h"] = { name = "Git [H]unk", _ = "which_key_ignore" },
         ["<leader>q"] = { name = "[Q]uickfix", _ = "which_key_ignore" },
       })

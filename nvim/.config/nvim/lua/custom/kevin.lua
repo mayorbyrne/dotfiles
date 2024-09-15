@@ -128,6 +128,11 @@ vim.keymap.set('n', '<leader>ql', ':clast<CR>', { desc = "Quickfix Last" })
 vim.keymap.set('n', '<leader>lr', ':LspRestart<CR>', { desc = "LSP Restart" })
 vim.keymap.set('n', '<leader>li', ':LspInfo<CR>', { desc = "LSP Info" })
 
+vim.keymap.set('n', '<leader>to', ':NvimTreeOpen<CR>', { desc = "NvimTree Open" })
+vim.keymap.set('n', '<leader>tc', ':NvimTreeClose<CR>', { desc = "NvimTree Close" })
+vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<CR>', { desc = "NvimTree Toggle" })
+vim.keymap.set('n', '<leader>tf', ':NvimTreeFocus<CR>', { desc = "NvimTree Focus" })
+
 local editCfg = require("custom.mac")
 
 return {
