@@ -20,7 +20,7 @@ config.colors = {
 }
 
 config.font = wezterm.font("Monaspace Neon Var", { weight = "Black", stretch = "Normal" })
-config.font_size = 12
+config.font_size = 16
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {
