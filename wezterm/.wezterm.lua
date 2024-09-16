@@ -19,8 +19,8 @@ config.colors = {
   cursor_bg = "#ffd900",
 }
 
-config.font = wezterm.font("Monaspace Neon Var", { weight = "Black", stretch = "Normal" })
-config.font_size = 15
+config.font = wezterm.font("Monaspace Neon Var", { weight = "Bold", stretch = "Normal" })
+config.font_size = 12
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {
