@@ -71,6 +71,6 @@ if [ $? != 0 ]
     tmux send-keys -t $SESSIONNAME "lazygit" C-m 
 
     tmux select-window -t $SESSIONNAME:0
-
+fi
 
 tmux attach-session -t $SESSIONNAME
