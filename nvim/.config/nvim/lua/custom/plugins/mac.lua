@@ -456,6 +456,7 @@ return {
         },
         renderer = {
           group_empty = true,
+          highlight_diagnostics = "all",
         },
         filters = {
           dotfiles = true,
