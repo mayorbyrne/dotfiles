@@ -459,7 +459,7 @@ return {
           highlight_diagnostics = "all",
         },
         filters = {
-          dotfiles = true,
+          dotfiles = false,
         },
         update_focused_file = {
           -- enables the feature
