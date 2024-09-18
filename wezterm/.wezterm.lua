@@ -11,7 +11,7 @@ config.hide_tab_bar_if_only_one_tab = true
 config.hyperlink_rules = wezterm.default_hyperlink_rules()
 
 -- For example, changing the color scheme:
-config.color_scheme = "Dark+"
+config.color_scheme = "tokyonight_night"
 
 -- The default background color
 config.colors = {

@@ -133,48 +133,48 @@ return {
       })
     end,
   },
-  {
-    'Mofiqul/vscode.nvim',
-    config = function()
-      local c = require("vscode.colors").get_colors()
-      require("vscode").setup({
-        -- Alternatively set style in setup
-        -- style = 'light'
-
-        -- Enable transparent background
-        transparent = true,
-
-        -- Enable italic comment
-        italic_comments = true,
-
-        -- Underline `@markup.link.*` variants
-        underline_links = true,
-
-        -- Disable nvim-tree background color
-        disable_nvimtree_bg = true,
-
-        -- Override colors (see ./lua/vscode/colors.lua)
-        color_overrides = {
-          vscLineNumber = "#555555",
-          vscLightBlue = "#8ccef2",
-        },
-
-        -- Override highlight groups (see ./lua/vscode/theme.lua)
-        group_overrides = {
-          -- this supports the same val table as vim.api.nvim_set_hl
-          -- use colors from this colorscheme by requiring vscode.colors!
-          -- Cursor = { fg = c.vscDarkBlue, bg = c.vscLightGreen, bold = true },
-          LineNr = { fg = "#7a7a7a", bg = c.vscNone, bold = false },
-          CursorLineNr = { fg = "#bebebe", bg = c.vscNone, bold = true },
-        },
-      })
-
-      require("vscode").load()
-
-      local hl = vim.api.nvim_set_hl
-      hl(0, "@string", { fg = "#c7866d" })
-    end,
-  },
+  -- {
+  --   'Mofiqul/vscode.nvim',
+  --   config = function()
+  --     local c = require("vscode.colors").get_colors()
+  --     require("vscode").setup({
+  --       -- Alternatively set style in setup
+  --       -- style = 'light'
+  --
+  --       -- Enable transparent background
+  --       transparent = true,
+  --
+  --       -- Enable italic comment
+  --       italic_comments = true,
+  --
+  --       -- Underline `@markup.link.*` variants
+  --       underline_links = true,
+  --
+  --       -- Disable nvim-tree background color
+  --       disable_nvimtree_bg = true,
+  --
+  --       -- Override colors (see ./lua/vscode/colors.lua)
+  --       color_overrides = {
+  --         vscLineNumber = "#555555",
+  --         vscLightBlue = "#8ccef2",
+  --       },
+  --
+  --       -- Override highlight groups (see ./lua/vscode/theme.lua)
+  --       group_overrides = {
+  --         -- this supports the same val table as vim.api.nvim_set_hl
+  --         -- use colors from this colorscheme by requiring vscode.colors!
+  --         -- Cursor = { fg = c.vscDarkBlue, bg = c.vscLightGreen, bold = true },
+  --         LineNr = { fg = "#7a7a7a", bg = c.vscNone, bold = false },
+  --         CursorLineNr = { fg = "#bebebe", bg = c.vscNone, bold = true },
+  --       },
+  --     })
+  --
+  --     require("vscode").load()
+  --
+  --     local hl = vim.api.nvim_set_hl
+  --     hl(0, "@string", { fg = "#c7866d" })
+  --   end,
+  -- },
   {
     'nvimdev/dashboard-nvim',
     event = 'VimEnter',
