@@ -81,6 +81,8 @@ vim.keymap.set('v', 'ciw', '"_ciw', {})
 vim.keymap.set('s', 'c', 'c', {})
 vim.keymap.set('s', 'd', 'd', {})
 
+vim.keymap.set('n', '<leader>bc', ':%bd|e#<CR>', { desc = "Close all buffers except current" })
+
 vim.keymap.set('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
     expr = true,
     replace_keycodes = false
