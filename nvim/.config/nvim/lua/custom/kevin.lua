@@ -81,6 +81,8 @@ vim.keymap.set('v', 'ciw', '"_ciw', {})
 vim.keymap.set('s', 'c', 'c', {})
 vim.keymap.set('s', 'd', 'd', {})
 
+vim.keymap.set('n', '<leader>bc', ':%bd|e#<CR>', { desc = "Close all buffers except current" })
+
 vim.keymap.set('i', '<C-J>', 'copilot#Accept("\\<CR>")', {
     expr = true,
     replace_keycodes = false
@@ -127,6 +129,11 @@ vim.keymap.set('n', '<leader>ql', ':clast<CR>', { desc = "Quickfix Last" })
 
 vim.keymap.set('n', '<leader>lr', ':LspRestart<CR>', { desc = "LSP Restart" })
 vim.keymap.set('n', '<leader>li', ':LspInfo<CR>', { desc = "LSP Info" })
+
+vim.keymap.set('n', '<leader>to', ':NvimTreeOpen<CR>', { desc = "NvimTree Open" })
+vim.keymap.set('n', '<leader>tc', ':NvimTreeClose<CR>', { desc = "NvimTree Close" })
+vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<CR>', { desc = "NvimTree Toggle" })
+vim.keymap.set('n', '<leader>tf', ':NvimTreeFocus<CR>', { desc = "NvimTree Focus" })
 
 local editCfg = require("custom.mac")
 

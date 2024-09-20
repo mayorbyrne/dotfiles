@@ -11,16 +11,16 @@ config.hide_tab_bar_if_only_one_tab = true
 config.hyperlink_rules = wezterm.default_hyperlink_rules()
 
 -- For example, changing the color scheme:
-config.color_scheme = "Dark+"
+config.color_scheme = "tokyonight_night"
 
 -- The default background color
 config.colors = {
-  background = "black",
+  background = "#1c1c1c",
   cursor_bg = "#ffd900",
 }
 
-config.font = wezterm.font("Fira Code", { weight = "Bold" })
-config.font_size = 11.6
+config.font = wezterm.font("Fira Code", { weight = "DemiBold" })
+config.font_size = 12
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {
