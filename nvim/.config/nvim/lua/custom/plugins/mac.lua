@@ -133,43 +133,48 @@ return {
       })
     end,
   },
-  {
-    'Mofiqul/vscode.nvim',
-    config = function()
-      local c = require("vscode.colors").get_colors()
-      require("vscode").setup({
-        -- Alternatively set style in setup
-        -- style = 'light'
-
-        -- Enable transparent background
-        transparent = true,
-
-        -- Enable italic comment
-        italic_comments = true,
-
-        -- Underline `@markup.link.*` variants
-        underline_links = true,
-
-        -- Disable nvim-tree background color
-        disable_nvimtree_bg = true,
-
-        -- Override colors (see ./lua/vscode/colors.lua)
-        color_overrides = {
-          vscLineNumber = "#555555",
-        },
-
-        -- Override highlight groups (see ./lua/vscode/theme.lua)
-        group_overrides = {
-          -- this supports the same val table as vim.api.nvim_set_hl
-          -- use colors from this colorscheme by requiring vscode.colors!
-          -- Cursor = { fg = c.vscDarkBlue, bg = c.vscLightGreen, bold = true },
-          LineNr = { fg = "#8f610a", bg = c.vscNone, bold = false },
-          CursorLineNr = { fg = "#F2CB05", bg = c.vscNone, bold = true },
-        },
-      })
-      require("vscode").load()
-    end,
-  },
+  -- {
+  --   'Mofiqul/vscode.nvim',
+  --   config = function()
+  --     local c = require("vscode.colors").get_colors()
+  --     require("vscode").setup({
+  --       -- Alternatively set style in setup
+  --       -- style = 'light'
+  --
+  --       -- Enable transparent background
+  --       transparent = true,
+  --
+  --       -- Enable italic comment
+  --       italic_comments = true,
+  --
+  --       -- Underline `@markup.link.*` variants
+  --       underline_links = true,
+  --
+  --       -- Disable nvim-tree background color
+  --       disable_nvimtree_bg = true,
+  --
+  --       -- Override colors (see ./lua/vscode/colors.lua)
+  --       color_overrides = {
+  --         vscLineNumber = "#555555",
+  --         vscLightBlue = "#8ccef2",
+  --       },
+  --
+  --       -- Override highlight groups (see ./lua/vscode/theme.lua)
+  --       group_overrides = {
+  --         -- this supports the same val table as vim.api.nvim_set_hl
+  --         -- use colors from this colorscheme by requiring vscode.colors!
+  --         -- Cursor = { fg = c.vscDarkBlue, bg = c.vscLightGreen, bold = true },
+  --         LineNr = { fg = "#7a7a7a", bg = c.vscNone, bold = false },
+  --         CursorLineNr = { fg = "#bebebe", bg = c.vscNone, bold = true },
+  --       },
+  --     })
+  --
+  --     require("vscode").load()
+  --
+  --     local hl = vim.api.nvim_set_hl
+  --     hl(0, "@string", { fg = "#c7866d" })
+  --   end,
+  -- },
   {
     'nvimdev/dashboard-nvim',
     event = 'VimEnter',
@@ -409,5 +414,82 @@ return {
     config = true
     -- use opts = {} for passing setup options
     -- this is equivalent to setup({}) function
-  }
+  },
+  {
+    'HiPhish/rainbow-delimiters.nvim',
+    config = function()
+      vim.api.nvim_set_hl(0, 'RainbowDelimiterYellow', { fg = "#FCD400", ctermfg = "White" })
+      vim.api.nvim_set_hl(0, 'RainbowDelimiterRed', {fg = "#DA70D6", ctermfg= 'White' })
+      vim.api.nvim_set_hl(0, 'RainbowDelimiterBlue', { fg = "#179DFB", ctermfg = "White" })
+
+      -- This module contains a number of default definitions
+      local rainbow_delimiters = require("rainbow-delimiters")
+
+      -- This sets up the colorized brackets ala vscode
+      vim.g.rainbow_delimiters = {
+        blacklist = { "html" },
+        highlight = {
+          "RainbowDelimiterYellow",
+          "RainbowDelimiterRed",
+          "RainbowDelimiterBlue",
+          -- "RainbowDelimiterOrange",
+          -- "RainbowDelimiterGreen",
+          -- "RainbowDelimiterViolet",
+          -- "RainbowDelimiterCyan",
+        },
+      }
+    end,
+  },
+  {
+    "nvim-tree/nvim-tree.lua",
+    config = function()
+      require("nvim-tree").setup({
+        diagnostics = {
+          enable = true,
+          show_on_dirs = true,
+        },
+        sort = {
+          sorter = "case_sensitive",
+        },
+        view = {
+          width = 30,
+          side = "right",
+        },
+        renderer = {
+          group_empty = true,
+          highlight_diagnostics = "all",
+        },
+        filters = {
+          dotfiles = false,
+        },
+        update_focused_file = {
+          -- enables the feature
+          enable = true,
+          -- update the root directory of the tree to the one of the folder containing the file if the file is not under the current root directory
+          -- only relevant when `update_focused_file.enable` is true
+          update_cwd = true,
+          -- list of buffer names / filetypes that will not update the cwd if the file isn't found under the current root directory
+          -- only relevant when `update_focused_file.update_cwd` is true and `update_focused_file.enable` is true
+          ignore_list = {}
+        },
+      })
+    end
+  },
+  {
+    "windwp/nvim-ts-autotag",
+    opts = {
+      -- Defaults
+      enable_close = true,        -- Auto close tags
+      enable_rename = true,       -- Auto rename pairs of tags
+      enable_close_on_slash = false -- Auto close on trailing </
+    },
+    -- Also override individual filetype configs, these take priority.
+    -- Empty by default, useful if one of the "opts" global settings
+    -- doesn't work well in a specific filetype
+    -- per_filetype = {
+    --   ["html"] = {
+    --     enable_close = false
+    --   }
+    -- }
+  },
 }
