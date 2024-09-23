@@ -14,15 +14,15 @@ nvim_lsp.dartls.setup({
 
 local kevin = require("custom.kevin")
 
-require("mac.copilot")
-require("mac.indent-blankline")
-require("mac.null-ls")
-require("mac.prettier")
-require("mac.auto-save")
-require("mac.nvim-dashboard")
-require("mac.trouble")
-require("mac.harpoon")
-require("mac.tmux")
+require("custom.plugins.mac.copilot")
+require("custom.plugins.mac.indent-blankline")
+require("custom.plugins.mac.null-ls")
+require("custom.plugins.mac.prettier")
+require("custom.plugins.mac.auto-save")
+require("custom.plugins.mac.nvim-dashboard")
+require("custom.plugins.mac.trouble")
+require("custom.plugins.mac.harpoon")
+require("custom.plugins.mac.tmux")
 
 return {
   -- {
