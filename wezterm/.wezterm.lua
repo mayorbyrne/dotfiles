@@ -28,6 +28,8 @@ config.window_frame = {
   border_bottom_color = "#123456",
 }
 
+config.audible_bell = "Disabled"
+
 -- and finally, return the configuration to wezterm
 wezterm.on("gui-startup", function(cmd)
   -- Pick the active screen to maximize into, there are also other options, see the docs.
