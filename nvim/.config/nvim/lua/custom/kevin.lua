@@ -135,7 +135,7 @@ vim.keymap.set('n', '<leader>tc', ':NvimTreeClose<CR>', { desc = "NvimTree Close
 vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<CR>', { desc = "NvimTree Toggle" })
 vim.keymap.set('n', '<leader>tf', ':NvimTreeFocus<CR>', { desc = "NvimTree Focus" })
 
-local editCfg = require("custom.mac")
+local editCfg = require("custom.custom")
 
 return {
     editCfg = editCfg,
