@@ -52,25 +52,25 @@ tmux has-session -t $SESSIONNAME &> /dev/null
 if [ $? != 0 ] 
  then
     tmux new-session -d -s $SESSIONNAME
-    window=0
+    window=1
     tmux rename-window -t $SESSIONNAME:$window 'nvim'
     tmux send-keys -t $SESSIONNAME "cd ~/Documents/$PROJECT_NAME/" C-m
     tmux send-keys -t $SESSIONNAME "clear" C-m
     tmux send-keys -t $SESSIONNAME "nvim" C-m
 
-    window=1
+    window=2
     tmux new-window -t $SESSIONNAME:$window -n "server"
     tmux send-keys -t $SESSIONNAME "cd ~/Documents/$PROJECT_NAME/" C-m
     tmux send-keys -t $SESSIONNAME "clear" C-m
     tmux send-keys -t $SESSIONNAME "$COMMAND" C-m
 
-    window=2
+    window=3
     tmux new-window -t $SESSIONNAME:$window -n "git"
     tmux send-keys -t $SESSIONNAME "cd ~/Documents/$PROJECT_NAME/" C-m
     tmux send-keys -t $SESSIONNAME "clear" C-m
     tmux send-keys -t $SESSIONNAME "lazygit" C-m 
 
-    tmux select-window -t $SESSIONNAME:0
+    tmux select-window -t $SESSIONNAME:1
 fi
 
 tmux attach-session -t $SESSIONNAME
