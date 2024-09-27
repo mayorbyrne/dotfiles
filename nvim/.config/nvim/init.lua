@@ -608,12 +608,12 @@ require("lazy").setup({
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
       })
 
-      -- No need to set `hybridMode` to `true` as it's the default value
-      lspconfig.volar.setup({
-        settings = {
-          singleAttributePerLine = true,
-        },
-      })
+      -- -- No need to set `hybridMode` to `true` as it's the default value
+      -- lspconfig.volar.setup({
+      --   settings = {
+      --     singleAttributePerLine = true,
+      --   },
+      -- })
     end,
   },
   { -- Autocompletion
