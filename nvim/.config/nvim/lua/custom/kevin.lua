@@ -135,6 +135,8 @@ vim.keymap.set('n', '<leader>tc', ':NvimTreeClose<CR>', { desc = "NvimTree Close
 vim.keymap.set('n', '<leader>tt', ':NvimTreeToggle<CR>', { desc = "NvimTree Toggle" })
 vim.keymap.set('n', '<leader>tf', ':NvimTreeFocus<CR>', { desc = "NvimTree Focus" })
 
+vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "LSP Rename" })
+
 local editCfg = require("custom.custom")
 
 return {
