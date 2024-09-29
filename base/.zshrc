@@ -26,6 +26,7 @@ precmd() {
  __posh_git_ps1 '$fg[green]%~$fg[white]' ' $ '
 }
 export PATH="/usr/local/sbin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
+export PATH="$PATH":"$HOME/.pub-cache/bin"
 
 . "/Users/$USER/.deno/env"
 # Initialize zsh completions (added by deno install script)
