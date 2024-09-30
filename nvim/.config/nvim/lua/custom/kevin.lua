@@ -137,6 +137,8 @@ vim.keymap.set('n', '<leader>tf', ':NvimTreeFocus<CR>', { desc = "NvimTree Focus
 
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "LSP Rename" })
 
+vim.keymap.set("n", "<leader>m", ":RenderMarkdown toggle<CR>", { desc = "Markdown Preview" })
+
 local editCfg = require("custom.custom")
 
 return {
