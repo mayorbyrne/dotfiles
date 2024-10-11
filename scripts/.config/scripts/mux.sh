@@ -38,7 +38,7 @@ fi
 
 if [[ ${COMMAND:0:3} == "npm" ]]
 then
-  COMMAND="PORT=$PORT $COMMAND"
+  COMMAND="$COMMAND -- --port=$PORT"
 fi
 
 echo "NAME: $PROJECT_NAME";
