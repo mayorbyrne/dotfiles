@@ -4,6 +4,9 @@ local mux = wezterm.mux
 -- This will hold the configuration.
 local config = wezterm.config_builder()
 
+config.check_for_updates = true
+config.show_update_window = true
+
 -- This is where you actually apply your config choices
 
 config.hide_tab_bar_if_only_one_tab = true
