@@ -5,7 +5,6 @@ local mux = wezterm.mux
 local config = wezterm.config_builder()
 
 config.check_for_updates = true
-config.show_update_window = true
 
 -- This is where you actually apply your config choices
 
