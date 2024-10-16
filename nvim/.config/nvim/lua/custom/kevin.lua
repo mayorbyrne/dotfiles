@@ -139,8 +139,10 @@ vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "LSP Rename" })
 
 vim.keymap.set("n", "<leader>m", ":RenderMarkdown toggle<CR>", { desc = "Markdown Preview" })
 
-vim.keymap.set("n", "<leader>frc", "yiw :%s/<C-R><C-W>//gc<LEFT><LEFT><LEFT>", { desc = "[C]onfirm" })
-vim.keymap.set("n", "<leader>fra", "yiw :%s/<C-R><C-W>//g<LEFT><LEFT>", { desc = "[A]ll" })
+vim.keymap.set("n", "<leader>frc", "yiw :%s/<C-R>\"//gc<LEFT><LEFT><LEFT>", { desc = "[C]onfirm" })
+vim.keymap.set("n", "<leader>fra", "yiw :%s/<C-R>\"//g<LEFT><LEFT>", { desc = "[A]ll" })
+vim.keymap.set("n", "<leader>fr\"", "yi\" :%s/<C-R>\"//gc<LEFT><LEFT><LEFT>", { desc = "Inside [\"]"})
+vim.keymap.set("n", "<leader>fr\'", "yi\' :%s/<C-R>\"//gc<LEFT><LEFT><LEFT>", { desc = "Inside [\']"})
 
 local editCfg = require("custom.custom")
 
