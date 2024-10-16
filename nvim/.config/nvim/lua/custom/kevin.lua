@@ -141,7 +141,20 @@ vim.keymap.set("n", "<leader>m", ":RenderMarkdown toggle<CR>", { desc = "Markdow
 
 vim.keymap.set("n", "<leader>frc", "yiw :%s/<C-R>\"//gc<LEFT><LEFT><LEFT>", { desc = "[C]onfirm" })
 vim.keymap.set("n", "<leader>fra", "yiw :%s/<C-R>\"//g<LEFT><LEFT>", { desc = "[A]ll" })
-vim.keymap.set("n", "<leader>fr\"", "yi\" :%s/<C-R>\"//gc<LEFT><LEFT><LEFT>", { desc = "Inside [\"]"})
+
+local function yank(isConfirm)
+  -- local char = vim.fn.input("Character to yank around")
+  local char = "a"
+  if isConfirm then
+    return "yi" .. char .. ":%s/<C-R>\"//gc<LEFT><LEFT><LEFT>"
+    end
+
+  return "yi" .. char .. ":%s/<C-R>\"//g<LEFT><LEFT>"
+end
+
+vim.keymap.set("n", "<leader>frya", yank(), { desc = "Choose [Y]ank Character [A]ll" })
+vim.keymap.set("n", "<leader>fryc", yank(true), { desc = "Choose [Y]ank Character [C]onfirm" })
+
 vim.keymap.set("n", "<leader>fr\'", "yi\' :%s/<C-R>\"//gc<LEFT><LEFT><LEFT>", { desc = "Inside [\']"})
 
 local editCfg = require("custom.custom")
