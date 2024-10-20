@@ -148,6 +148,18 @@ vim.keymap.set("n", "<leader>fryc", function()
   return "yi" .. char .. ' :%s/<C-R>"//gc<LEFT><LEFT><LEFT>'
 end, { desc = "Choose [Y]ank Character [C]onfirm", expr = true })
 
+-- VSCode style keybindings for moving lines up / down
+-- We can use the keyboard shortcut Option + Up/Down (on Macs) or Alt + Up/Down (on Windows) to move lines up and down. We can use the keyboard shortcut Shift + Option + Up/Down (on Macs) or Shift + Alt + Up/Down (on Windows) to duplicate lines above or below the current line.
+vim.keymap.set('n', '<A-Up>', 'yyddkP', { noremap = true, silent = true })
+vim.keymap.set('n', '<A-k>', 'yyddkP', { noremap = true, silent = true })
+vim.keymap.set('n', '<A-Down>', 'yyddp', { noremap = true, silent = true })
+vim.keymap.set('n', '<A-j>', 'yyddp', { noremap = true, silent = true })
+
+vim.keymap.set('n', '<AS-Up>', 'yyP', { noremap = true, silent = true })
+vim.keymap.set('n', '<AS-K>', 'yyP', { noremap = true, silent = true })
+vim.keymap.set('n', '<AS-Down>', 'yyp', { noremap = true, silent = true })
+vim.keymap.set('n', '<AS-J>', 'yyp', { noremap = true, silent = true })
+
 local editCfg = require("custom.custom")
 
 return {
