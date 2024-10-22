@@ -32,3 +32,4 @@ export PATH="$PATH":"$HOME/.pub-cache/bin"
 # Initialize zsh completions (added by deno install script)
 autoload -Uz compinit
 compinit
+. "/Users/Kevin/.deno/env"
