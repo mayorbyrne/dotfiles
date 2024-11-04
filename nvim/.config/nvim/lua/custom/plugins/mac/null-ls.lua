@@ -15,9 +15,12 @@ return {
       })
 
       local formatCode = function()
-        -- require("conform").format({ async = true, lsp_format = "fallback" })
-        -- vim.lsp.buf.format({ async = true })
-        vim.lsp.buf.format({ timeout_ms = 2000 }) -- 2 seconds
+        vim.lsp.buf.format({
+          filter = function(client)
+            print("client.name: " .. client.name)
+            return client.name ~= "ts_ls" and client.name ~= "eslint" and client.name ~= "volar"
+          end,
+        })
       end
 
       vim.keymap.set("", "<leader>cf", formatCode, { desc = "Format code" })
