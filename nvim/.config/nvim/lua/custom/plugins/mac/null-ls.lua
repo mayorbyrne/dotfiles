@@ -17,7 +17,7 @@ return {
       local formatCode = function()
         vim.lsp.buf.format({
           filter = function(client)
-            print("client.name: " .. client.name)
+            -- print("client.name: " .. client.name)
             return client.name ~= "ts_ls" and client.name ~= "eslint" and client.name ~= "volar"
           end,
         })
