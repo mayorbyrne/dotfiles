@@ -636,15 +636,15 @@ require("lazy").setup({
         root_dir = function(filename, bufnr)
           local denoRootDir = lspconfig.util.root_pattern("deno.json", "deno.json")(filename)
           if denoRootDir then
-            print("this seems to be a deno project; returning nil so that tsserver does not attach")
+            -- print("this seems to be a deno project; returning nil so that tsserver does not attach")
             return nil
           else
-            print("this seems to be a ts project; return root dir based on package.json")
+            -- print("this seems to be a ts project; return root dir based on package.json")
           end
 
           return lspconfig.util.root_pattern("package.json")(filename)
         end,
-        single_file_support = false,
+        single_file_support = true,
       })
     end,
   },
