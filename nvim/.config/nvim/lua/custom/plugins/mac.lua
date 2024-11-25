@@ -27,5 +27,6 @@ require("custom.plugins.mac.nvim-tree")
 require("custom.plugins.mac.nvim-ts-autotag")
 require("custom.plugins.mac.drop")
 require("custom.plugins.mac.render-markdown")
+require("custom.plugins.mac.workspace-diagnostics")
 
 return {}
