@@ -2,10 +2,8 @@
 if [[ ":$FPATH:" != *":/Users/Q1524/.zsh/completions:"* ]]; then export FPATH="/Users/Q1524/.zsh/completions:$FPATH"; fi
 # Path to your oh-my-zsh installation.
 export ZSH=$HOME/.oh-my-zsh
-#ZSH_THEME="kevin" # set by `omz`
+# ZSH_THEME="kevin" # set by `omz`
 plugins=(git)
-
-source $ZSH/oh-my-zsh.sh
 
 alias gs="git status"
 alias gfp="git fetch -p"
@@ -28,7 +26,4 @@ precmd() {
 export PATH="/usr/local/sbin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
 export PATH="$PATH":"$HOME/.pub-cache/bin"
 
-# Initialize zsh completions (added by deno install script)
-autoload -Uz compinit
-compinit
-. "/Users/$USER/.deno/env"
+source $ZSH/oh-my-zsh.sh
