@@ -39,10 +39,10 @@ wezterm.on("gui-startup", function(cmd)
 
   -- Set the window coords on spawn.
   local tab, pane, window = mux.spawn_window(cmd or {
-    x = active.x,
-    y = active.y,
-    width = active.width,
-    height = active.height,
+    -- x = active.x,
+    -- y = active.y,
+    -- width = active.width,
+    -- height = active.height,
   })
 
   -- You probably don't need both, but you can also set the positions after spawn.
