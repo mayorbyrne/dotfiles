@@ -27,3 +27,5 @@ export PATH="/usr/local/sbin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
 export PATH="$PATH":"$HOME/.pub-cache/bin"
 
 source $ZSH/oh-my-zsh.sh
+
+eval "$(fnm env --use-on-cd --shell zsh)"
