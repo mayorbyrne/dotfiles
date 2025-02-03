@@ -55,4 +55,10 @@ config.cursor_blink_rate = 500
 config.cursor_blink_ease_in = "Constant"
 config.cursor_blink_ease_out = "Constant"
 
+if wezterm.target_triple == "x86_64-pc-windows-msvc" then
+  config.default_prog = { "powershell.exe" }
+else
+  config.default_prog = wezterm.Default_prog
+end
+
 return config
