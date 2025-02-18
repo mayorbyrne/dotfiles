@@ -20,6 +20,7 @@ config.wsl_domains = {
     -- It must match a valid distribution from your `wsl -l -v` output in
     -- order for the domain to be useful.
     distribution = 'Ubuntu',
+    default_cwd = '~',
   },
 }
 config.default_domain = 'WSL:Ubuntu'
@@ -41,8 +42,9 @@ config.colors = {
   cursor_bg = "#ffd900",
 }
 
-config.font = wezterm.font("Fira Code", { weight = "DemiBold" })
-config.font_size = 11
+-- config.font = wezterm.font("Fira Code", { weight = "DemiBold" })
+config.font = wezterm.font("JetBrains Mono", { weight = "Bold" })
+config.font_size = 9
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {

@@ -17,6 +17,8 @@ export NVM_DIR="$HOME/.nvm"
 export PATH=$HOME/.npm-global/bin:$HOME/Desktop/dart-sdk/bin:$HOME/.config/scripts:$PATH
 source ~/git-prompt.sh
 
+export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
+
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
 
