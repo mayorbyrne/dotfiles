@@ -61,4 +61,44 @@ else
   config.default_prog = wezterm.Default_prog
 end
 
+config.keys = {
+  {
+    key = "v",
+    mods = "CMD",
+    action = wezterm.action.PasteFrom("Clipboard"),
+  },
+  {
+    key = "j",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "j",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "y",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "y",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "o",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "o",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "i",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "i",
+      mods = "CTRL",
+    }),
+  }
+}
+
 return config
