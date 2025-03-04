@@ -98,6 +98,22 @@ config.keys = {
       key = "i",
       mods = "CTRL",
     }),
+  },
+  {
+    key = "d",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "d",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "u",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "u",
+      mods = "CTRL",
+    }),
   }
 }
 
