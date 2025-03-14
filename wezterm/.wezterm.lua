@@ -130,6 +130,46 @@ config.keys = {
       key = "p",
       mods = "CTRL",
     }),
+  },
+  {
+    key = "h",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "h",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "l",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "l",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "k",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "k",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "j",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "j",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "b",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "b",
+      mods = "CTRL",
+    }),
   }
 }
 

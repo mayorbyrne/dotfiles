@@ -92,6 +92,7 @@ vim.keymap.set("i", "<C-J>", 'copilot#Accept("\\<CR>")', {
   replace_keycodes = false,
 })
 vim.g.copilot_no_tab_map = true
+vim.keymap.set("n", "<leader>cc", ":CopilotChatToggle<CR> cci", { desc = "Copilot Chat" })
 
 vim.keymap.set("n", "<leader>dd", ":Dashboard<CR>")
 vim.keymap.set("n", "<leader>dr", ":Telescope oldfiles<CR>")
