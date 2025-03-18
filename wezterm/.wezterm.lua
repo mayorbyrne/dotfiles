@@ -170,6 +170,14 @@ config.keys = {
       key = "b",
       mods = "CTRL",
     }),
+  },
+  {
+    key = "r",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "r",
+      mods = "CTRL",
+    }),
   }
 }
 
