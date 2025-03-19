@@ -102,6 +102,41 @@ config.keys = {
     mods = "CTRL",
     action = wezterm.action.CloseCurrentTab({ confirm = true }),
   },
+  {
+    key = "1",
+    mods = "CTRL",
+    action = wezterm.action.ActivateTab(0),
+  },
+  {
+    key = "2",
+    mods = "CTRL",
+    action = wezterm.action.ActivateTab(1),
+  },
+  {
+    key = "3",
+    mods = "CTRL",
+    action = wezterm.action.ActivateTab(2),
+  },
+  {
+    key = "4",
+    mods = "CTRL",
+    action = wezterm.action.ActivateTab(3),
+  },
+  {
+    key = "5",
+    mods = "CTRL",
+    action = wezterm.action.ActivateTab(4),
+  },
+  {
+    key = "6",
+    mods = "CTRL",
+    action = wezterm.action.ActivateTab(5),
+  },
+  {
+    key = "7",
+    mods = "CTRL",
+    action = wezterm.action.ActivateTab(6),
+  },
 }
 
 return config
