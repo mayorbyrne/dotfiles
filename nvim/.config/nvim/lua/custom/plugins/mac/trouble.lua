@@ -8,6 +8,11 @@ return {
             focus = true,
           },
         },
+        win = {
+          wo = {
+            wrap = true,
+          },
+        },
       })
     end,
   },
