@@ -44,6 +44,9 @@ brew install fzf
 echo "Installing ripgrep..."
 brew install ripgrep
 
+echo "Installing karabiner-elements"
+brew install --cask karabiner-elements
+
 echo "Installing stow..."
 brew install stow
 
@@ -55,3 +58,4 @@ cd ~/.dotfiles
 stow -v */
 
 echo "Done!"
+echo "Visit https://ke-complex-modifications.pqrs.org/json/windows_shortcuts_on_macos.json"
