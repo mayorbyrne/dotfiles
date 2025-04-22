@@ -106,6 +106,7 @@ vim.keymap.set("n", "<leader>bd", function()
   if vim.bo.buftype == "terminal" then
     vim.cmd("bd!")
   else
+    require("trouble").close('diagnostics')
     vim.cmd("bd")
   end
 end)
