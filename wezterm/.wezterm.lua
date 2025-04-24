@@ -10,21 +10,6 @@ if wezterm.config_builder then
   config = wezterm.config_builder()
 end
 
-config.wsl_domains = {
-  {
-    -- The name of this specific domain.  Must be unique amonst all types
-    -- of domain in the configuration file.
-    name = "WSL:Ubuntu",
-
-    -- The name of the distribution.  This identifies the WSL distribution.
-    -- It must match a valid distribution from your `wsl -l -v` output in
-    -- order for the domain to be useful.
-    distribution = "Ubuntu",
-    default_cwd = "~",
-  },
-}
-config.default_domain = "WSL:Ubuntu"
-
 config.check_for_updates = true
 
 -- This is where you actually apply your config choices
@@ -73,6 +58,14 @@ wezterm.on("gui-startup", function(cmd)
   window:gui_window():set_position(active.x, active.y)
   window:gui_window():maximize()
   -- window:gui_window():set_inner_size(active.width, active.height - 20)
+
+  local tab2, pane2, window2 = window:spawn_tab {}
+  local tab3, pane3, window3 = window:spawn_tab {}
+
+  pane:send_text "nvim\r\n"
+  pane2:send_text "npm run dev\r\n"
+  pane3:send_text "lazygit\r\n"
+
 end)
 
 config.default_cursor_style = "BlinkingBlock"
@@ -104,39 +97,44 @@ config.keys = {
   },
   {
     key = "1",
-    mods = "CTRL",
+    mods = "ALT",
     action = wezterm.action.ActivateTab(0),
   },
   {
     key = "2",
-    mods = "CTRL",
+    mods = "ALT",
     action = wezterm.action.ActivateTab(1),
   },
   {
     key = "3",
-    mods = "CTRL",
+    mods = "ALT",
     action = wezterm.action.ActivateTab(2),
   },
   {
     key = "4",
-    mods = "CTRL",
+    mods = "ALT",
     action = wezterm.action.ActivateTab(3),
   },
   {
     key = "5",
-    mods = "CTRL",
+    mods = "ALT",
     action = wezterm.action.ActivateTab(4),
   },
   {
     key = "6",
-    mods = "CTRL",
+    mods = "ALT",
     action = wezterm.action.ActivateTab(5),
   },
   {
     key = "7",
-    mods = "CTRL",
+    mods = "ALT",
     action = wezterm.action.ActivateTab(6),
   },
+  {
+    key = "Q",
+    mods = "CTRL",
+    action = wezterm.action.CloseCurrentTab({ confirm = false }),
+  }
 }
 
 return config
