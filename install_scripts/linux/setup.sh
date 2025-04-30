@@ -20,13 +20,14 @@ curl -fsSL https://fnm.vercel.app/install | bash
 echo "Install latest LTS version of node..."
 fnm install --lts
 
+echo "Installing git..."
+sudo apt install git-all
+
 # install homebrew
 echo "Installing homebrew..."
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 echo "Installing programs..."
-echo "Installing git..."
-brew install git
 
 echo "Installing tmux..."
 brew install tmux
