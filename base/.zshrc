@@ -29,3 +29,9 @@ export PATH="$PATH":"$HOME/.pub-cache/bin"
 source $ZSH/oh-my-zsh.sh
 
 eval "$(fnm env --use-on-cd --shell zsh)"
+
+typeset -gaU path=(
+  /home/linuxbrew/.linuxbrew/bin
+  /home/linuxbrew/.linuxbrew/sbin
+  $path
+)
