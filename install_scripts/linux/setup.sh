@@ -76,4 +76,7 @@ sudo apt install build-essential
 echo "oh my zsh"
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
+echo "firacode"
+sudo apt install fonts-firacode
+
 echo "Done!"
