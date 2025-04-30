@@ -49,7 +49,10 @@ echo "Installing yazi..."
 brew install yazi
 
 echo "Installing wezterm..."
-brew install wezterm
+curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/wezterm-fury.gpg
+echo 'deb [signed-by=/etc/apt/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
+sudo apt update
+sudo apt install wezterm
 
 echo "Installing fzf..."
 brew install fzf
@@ -66,5 +69,8 @@ git clone https://www.github.com/mayorbyrne/dotfiles.git ~/.dotfiles
 echo "Stowing dotfiles..."
 cd ~/.dotfiles
 stow -v */
+
+echo "build-essentials..."
+sudo apt install build-essential
 
 echo "Done!"
