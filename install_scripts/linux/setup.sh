@@ -4,8 +4,14 @@
 echo "Installing ZSH..."
 sudo apt install zsh
 
+echo "Add zsh to etc/shells"
+command -v zsh | sudo tee -a /etc/shells
+
 echo "Making zsh default shell..."
-chsh -s $(which zsh)
+sudo chsh -s $(which zsh) $USER
+
+echo "oh my zsh"
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 echo "Install curl..."
 sudo apt install curl
@@ -27,9 +33,19 @@ sudo apt install git-all
 echo "Installing homebrew..."
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-echo >> /home/kevin/.bashrc
-echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/kevin/.bashrc
+echo >> /home/$USER/.bashrc
+echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/$USER/.bashrc
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+
+echo "Installing stow..."
+brew install stow
+
+echo "Cloning dotfiles..."
+git clone https://www.github.com/mayorbyrne/dotfiles.git ~/.dotfiles
+
+echo "Stowing dotfiles..."
+cd ~/.dotfiles
+stow -v */
 
 echo "Installing programs..."
 
@@ -60,21 +76,8 @@ brew install fzf
 echo "Installing ripgrep..."
 brew install ripgrep
 
-echo "Installing stow..."
-brew install stow
-
-echo "Cloning dotfiles..."
-git clone https://www.github.com/mayorbyrne/dotfiles.git ~/.dotfiles
-
-echo "Stowing dotfiles..."
-cd ~/.dotfiles
-stow -v */
-
 echo "build-essentials..."
 sudo apt install build-essential
-
-echo "oh my zsh"
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 echo "firacode"
 sudo apt install fonts-firacode
