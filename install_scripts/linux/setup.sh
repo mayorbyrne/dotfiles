@@ -15,8 +15,26 @@ command -v zsh | sudo tee -a /etc/shells
 echo "Making zsh default shell..."
 sudo chsh -s $(which zsh) $USER
 
+echo "SWITCH TO ZSH NOW and continue"
+return 1
+
+echo "Install curl..."
+sudo apt install curl
+
+echo "Install unzip..."
+sudo apt install unzip
+
+echo "Installing ZSH..."
+sudo apt install zsh
+
+echo "Installing git..."
+sudo apt install git-all
+
 echo "oh my zsh"
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+echo "fire up terminal once more and continue"
+return 1
 
 # Install nodejs
 echo "Installing fnm..."
@@ -24,9 +42,6 @@ curl -fsSL https://fnm.vercel.app/install | bash
 
 echo "Install latest LTS version of node..."
 fnm install --lts
-
-echo "Installing git..."
-sudo apt install git-all
 
 # install homebrew
 echo "Installing homebrew..."
@@ -36,20 +51,11 @@ echo >> /home/$USER/.bashrc
 echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/$USER/.bashrc
 eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
-echo "Installing stow..."
-brew install stow
-
-echo "Cloning dotfiles..."
-git clone https://www.github.com/mayorbyrne/dotfiles.git ~/.dotfiles
-
-echo "Stowing dotfiles..."
-cd ~/.dotfiles
-stow -v */
-
 echo "Installing programs..."
 
 echo "Installing tmux..."
 brew install tmux
+git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
 echo "Installing neovim..."
 brew install neovim
@@ -80,5 +86,23 @@ sudo apt install build-essential
 
 echo "firacode"
 sudo apt install fonts-firacode
+
+echo "Installing stow..."
+brew install stow
+
+echo "Cloning dotfiles..."
+git clone https://www.github.com/mayorbyrne/dotfiles.git ~/.dotfiles
+
+echo "Stowing dotfiles..."
+cd ~/.dotfiles
+stow --adopt -v base
+stow --adopt -v lazygit
+stow --adopt -v nvim
+stow --adopt -v scripts
+stow --adopt -v tmux
+stow --adopt -v wezterm
+stow --adopt -v yazi
+git restore .
+source ~/.zshrc
 
 echo "Done!"
