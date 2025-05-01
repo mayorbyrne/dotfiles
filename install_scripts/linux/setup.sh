@@ -105,4 +105,12 @@ stow --adopt -v yazi
 git restore .
 source ~/.zshrc
 
+cd ~
+wget https://github.com/GitCredentialManager/git-credential-manager/releases/download/v2.0.935/gcm-linux_amd64.2.0.935.deb
+sudo dpkg -i gcm-linux_amd64.2.0.935.deb
+git-credential-manager configure
+git config --global credential.credentialStore cache
+git config --global user.name "Kevin Moritz"
+git config --global user.email ""
+
 echo "Done!"
