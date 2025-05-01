@@ -21,6 +21,9 @@ echo 'deb [signed-by=/etc/apt/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez
 sudo apt update
 sudo apt install wezterm
 
+echo "Installing git..."
+sudo apt install git-all
+
 # install homebrew
 echo "Installing homebrew..."
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
