@@ -1,5 +1,10 @@
 #!/bin/sh
 # Description: Setup script for dotfiles
+echo "Install curl..."
+sudo apt install curl
+
+echo "Install unzip..."
+sudo apt install unzip
 
 echo "Installing ZSH..."
 sudo apt install zsh
@@ -12,12 +17,6 @@ sudo chsh -s $(which zsh) $USER
 
 echo "oh my zsh"
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-
-echo "Install curl..."
-sudo apt install curl
-
-echo "Install unzip..."
-sudo apt install unzip
 
 # Install nodejs
 echo "Installing fnm..."
