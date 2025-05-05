@@ -106,7 +106,7 @@ vim.keymap.set("n", "<leader>bd", function()
   if vim.bo.buftype == "terminal" then
     vim.cmd("bd!")
   else
-    require("trouble").close('diagnostics')
+    require("trouble").close("diagnostics")
     vim.cmd("bd")
   end
 end)
@@ -174,7 +174,27 @@ vim.keymap.set("v", "<leader>yy", function()
   vim.fn.setreg("a", vim.fn.getreg("a") .. to_append)
 end, { desc = "Yank and append with newline to register a", silent = true })
 
-vim.keymap.set("n", "<leader>pp", "\"ap", { desc = "Paste from register a" })
+vim.keymap.set("n", "<leader>pp", '"ap', { desc = "Paste from register a" })
+
+-- prevent fat fingering multiple undos
+vim.keymap.set("n", "u", function()
+  if vim.v.count > 0 then
+    -- clear the count by sending ESC to neovim
+    local keys = vim.api.nvim_replace_termcodes('<ESC>',true,false,true)
+    vim.api.nvim_feedkeys(keys,'m',false)
+
+    local message = "You fat fingered "
+        .. vim.v.count
+        .. " undos. Preventing this action, and resetting your vim count."
+
+    vim.notify(message, vim.log.levels.WARN)
+
+    -- do nothing
+    return ""
+  else
+    return "u"
+  end
+end, { expr = true })
 
 local editCfg = require("custom.custom")
 
