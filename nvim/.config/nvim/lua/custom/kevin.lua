@@ -92,7 +92,6 @@ vim.keymap.set("i", "<C-J>", 'copilot#Accept("\\<CR>")', {
   replace_keycodes = false,
 })
 vim.g.copilot_no_tab_map = true
-vim.keymap.set("n", "<leader>cc", ":CopilotChatToggle<CR>", { desc = "Copilot Chat" })
 
 vim.keymap.set("n", "<leader>dd", ":Dashboard<CR>")
 vim.keymap.set("n", "<leader>dr", ":Telescope oldfiles<CR>")
@@ -142,7 +141,7 @@ vim.keymap.set("n", "<leader>tf", ":NvimTreeFocus<CR>", { desc = "NvimTree Focus
 
 vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "LSP Rename" })
 
-vim.keymap.set("n", "<leader>m", ":RenderMarkdown toggle<CR>", { desc = "Markdown Preview" })
+vim.keymap.set("n", "<leader>mm", ":RenderMarkdown toggle<CR>", { desc = "Markdown Preview" })
 
 vim.keymap.set("n", "<leader>frya", function()
   local char = vim.fn.input("Character to yank inside: ")
@@ -164,6 +163,16 @@ vim.keymap.set('n', '<AS-Up>', 'yyP', { noremap = true, silent = true })
 vim.keymap.set('n', '<AS-K>', 'yyP', { noremap = true, silent = true })
 vim.keymap.set('n', '<AS-Down>', 'yyp', { noremap = true, silent = true })
 vim.keymap.set('n', '<AS-J>', 'yyp', { noremap = true, silent = true })
+
+local MiniMap = require('mini.map')
+vim.keymap.set('n', '<Leader>mc', MiniMap.close, { desc = "MiniMap Close" })
+vim.keymap.set('n', '<Leader>mf', MiniMap.toggle_focus, { desc = "MiniMap Toggle Focus" })
+vim.keymap.set('n', '<Leader>mo', MiniMap.open, { desc = "MiniMap Open" })
+vim.keymap.set('n', '<Leader>mr', MiniMap.refresh, { desc = "MiniMap Refresh" })
+vim.keymap.set('n', '<Leader>ms', MiniMap.toggle_side, { desc = "MiniMap Toggle Side" })
+vim.keymap.set('n', '<Leader>mt', MiniMap.toggle, { desc = "MiniMap Toggle" })
+
+vim.keymap.set('n', '<Leader>cc', ":CopilotChatToggle<CR>", { desc = "Copilot Chat Toggle" })
 
 local editCfg = require("custom.custom")
 
