@@ -44,6 +44,7 @@
   "vim-rooter": { "branch": "master", "commit": "51402fb77c4d6ae94994e37dc7ca13bec8f4afcc" },
   "vim-tmux-navigator": { "branch": "master", "commit": "a74836d404c295e799a6ba59794e37fe257509ec" },
   "vimux": { "branch": "master", "commit": "7db6b2f79d432ee3820668b1d4625311dbe1d0ad" },
+  "visual_studio_code": { "branch": "master", "commit": "ff7fd467e6c82bd1e062d64f60428cf36b0e99c6" },
   "which-key.nvim": { "branch": "main", "commit": "0539da005b98b02cf730c1d9da82b8e8edb1c2d2" },
   "workspace-diagnostics.nvim": { "branch": "main", "commit": "60f9175b2501ae3f8b1aba9719c0df8827610c8e" }
 }
