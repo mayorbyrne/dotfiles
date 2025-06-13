@@ -80,10 +80,10 @@ vim.keymap.set("t", "<Esc><Esc>", "<C-\\><C-n>", {
 })
 
 -- TIP: Disable arrow keys in normal mode
-vim.keymap.set('n', '<left>', '<cmd>echo "Use h to move!!"<CR>')
-vim.keymap.set('n', '<right>', '<cmd>echo "Use l to move!!"<CR>')
-vim.keymap.set('n', '<up>', '<cmd>echo "Use k to move!!"<CR>')
-vim.keymap.set('n', '<down>', '<cmd>echo "Use j to move!!"<CR>')
+vim.keymap.set("n", "<left>", '<cmd>echo "Use h to move!!"<CR>')
+vim.keymap.set("n", "<right>", '<cmd>echo "Use l to move!!"<CR>')
+vim.keymap.set("n", "<up>", '<cmd>echo "Use k to move!!"<CR>')
+vim.keymap.set("n", "<down>", '<cmd>echo "Use j to move!!"<CR>')
 
 -- Keybinds to make split navigation easier.
 --  Use CTRL+<hjkl> to switch between windows
@@ -343,7 +343,7 @@ require("lazy").setup({
       vim.keymap.set("n", "<leader>sr", "<cmd> lua require('fzf-lua').resume()<CR>", {
         desc = "[S]earch [R]esume",
       })
-      vim.keymap.set("n", "<leader>s.",  "<cmd> lua require('fzf-lua').oldfiles()<CR>", {
+      vim.keymap.set("n", "<leader>s.", "<cmd> lua require('fzf-lua').oldfiles()<CR>", {
         desc = '[S]earch Recent Files ("." for repeat)',
       })
       vim.keymap.set("n", "<leader><leader>", "<cmd> lua require('fzf-lua').buffers()<CR>", {
@@ -351,7 +351,12 @@ require("lazy").setup({
       })
 
       -- Shortcut for searching your Neovim configuration files
-      vim.keymap.set("n", "<leader>sn", "<cmd>lua require('fzf-lua').files({ cwd = '~/dotfiles/nvim/.config/nvim/' })<CR>", { desc = "[S]earch [N]eovim files" })
+      vim.keymap.set(
+        "n",
+        "<leader>sn",
+        "<cmd>lua require('fzf-lua').files({ cwd = '~/dotfiles/nvim/.config/nvim/' })<CR>",
+        { desc = "[S]earch [N]eovim files" }
+      )
     end,
   },
 
@@ -363,17 +368,17 @@ require("lazy").setup({
       -- "williamboman/mason-lspconfig.nvim",
       -- "WhoIsSethDaniel/mason-tool-installer.nvim",
 
-      { "mason-org/mason.nvim", version = "^1.0.0" },
+      { "mason-org/mason.nvim",           version = "^1.0.0" },
       { "mason-org/mason-lspconfig.nvim", version = "^1.0.0" },
-      'WhoIsSethDaniel/mason-tool-installer.nvim',
+      "WhoIsSethDaniel/mason-tool-installer.nvim",
 
       -- Useful status updates for LSP.
       -- NOTE: `opts = {}` is the same as calling `require('fidget').setup({})`
-      { "j-hui/fidget.nvim",       opts = {} },
+      { "j-hui/fidget.nvim", opts = {} },
 
       -- `neodev` configures Lua LSP for your Neovim config, runtime and plugins
       -- used for completion, annotations and signatures of Neovim apis
-      { "folke/neodev.nvim",       opts = {} },
+      { "folke/neodev.nvim", opts = {} },
     },
     config = function()
       -- Brief aside: **What is LSP?**
@@ -693,31 +698,31 @@ require("lazy").setup({
       local luasnip = require("luasnip")
       luasnip.config.setup({})
       local kind_icons = {
-        Text = '󰉿',
-        Method = 'm',
-        Function = '󰊕',
-        Constructor = '',
-        Field = '',
-        Variable = '󰆧',
-        Class = '󰌗',
-        Interface = '',
-        Module = '',
-        Property = '',
-        Unit = '',
-        Value = '󰎠',
-        Enum = '',
-        Keyword = '󰌋',
-        Snippet = '',
-        Color = '󰏘',
-        File = '󰈙',
-        Reference = '',
-        Folder = '󰉋',
-        EnumMember = '',
-        Constant = '󰇽',
-        Struct = '',
-        Event = '',
-        Operator = '󰆕',
-        TypeParameter = '󰊄',
+        Text = "󰉿",
+        Method = "m",
+        Function = "󰊕",
+        Constructor = "",
+        Field = "",
+        Variable = "󰆧",
+        Class = "󰌗",
+        Interface = "",
+        Module = "",
+        Property = "",
+        Unit = "",
+        Value = "󰎠",
+        Enum = "",
+        Keyword = "󰌋",
+        Snippet = "",
+        Color = "󰏘",
+        File = "󰈙",
+        Reference = "",
+        Folder = "󰉋",
+        EnumMember = "",
+        Constant = "󰇽",
+        Struct = "",
+        Event = "",
+        Operator = "󰆕",
+        TypeParameter = "󰊄",
       }
 
       cmp.setup({
@@ -790,14 +795,14 @@ require("lazy").setup({
           { name = "path" },
         },
         formatting = {
-          fields = { 'kind', 'abbr', 'menu' },
+          fields = { "kind", "abbr", "menu" },
           format = function(entry, vim_item)
-            vim_item.kind = string.format('%s', kind_icons[vim_item.kind])
+            vim_item.kind = string.format("%s", kind_icons[vim_item.kind])
             vim_item.menu = ({
-              nvim_lsp = '[LSP]',
-              luasnip = '[Snippet]',
-              buffer = '[Buffer]',
-              path = '[Path]',
+              nvim_lsp = "[LSP]",
+              luasnip = "[Snippet]",
+              buffer = "[Buffer]",
+              path = "[Path]",
             })[entry.source.name]
             return vim_item
           end,
@@ -806,18 +811,26 @@ require("lazy").setup({
     end,
   },
 
+  {
+    "askfiy/visual_studio_code",
+    priority = 100,
+    config = function()
+      vim.cmd([[colorscheme visual_studio_code]])
+    end,
+  },
+
   { -- You can easily change to a different colorscheme.
     -- Change the name of the colorscheme plugin below, and then
     -- change the command in the config to whatever the name of that colorscheme is.
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
-    'folke/tokyonight.nvim',
+    "folke/tokyonight.nvim",
     priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
       -- Load the colorscheme here.
       -- Like many other themes, this one has different styles, and you could load
       -- any other, such as 'tokyonight-storm', 'tokyonight-moon', or 'tokyonight-day'.
-      vim.cmd.colorscheme 'tokyonight-night'
+      -- vim.cmd.colorscheme 'tokyonight-night'
 
       -- You can configure highlights by doing something like:
       -- vim.cmd.hi 'Comment gui=none'
@@ -865,7 +878,7 @@ require("lazy").setup({
         return "%2l:%-2v"
       end
 
-      require('mini.map').setup()
+      require("mini.map").setup()
       -- ... and there is more!
       --  Check out: https://github.com/echasnovski/mini.nvim
     end,
@@ -874,7 +887,30 @@ require("lazy").setup({
     "nvim-treesitter/nvim-treesitter",
     build = ":TSUpdate",
     opts = {
-      ensure_installed = { 'bash', 'c', 'csv', 'dart', 'diff', 'elixir', 'gitcommit', 'heex', 'html', 'javascript', 'json', 'lua', 'luadoc', 'markdown', 'query', 'tmux', 'typescript', 'vim', 'vimdoc', 'vue', 'markdown_inline', 'python' },
+      ensure_installed = {
+        "bash",
+        "c",
+        "csv",
+        "dart",
+        "diff",
+        "elixir",
+        "gitcommit",
+        "heex",
+        "html",
+        "javascript",
+        "json",
+        "lua",
+        "luadoc",
+        "markdown",
+        "query",
+        "tmux",
+        "typescript",
+        "vim",
+        "vimdoc",
+        "vue",
+        "markdown_inline",
+        "python",
+      },
       -- Autoinstall languages that are not installed
       auto_install = true,
       highlight = {
