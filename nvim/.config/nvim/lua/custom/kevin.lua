@@ -88,8 +88,8 @@ vim.keymap.set("s", "d", "d", {})
 vim.keymap.set("n", "<leader>bc", ":%bd|e#<CR>", { desc = "Close all buffers except current" })
 
 vim.keymap.set("i", "<C-J>", 'copilot#Accept("\\<CR>")', {
-  expr = true,
-  replace_keycodes = false,
+	expr = true,
+	replace_keycodes = false,
 })
 vim.g.copilot_no_tab_map = true
 
@@ -102,11 +102,11 @@ vim.keymap.set("n", "<leader>bn", ":bn<CR>")
 vim.keymap.set("n", "<leader>bp", ":bp<CR>")
 vim.keymap.set("t", "<leader>bd", ":bd!<CR>")
 vim.keymap.set("n", "<leader>bd", function()
-  if vim.bo.buftype == "terminal" then
-    vim.cmd("bd!")
-  else
-    vim.cmd("bd")
-  end
+	if vim.bo.buftype == "terminal" then
+		vim.cmd("bd!")
+	else
+		vim.cmd("bd")
+	end
 end)
 
 vim.cmd("ca wq bd!")
@@ -144,40 +144,60 @@ vim.keymap.set("n", "<leader>rn", vim.lsp.buf.rename, { desc = "LSP Rename" })
 vim.keymap.set("n", "<leader>mm", ":RenderMarkdown toggle<CR>", { desc = "Markdown Preview" })
 
 vim.keymap.set("n", "<leader>frya", function()
-  local char = vim.fn.input("Character to yank inside: ")
-  return "yi" .. char .. ' :%s/<C-R>"//g<LEFT><LEFT>'
+	local char = vim.fn.input("Character to yank inside: ")
+	return "yi" .. char .. ' :%s/<C-R>"//g<LEFT><LEFT>'
 end, { desc = "Choose [Y]ank Character [A]ll", expr = true })
 vim.keymap.set("n", "<leader>fryc", function()
-  local char = vim.fn.input("Character to yank inside: ")
-  return "yi" .. char .. ' :%s/<C-R>"//gc<LEFT><LEFT><LEFT>'
+	local char = vim.fn.input("Character to yank inside: ")
+	return "yi" .. char .. ' :%s/<C-R>"//gc<LEFT><LEFT><LEFT>'
 end, { desc = "Choose [Y]ank Character [C]onfirm", expr = true })
 
 -- VSCode style keybindings for moving lines up / down
 -- We can use the keyboard shortcut Option + Up/Down (on Macs) or Alt + Up/Down (on Windows) to move lines up and down. We can use the keyboard shortcut Shift + Option + Up/Down (on Macs) or Shift + Alt + Up/Down (on Windows) to duplicate lines above or below the current line.
-vim.keymap.set('n', '<A-Up>', 'yyddkP', { noremap = true, silent = true })
-vim.keymap.set('n', '<A-k>', 'yyddkP', { noremap = true, silent = true })
-vim.keymap.set('n', '<A-Down>', 'yyddp', { noremap = true, silent = true })
-vim.keymap.set('n', '<A-j>', 'yyddp', { noremap = true, silent = true })
+vim.keymap.set("n", "<A-Up>", "yyddkP", { noremap = true, silent = true })
+vim.keymap.set("n", "<A-k>", "yyddkP", { noremap = true, silent = true })
+vim.keymap.set("n", "<A-Down>", "yyddp", { noremap = true, silent = true })
+vim.keymap.set("n", "<A-j>", "yyddp", { noremap = true, silent = true })
 
-vim.keymap.set('n', '<AS-Up>', 'yyP', { noremap = true, silent = true })
-vim.keymap.set('n', '<AS-K>', 'yyP', { noremap = true, silent = true })
-vim.keymap.set('n', '<AS-Down>', 'yyp', { noremap = true, silent = true })
-vim.keymap.set('n', '<AS-J>', 'yyp', { noremap = true, silent = true })
+vim.keymap.set("n", "<AS-Up>", "yyP", { noremap = true, silent = true })
+vim.keymap.set("n", "<AS-K>", "yyP", { noremap = true, silent = true })
+vim.keymap.set("n", "<AS-Down>", "yyp", { noremap = true, silent = true })
+vim.keymap.set("n", "<AS-J>", "yyp", { noremap = true, silent = true })
 
-local MiniMap = require('mini.map')
-vim.keymap.set('n', '<Leader>mc', MiniMap.close, { desc = "MiniMap Close" })
-vim.keymap.set('n', '<Leader>mf', MiniMap.toggle_focus, { desc = "MiniMap Toggle Focus" })
-vim.keymap.set('n', '<Leader>mo', MiniMap.open, { desc = "MiniMap Open" })
-vim.keymap.set('n', '<Leader>mr', MiniMap.refresh, { desc = "MiniMap Refresh" })
-vim.keymap.set('n', '<Leader>ms', MiniMap.toggle_side, { desc = "MiniMap Toggle Side" })
-vim.keymap.set('n', '<Leader>mt', MiniMap.toggle, { desc = "MiniMap Toggle" })
+local MiniMap = require("mini.map")
+vim.keymap.set("n", "<Leader>mc", MiniMap.close, { desc = "MiniMap Close" })
+vim.keymap.set("n", "<Leader>mf", MiniMap.toggle_focus, { desc = "MiniMap Toggle Focus" })
+vim.keymap.set("n", "<Leader>mo", MiniMap.open, { desc = "MiniMap Open" })
+vim.keymap.set("n", "<Leader>mr", MiniMap.refresh, { desc = "MiniMap Refresh" })
+vim.keymap.set("n", "<Leader>ms", MiniMap.toggle_side, { desc = "MiniMap Toggle Side" })
+vim.keymap.set("n", "<Leader>mt", MiniMap.toggle, { desc = "MiniMap Toggle" })
 
-vim.keymap.set('n', '<Leader>cc', ":CopilotChatToggle<CR>", { desc = "Copilot Chat Toggle" })
+vim.keymap.set("n", "<Leader>cc", ":CopilotChatToggle<CR>", { desc = "Copilot Chat Toggle" })
+
+local function compare_to_clipboard()
+  local ftype = vim.api.nvim_eval("&filetype")
+  vim.cmd(string.format([[
+    execute "normal! \"xy"
+    vsplit
+    enew
+    normal! P
+    setlocal buftype=nowrite
+    set filetype=%s
+    diffthis
+    execute "normal! \<C-w>\<C-w>"
+    enew
+    set filetype=%s
+    normal! "xP
+    diffthis
+  ]], ftype, ftype))
+end
+
+vim.keymap.set('x', '<Leader>cwc', compare_to_clipboard, { desc = "Compare with Clipboard" })
 
 local editCfg = require("custom.custom")
 
 return {
-  editCfg = editCfg,
-  editKevin = editCfg.editKevin,
-  editPlugins = editCfg.editPlugins,
+	editCfg = editCfg,
+	editKevin = editCfg.editKevin,
+	editPlugins = editCfg.editPlugins,
 }
