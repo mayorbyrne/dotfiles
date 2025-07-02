@@ -3,12 +3,18 @@ local wezterm = require("wezterm")
 local mux = wezterm.mux
 -- This will hold the configuration.
 local config = wezterm.config_builder()
+local launch_menu = {}
 
 -- In newer versions of wezterm, use the config_builder which will
 -- help provide clearer error messages
 if wezterm.config_builder then
   config = wezterm.config_builder()
 end
+
+--- Set Pwsh as the default on Windows
+config.default_prog = { "powershell.exe", "-NoLogo" }
+
+config.tab_bar_at_bottom = true
 
 config.check_for_updates = true
 
@@ -41,31 +47,57 @@ config.audible_bell = "Disabled"
 
 config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
 
--- and finally, return the configuration to wezterm
-wezterm.on("gui-startup", function(cmd)
-  -- Pick the active screen to maximize into, there are also other options, see the docs.
-  local active = wezterm.gui.screens().active
+wezterm.on("trigger-workspace", function(cmd)
+  -- allow `wezterm start -- something` to affect what we spawn
+  -- in our initial window
+  local args = {}
+  if cmd then
+    args = cmd.args
+  end
 
-  -- Set the window coords on spawn.
-  local tab, pane, window = mux.spawn_window(cmd or {
-    -- x = active.x,
-    -- y = active.y,
-    -- width = active.width,
-    -- height = active.height,
+  local project_dir = "d:/git/" .. args[1]
+  local tab, pane, window = mux.spawn_window({
+    workspace = "work",
+    cwd = project_dir,
   })
 
-  -- You probably don't need both, but you can also set the positions after spawn.
-  window:gui_window():set_position(active.x, active.y)
+  pane:send_text("nvim\r\n")
+
+  local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
+  nodePane:send_text(args[2] .. "\r\n")
+
+  local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
+  gitPane:send_text("lazygit\r\n")
+  --
+  tab:activate()
+  mux.set_active_workspace("work")
+
   window:gui_window():maximize()
-  -- window:gui_window():set_inner_size(active.width, active.height - 20)
+end)
 
-  local tab2, pane2, window2 = window:spawn_tab {}
-  local tab3, pane3, window3 = window:spawn_tab {}
+-- and finally, return the configuration to wezterm
+wezterm.on("gui-startup", function(cmd)
+  local count = 0
+  cmd = cmd or {}
 
-  pane:send_text "nvim\r\n"
-  pane2:send_text "npm run dev\r\n"
-  pane3:send_text "lazygit\r\n"
+  if cmd.args then
+    wezterm.emit("trigger-workspace", cmd)
+  else
+    -- Pick the active screen to maximize into, there are also other options, see the docs.
+    local active = wezterm.gui.screens().active
+    -- Set the window coords on spawn.
+    local tab, pane, window = mux.spawn_window(cmd or {
+      -- x = active.x,
+      -- y = active.y,
+      -- width = active.width,
+      -- height = active.height,
+    })
 
+    -- You probably don't need both, but you can also set the positions after spawn.
+    window:gui_window():set_position(active.x, active.y)
+    window:gui_window():set_inner_size(active.width, active.height)
+    window:gui_window():maximize()
+  end
 end)
 
 config.default_cursor_style = "BlinkingBlock"
@@ -79,7 +111,46 @@ else
   config.default_prog = wezterm.Default_prog
 end
 
+config.window_frame = {
+  -- The font used in the tab bar.
+  -- Roboto Bold is the default; this font is bundled
+  -- with wezterm.
+  -- Whatever font is selected here, it will have the
+  -- main font setting appended to it to pick up any
+  -- fallback fonts you may have used there.
+  font = wezterm.font({ family = "Roboto", weight = "Bold" }),
+
+  -- The size of the font in the tab bar.
+  -- Default to 10.0 on Windows but 12.0 on other systems
+  font_size = 9.0,
+}
+
+config.colors = {
+  tab_bar = {
+    -- The color of the inactive tab bar edge/divider
+    inactive_tab_edge = "white",
+    -- The active tab is the one that has focus in the window
+    active_tab = {
+      -- The color of the background area for the tab
+      bg_color = "#a37ade",
+      -- The color of the text for the tab
+      fg_color = "#fff",
+    },
+    inactive_tab = {
+      -- The color of the background area for the tab
+      bg_color = "#525c81",
+      -- The color of the text for the tab
+      fg_color = "white",
+    },
+  },
+}
+
 config.keys = {
+  {
+    key = "w",
+    mods = "CTRL",
+    action = wezterm.action.CloseCurrentPane({ confirm = false }),
+  },
   {
     key = "v",
     mods = "CTRL",
@@ -130,11 +201,18 @@ config.keys = {
     mods = "ALT",
     action = wezterm.action.ActivateTab(6),
   },
-  {
-    key = "Q",
-    mods = "CTRL",
-    action = wezterm.action.CloseCurrentTab({ confirm = false }),
-  }
 }
+
+for i = 1, 8 do
+  -- CTRL+ALT + number to move to that position
+  table.insert(config.keys, {
+    key = tostring(i),
+    mods = "CTRL|ALT",
+    action = wezterm.action.MoveTab(i - 1),
+  })
+end
+
+--- Default config settings
+config.launch_menu = launch_menu
 
 return config
