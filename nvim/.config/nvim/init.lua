@@ -162,6 +162,7 @@ require("lazy").setup({
   -- See `:help gitsigns` to understand what the configuration keys do
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     "lewis6991/gitsigns.nvim",
+    commit = "1796c7c",
     opts = {
       signs = {
         add = { text = "+" },
@@ -984,6 +985,8 @@ require("lazy").setup({
 })
 
 require("custom.kevin")
+
+vim.cmd.highlight('DiagnosticUnderlineError guifg=#D64A4A gui=underline')
 
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
