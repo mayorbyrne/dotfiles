@@ -85,7 +85,7 @@ vim.keymap.set("v", "ciw", '"_ciw', {})
 vim.keymap.set("s", "c", "c", {})
 vim.keymap.set("s", "d", "d", {})
 
-vim.keymap.set("n", "<leader>bc", ":%bd|e#<CR>", { desc = "Close all buffers except current" })
+vim.keymap.set("n", "<leader>bc", ":xc<CR>:%bd|e#<CR>", { desc = "Close all buffers except current" })
 
 vim.keymap.set("i", "<C-J>", 'copilot#Accept("\\<CR>")', {
 	expr = true,
@@ -98,9 +98,9 @@ vim.keymap.set("n", "<leader>dr", ":Telescope oldfiles<CR>")
 vim.keymap.set("n", "<leader>pp", ":Prettier<CR>")
 -- vim.keymap.set('n', '<leader>ee', ':Telescope file_browser<CR>')
 
-vim.keymap.set("n", "<leader>bn", ":bn<CR>")
-vim.keymap.set("n", "<leader>bp", ":bp<CR>")
-vim.keymap.set("t", "<leader>bd", ":bd!<CR>")
+vim.keymap.set("n", "<leader>bn", ":xc<CR>:bn<CR>")
+vim.keymap.set("n", "<leader>bp", ":xc<CR>:bp<CR>")
+vim.keymap.set("t", "<leader>bd", ":xc<CR>:bd!<CR>")
 vim.keymap.set("n", "<leader>bd", function()
 	if vim.bo.buftype == "terminal" then
 		vim.cmd("bd!")
