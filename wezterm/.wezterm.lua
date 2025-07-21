@@ -10,6 +10,7 @@ config.check_for_updates = true
 
 config.hide_tab_bar_if_only_one_tab = true
 config.tab_bar_at_bottom = true
+
 -- Use the defaults as a base
 config.hyperlink_rules = wezterm.default_hyperlink_rules()
 
@@ -20,7 +21,63 @@ config.color_scheme = "tokyonight_night"
 config.colors = {
   background = "#1c1c1c",
   cursor_bg = "#ffd900",
+  tab_bar = {
+    background = "#ffffff",
+    -- The color of the inactive tab bar edge/divider
+    inactive_tab_edge = "transparent",
+  },
 }
+
+-- This function returns the suggested title for a tab.
+-- It prefers the title that was set via `tab:set_title()`
+-- or `wezterm cli set-tab-title`, but falls back to the
+-- title of the active pane in that tab.
+function tab_title(tab_info)
+  local title = tab_info.tab_title
+  -- if the tab title is explicitly set, take that
+  if title and #title > 0 then
+    return title
+  end
+  -- Otherwise, use the title from the active pane
+  -- in that tab
+  return tab_info.active_pane.title
+end
+
+-- The filled in variant of the < symbol
+local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
+
+-- The filled in variant of the > symbol
+local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
+
+wezterm.on(
+  'format-tab-title',
+  function(tab, tabs, panes, config, hover, max_width)
+    local title = tab_title(tab)
+    if tab.is_active then
+      return {
+        { Background = { Color = '#966dd9' } },
+        { Foreground = { Color = '#ffffff' } },
+        { Text = '   ' .. title .. '   ' },
+      }
+
+    else
+      return {
+        { Background = { Color = '#4b5378' } },
+        { Foreground = { Color = '#ffffff' } },
+        { Text = '   ' .. title .. '   ' },
+      }
+    end
+    if tab.is_last_active then
+      -- Green color and append '*' to previously active tab.
+      return {
+        { Background = { Color = 'green' } },
+        { Foreground = { Color = 'white' } },
+        { Text = ' ' .. title .. '*' },
+      }
+    end
+    return title
+  end
+)
 
 config.font = wezterm.font("Fira Code", { weight = "DemiBold" })
 config.font_size = 12
@@ -35,59 +92,59 @@ config.audible_bell = "Disabled"
 
 -- and finally, return the configuration to wezterm
 wezterm.on("trigger-workspace", function(cmd)
-	-- allow `wezterm start -- something` to affect what we spawn
-	-- in our initial window
-	local args = {}
-	if cmd then
-		args = cmd.args
-	end
+  -- allow `wezterm start -- something` to affect what we spawn
+  -- in our initial window
+  local args = {}
+  if cmd then
+    args = cmd.args
+  end
 
-	local project_dir = "/Users/Q1524/Documents/" .. args[1]
+  local project_dir = "/Users/Q1524/Documents/" .. args[1]
 
   print(project_dir)
 
-	local tab, pane, window = mux.spawn_window({
-		workspace = "work",
-		cwd = project_dir,
-	})
+  local tab, pane, window = mux.spawn_window({
+    workspace = "work",
+    cwd = project_dir,
+  })
 
-	pane:send_text("nvim\r\n")
+  pane:send_text("nvim\r\n")
 
-	local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
-	nodePane:send_text(args[2] .. "\r\n")
+  local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
+  nodePane:send_text(args[2] .. "\r\n")
 
-	local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
-	gitPane:send_text("lazygit\r\n")
-	--
-	tab:activate()
-	mux.set_active_workspace("work")
+  local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
+  gitPane:send_text("lazygit\r\n")
+  --
+  tab:activate()
+  mux.set_active_workspace("work")
 
-	window:gui_window():maximize()
+  window:gui_window():maximize()
 end)
 
 -- and finally, return the configuration to wezterm
 wezterm.on("gui-startup", function(cmd)
-	local count = 0
-	cmd = cmd or {}
+  local count = 0
+  cmd = cmd or {}
 
-	if cmd.args then
-		wezterm.emit("trigger-workspace", cmd)
-	else
-		-- Pick the active screen to maximize into, there are also other options, see the docs.
-		local active = wezterm.gui.screens().active
-		-- Set the window coords on spawn.
-		local tab, pane, window = mux.spawn_window(cmd or {
-			-- x = active.x,
-			-- y = active.y,
-			-- width = active.width,
-			-- height = active.height,
-		})
+  if cmd.args then
+    wezterm.emit("trigger-workspace", cmd)
+  else
+    -- Pick the active screen to maximize into, there are also other options, see the docs.
+    local active = wezterm.gui.screens().active
+    -- Set the window coords on spawn.
+    local tab, pane, window = mux.spawn_window(cmd or {
+      -- x = active.x,
+      -- y = active.y,
+      -- width = active.width,
+      -- height = active.height,
+    })
 
-		-- You probably don't need both, but you can also set the positions after spawn.
-		window:gui_window():set_position(active.x, active.y)
-		window:gui_window():set_inner_size(active.width, active.height)
+    -- You probably don't need both, but you can also set the positions after spawn.
+    window:gui_window():set_position(active.x, active.y)
+    window:gui_window():set_inner_size(active.width, active.height)
     window:gui_window():maximize()
-	end
+  end
 end)
 
 config.default_cursor_style = "BlinkingBlock"
@@ -219,41 +276,41 @@ config.keys = {
       mods = "CTRL",
     }),
   },
-	{
-		key = "1",
-		mods = "ALT",
-		action = wezterm.action.ActivateTab(0),
-	},
-	{
-		key = "2",
-		mods = "ALT",
-		action = wezterm.action.ActivateTab(1),
-	},
-	{
-		key = "3",
-		mods = "ALT",
-		action = wezterm.action.ActivateTab(2),
-	},
-	{
-		key = "4",
-		mods = "ALT",
-		action = wezterm.action.ActivateTab(3),
-	},
-	{
-		key = "5",
-		mods = "ALT",
-		action = wezterm.action.ActivateTab(4),
-	},
-	{
-		key = "6",
-		mods = "ALT",
-		action = wezterm.action.ActivateTab(5),
-	},
-	{
-		key = "7",
-		mods = "ALT",
-		action = wezterm.action.ActivateTab(6),
-	},
+  {
+    key = "1",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(0),
+  },
+  {
+    key = "2",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(1),
+  },
+  {
+    key = "3",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(2),
+  },
+  {
+    key = "4",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(3),
+  },
+  {
+    key = "5",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(4),
+  },
+  {
+    key = "6",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(5),
+  },
+  {
+    key = "7",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(6),
+  },
 }
 
 return config

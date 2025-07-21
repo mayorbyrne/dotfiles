@@ -180,8 +180,8 @@ vim.keymap.set("n", "<leader>pp", '"ap', { desc = "Paste from register a" })
 vim.keymap.set("n", "u", function()
   if vim.v.count > 0 then
     -- clear the count by sending ESC to neovim
-    local keys = vim.api.nvim_replace_termcodes('<ESC>',true,false,true)
-    vim.api.nvim_feedkeys(keys,'m',false)
+    local keys = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
+    vim.api.nvim_feedkeys(keys, "m", false)
 
     local message = "You fat fingered "
         .. vim.v.count
@@ -195,6 +195,33 @@ vim.keymap.set("n", "u", function()
     return "u"
   end
 end, { expr = true })
+
+vim.keymap.set("i", "<C-k>", vim.lsp.buf.signature_help, { desc = "LSP Signature Help" })
+vim.keymap.set("n", "<C-k>", vim.lsp.buf.signature_help, { desc = "LSP Signature Help" })
+
+vim.keymap.set("n", "<leader>rt", function ()
+  require("neotest").run.run()
+  end, { desc = "Run Neotest" })
+
+local function compare_to_clipboard()
+  local ftype = vim.api.nvim_eval("&filetype")
+  vim.cmd(string.format([[
+    execute "normal! \"xy"
+    vsplit
+    enew
+    normal! P
+    setlocal buftype=nowrite
+    set filetype=%s
+    diffthis
+    execute "normal! \<C-w>\<C-w>"
+    enew
+    set filetype=%s
+    normal! "xP
+    diffthis
+  ]], ftype, ftype))
+end
+
+vim.keymap.set('x', '<Leader>d', compare_to_clipboard, { desc = "Compare to Clipboard" })
 
 local editCfg = require("custom.custom")
 

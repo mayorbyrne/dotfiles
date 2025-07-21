@@ -565,6 +565,7 @@ require("lazy").setup({
       vim.list_extend(ensure_installed, {
         "stylua", -- Used to format Lua code
         "cssls",
+        "eslint-lsp",
         "html",
         "lua_ls",
         "prettier",
@@ -691,6 +692,7 @@ require("lazy").setup({
     config = function()
       -- See `:help cmp`
       local cmp = require("cmp")
+
       local luasnip = require("luasnip")
       luasnip.config.setup({})
       local kind_icons = {
@@ -789,6 +791,7 @@ require("lazy").setup({
           { name = "nvim_lsp" },
           { name = "luasnip" },
           { name = "path" },
+          { name = "nvim_lsp_signature_help" },
         },
         formatting = {
           fields = { "kind", "abbr", "menu" },
