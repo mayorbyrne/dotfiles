@@ -1,19 +1,14 @@
+## PREREQUISITES
+# install nvm for windows
+# https://github.com/coreybutler/nvm-windows/releases
 
-#!/bin/sh
-# Description: Setup script for dotfiles
-
-# Install nodejs
-echo "Installing node version manager..."
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
-
-echo "Install latest LTS version of node..."
-nvm install --lts
-
-echo "Installing chocolatey..."
-@"%SystemRoot%\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -InputFormat None -ExecutionPolicy Bypass -Command "[System.Net.ServicePointManager]::SecurityProtocol = 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))" && SET "PATH=%PATH%;%ALLUSERSPROFILE%\chocolatey\bin"
+# install chocolatey
+# https://chocolatey.org/install
 
 echo "Installing git..."
 choco install git
+
+# restart the terminal at this point
 
 echo "Installing neovim..."
 choco install neovim
@@ -36,3 +31,6 @@ choco install ripgrep
 echo "Cloning dotfiles..."
 git clone https://www.github.com/mayorbyrne/dotfiles.git ~/.dotfiles
 
+# symlink the dotfiles
+# run CMD in administrator mode
+mklink /D c:\Users\[username]\AppData\Local\nvim C:\Users\[username]\.dotfiles\nvim\.config\nvim
