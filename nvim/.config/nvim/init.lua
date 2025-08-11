@@ -572,7 +572,6 @@ require("lazy").setup({
         "prettierd",
         "tailwindcss",
         "ts_ls",
-        "volar",
       })
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
@@ -621,8 +620,10 @@ require("lazy").setup({
       })
 
       lspconfig.ts_ls.setup({
+        on_attach = on_attach,
+        capabilities = capabilities,
         init_options = {
-          plugins = {
+          plugins = { -- I think this was my breakthrough that made it work
             {
               name = "@vue/typescript-plugin",
               location = vue_language_server_path,
@@ -631,26 +632,6 @@ require("lazy").setup({
           },
         },
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
-        on_attach = function(client, bufnr)
-          vim.keymap.set("n", "<leader>ro", function()
-            vim.lsp.buf.execute_command({
-              command = "_typescript.organizeImports",
-              arguments = { vim.fn.expand("%:p") },
-            })
-          end, { buffer = bufnr, remap = false })
-        end,
-        root_dir = function(filename, bufnr)
-          local denoRootDir = lspconfig.util.root_pattern("deno.json", "deno.json")(filename)
-          if denoRootDir then
-            -- print("this seems to be a deno project; returning nil so that tsserver does not attach")
-            return nil
-          else
-            -- print("this seems to be a ts project; return root dir based on package.json")
-          end
-
-          return lspconfig.util.root_pattern("package.json")(filename)
-        end,
-        single_file_support = true,
       })
     end,
   },
