@@ -189,10 +189,10 @@ require("lazy").setup({
   -- after the plugin has been loaded:
   --  config = function() ... end
 
-  {                   -- Useful plugin to show you pending keybinds.
+  {                     -- Useful plugin to show you pending keybinds.
     "folke/which-key.nvim",
     event = "VimEnter", -- Sets the loading event to 'VimEnter'
-    tag = "v2.1.0",   -- v3 has some breaking changes i don't want to deal with right now
+    tag = "v2.1.0",     -- v3 has some breaking changes i don't want to deal with right now
     config = function() -- This is the function that runs, AFTER loading
       require("which-key").setup()
 
@@ -576,8 +576,7 @@ require("lazy").setup({
         "prettier",
         "prettierd",
         "tailwindcss",
-        "ts_ls",
-        "volar",
+        "typescript-language-server"
       })
       require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
@@ -608,55 +607,20 @@ require("lazy").setup({
         }, -- on_attach = on_attach
       })
 
-      lspconfig.denols.setup({
-        root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
+      lspconfig.ts_ls.setup {
+        on_attach = on_attach,
+        capabilities = capabilities,
         init_options = {
-          lint = true,
-          unstable = true,
-          suggest = {
-            imports = {
-              hosts = {
-                ["https://deno.land"] = true,
-                ["https://cdn.nest.land"] = true,
-                ["https://crux.land"] = true,
-              },
-            },
-          },
-        },
-      })
-
-      lspconfig.ts_ls.setup({
-        init_options = {
-          plugins = {
+          plugins = { -- I think this was my breakthrough that made it work
             {
               name = "@vue/typescript-plugin",
-              location = vue_language_server_path,
+              location = "c:/nvm4w/nodejs/node_modules/@vue/language-server",
               languages = { "vue" },
             },
           },
         },
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
-        on_attach = function(client, bufnr)
-          vim.keymap.set("n", "<leader>ro", function()
-            vim.lsp.buf.execute_command({
-              command = "_typescript.organizeImports",
-              arguments = { vim.fn.expand("%:p") },
-            })
-          end, { buffer = bufnr, remap = false })
-        end,
-        root_dir = function(filename, bufnr)
-          local denoRootDir = lspconfig.util.root_pattern("deno.json", "deno.json")(filename)
-          if denoRootDir then
-            -- print("this seems to be a deno project; returning nil so that tsserver does not attach")
-            return nil
-          else
-            -- print("this seems to be a ts project; return root dir based on package.json")
-          end
-
-          return lspconfig.util.root_pattern("package.json")(filename)
-        end,
-        single_file_support = true,
-      })
+      }
     end,
   },
   { -- Autocompletion
