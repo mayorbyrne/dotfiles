@@ -23,7 +23,22 @@ return {
         })
       end
 
+      local range_formatting = function()
+        local start_row, _ = unpack(vim.api.nvim_buf_get_mark(0, "<"))
+        local end_row, _ = unpack(vim.api.nvim_buf_get_mark(0, ">"))
+        print(start_row)
+        print(end_row)
+        vim.lsp.buf.format({
+          range = {
+            ["start"] = { start_row, 0 },
+            ["end"] = { end_row, 0 },
+          },
+          async = true,
+        })
+      end
+
       vim.keymap.set("", "<leader>cf", formatCode, { desc = "Format code" })
+      vim.keymap.set("v", "<leader>cf", range_formatting, { desc = "Range Formatting" })
     end,
   },
 }
