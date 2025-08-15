@@ -112,6 +112,8 @@ end)
 vim.cmd("ca wq bd!")
 vim.cmd("ca q bd!")
 
+vim.cmd("ca Quit quit")
+
 vim.keymap.set("n", "<leader>kb", ':VimuxRunCommand "webdev serve"<CR>')
 vim.keymap.set("n", "<leader>kg", ':VimuxRunCommand "lazygit"<CR>')
 vim.keymap.set("n", "<leader>gi", ":Git<CR>", { desc = "Git Fugitive" })
