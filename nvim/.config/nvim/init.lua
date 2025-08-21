@@ -71,6 +71,31 @@ vim.opt.scrolloff = 10
 
 -- Set highlight on search, but clear on pressing <Esc> in normal mode
 vim.opt.hlsearch = true
+
+vim.diagnostic.config({
+  virtual_text = false,
+  virtual_lines = { current_line = true },
+  inline = true, -- Enable inline diagnostics by default
+  signs = {
+    active = true,
+    text = {
+      [vim.diagnostic.severity.ERROR] = "",
+      [vim.diagnostic.severity.WARN] = "",
+      [vim.diagnostic.severity.INFO] = "",
+      [vim.diagnostic.severity.HINT] = "",
+    },
+  },
+  underline = true,
+  update_in_insert = false,
+  severity_sort = true,
+  float = {
+    border = "rounded",
+    source = "always",
+    header = "",
+    prefix = "",
+  },
+})
+
 vim.keymap.set("n", "<Esc>", "<cmd>nohlsearch<CR>")
 
 -- NOTE: This won't work in all terminal emulators/tmux/etc. Try your own mapping
@@ -621,6 +646,21 @@ require("lazy").setup({
         },
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
       }
+
+      lspconfig.eslint.setup {
+        capabilities = capabilities,
+        on_attach = on_attach,
+        init_options = {
+          plugins = { -- I think this was my breakthrough that made it work
+            {
+              name = "eslint-plugin-vue",
+              location = "c:/nvm4w/nodejs/node_modules/eslint-plugin-vue",
+              languages = { "vue" },
+            },
+          },
+        },
+        filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue", "html", "css", },
+      }
     end,
   },
   { -- Autocompletion
@@ -953,5 +993,16 @@ require("custom.kevin")
 
 vim.cmd.highlight('DiagnosticUnderlineError guifg=#D64A4A gui=underline')
 
+-- Add after vim.diagnostic.config in init.lua
+vim.api.nvim_set_hl(0, "DiagnosticInlineError", { fg = "#FF3333", bg = "#4A2A2A", bold = true, underline = false })
+vim.api.nvim_set_hl(0, "DiagnosticInlineWarn", { fg = "#FFFF33", bg = "#4A4A2A", bold = true, underline = false })
+vim.api.nvim_set_hl(0, "DiagnosticInlineInfo", { fg = "#33FFFF", bg = "#2A4A4A", bold = true, underline = false })
+vim.api.nvim_set_hl(0, "DiagnosticInlineHint", { fg = "#33FF33", bg = "#2A4A2A", bold = true, underline = false })
+vim.api.nvim_set_hl(0, "DiagnosticVirtualTextError", { fg = "#FF6666", italic = true })
+vim.api.nvim_set_hl(0, "DiagnosticVirtualTextWarn", { fg = "#FFFF66", italic = true })
+vim.api.nvim_set_hl(0, "DiagnosticVirtualTextInfo", { fg = "#66FFFF", italic = true })
+vim.api.nvim_set_hl(0, "DiagnosticVirtualTextHint", { fg = "#66FF66", italic = true })
+
 -- The line beneath this is called `modeline`. See `:help modeline`
+-- vim: ts=2 sts=2 sw=2 et
 -- vim: ts=2 sts=2 sw=2 et

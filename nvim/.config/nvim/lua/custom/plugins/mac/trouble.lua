@@ -1,19 +1,10 @@
-return {
-  {
-    "folke/trouble.nvim",
-    config = function()
-      require("trouble").setup({
-        modes = {
-          diagnostics = {
-            focus = true,
-          },
-        },
-        win = {
-          wo = {
-            wrap = true,
-          },
-        },
-      })
-    end,
+return
+{
+  "folke/trouble.nvim",
+  version = "*",   -- Latest version
+  dependencies = { "nvim-tree/nvim-web-devicons" },
+  opts = {
+    mode = "diagnostics",
+    auto_close = true,
   },
 }
