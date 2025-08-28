@@ -298,10 +298,6 @@ require("lazy").setup({
         },
       })
 
-      local mason_registry = require("mason-registry")
-      local vue_language_server_path = mason_registry.get_package("vue-language-server"):get_install_path()
-        .. "/node_modules/@vue/language-server"
-
       local lspconfig = require("lspconfig")
       lspconfig.dartls.setup({
         capabilities = capabilities,
@@ -318,7 +314,7 @@ require("lazy").setup({
           plugins = {
             {
               name = "@vue/typescript-plugin",
-              location = vue_language_server_path,
+              location = "C:/tools/node_modules/@vue/language-server",
               languages = { "vue" },
             },
           },
