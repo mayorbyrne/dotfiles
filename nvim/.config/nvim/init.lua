@@ -65,7 +65,7 @@ vim.opt.scrolloff = 10
 -- Configure diagnostics for Neovim 0.11
 vim.diagnostic.config({
   virtual_text = true, -- Enable virtual text for diagnostics
-  inline = false, -- Set to true for inline diagnostics (optional)
+  inline = false,      -- Set to true for inline diagnostics (optional)
   signs = {
     text = {
       [vim.diagnostic.severity.ERROR] = "",
@@ -116,7 +116,7 @@ vim.opt.autochdir = true
 
 -- [[ Configure Plugins ]]
 require("lazy").setup({
-  { "numToStr/Comment.nvim", opts = {} },
+  { "numToStr/Comment.nvim",      opts = {} },
 
   {
     "lewis6991/gitsigns.nvim",
@@ -170,7 +170,7 @@ require("lazy").setup({
         end,
       },
       { "nvim-telescope/telescope-ui-select.nvim" },
-      { "nvim-tree/nvim-web-devicons", enabled = true },
+      { "nvim-tree/nvim-web-devicons",            enabled = true },
     },
     config = function()
       local actions = require("telescope.actions")
@@ -185,7 +185,7 @@ require("lazy").setup({
           border = true,
         },
         extensions = {
-          ["ui-select"] = { require("telescope.themes").get_dropdown() },
+          ["ui-select"] = { require("telescope.themes").get_dropdown({ initial_mode = "normal" }) },
         },
       })
 
@@ -212,7 +212,7 @@ require("lazy").setup({
   {
     "neovim/nvim-lspconfig",
     dependencies = {
-      { "mason-org/mason.nvim", version = "^1.0.0" },
+      { "mason-org/mason.nvim",           version = "^1.0.0" },
       { "mason-org/mason-lspconfig.nvim", version = "^1.0.0" },
       "WhoIsSethDaniel/mason-tool-installer.nvim",
       { "j-hui/fidget.nvim", opts = {} },
