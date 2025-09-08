@@ -79,7 +79,7 @@ wezterm.on(
   end
 )
 
-config.font = wezterm.font("Fira Code", { weight = "DemiBold" })
+config.font = wezterm.font("FiraCode Nerd Font", { weight = "DemiBold" })
 config.font_size = 12
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
