@@ -1,3 +1,4 @@
+
 -- Disable netrw
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
@@ -227,12 +228,10 @@ require("lazy").setup({
             vim.keymap.set("n", keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
           end
 
-          -- Jump to the definition of the word under your cursor.
-          --  This is where a variable was first declared, or where a function is defined, etc.
-          --  To jump back, press <C-t>.
-          map("gd", require("telescope.builtin").lsp_definitions({ initial_mode = "normal" }), "[G]oto [D]efinition")
-
-          -- Find references for the word under your cursor.
+          map("gd", function()
+            require("telescope.builtin").lsp_definitions({ initial_mode = "normal" })
+          end
+          , "[G]oto [D]efinition")
           map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
           map("gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
           map("<leader>D", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
@@ -323,7 +322,7 @@ require("lazy").setup({
           plugins = {
             {
               name = "@vue/typescript-plugin",
-              location = "~/tools/node_modules/@vue/language-server",
+              location = "/Users/Q1524/tools/node_modules/@vue/language-server",
               languages = { "vue" },
             },
           },
