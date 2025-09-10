@@ -3,14 +3,24 @@ local wezterm = require("wezterm")
 local mux = wezterm.mux
 -- This will hold the configuration.
 local config = wezterm.config_builder()
+local launch_menu = {}
+
+-- In newer versions of wezterm, use the config_builder which will
+-- help provide clearer error messages
+if wezterm.config_builder then
+  config = wezterm.config_builder()
+end
+
+--- Set Pwsh as the default on Windows
+config.default_prog = { "powershell.exe", "-NoLogo" }
+
+config.tab_bar_at_bottom = true
 
 config.check_for_updates = true
 
 -- This is where you actually apply your config choices
 
-config.hide_tab_bar_if_only_one_tab = true
-config.tab_bar_at_bottom = true
-
+config.hide_tab_bar_if_only_one_tab = false
 -- Use the defaults as a base
 config.hyperlink_rules = wezterm.default_hyperlink_rules()
 
@@ -21,76 +31,21 @@ config.color_scheme = "tokyonight_night"
 config.colors = {
   background = "#1c1c1c",
   cursor_bg = "#ffd900",
-  tab_bar = {
-    background = "#ffffff",
-    -- The color of the inactive tab bar edge/divider
-    inactive_tab_edge = "transparent",
-  },
 }
 
--- This function returns the suggested title for a tab.
--- It prefers the title that was set via `tab:set_title()`
--- or `wezterm cli set-tab-title`, but falls back to the
--- title of the active pane in that tab.
-function tab_title(tab_info)
-  local title = tab_info.tab_title
-  -- if the tab title is explicitly set, take that
-  if title and #title > 0 then
-    return title
-  end
-  -- Otherwise, use the title from the active pane
-  -- in that tab
-  return tab_info.active_pane.title
-end
-
--- The filled in variant of the < symbol
-local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
-
--- The filled in variant of the > symbol
-local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
-
-wezterm.on(
-  'format-tab-title',
-  function(tab, tabs, panes, config, hover, max_width)
-    local title = tab_title(tab)
-    if tab.is_active then
-      return {
-        { Background = { Color = '#966dd9' } },
-        { Foreground = { Color = '#ffffff' } },
-        { Text = '   ' .. title .. '   ' },
-      }
-
-    else
-      return {
-        { Background = { Color = '#4b5378' } },
-        { Foreground = { Color = '#ffffff' } },
-        { Text = '   ' .. title .. '   ' },
-      }
-    end
-    if tab.is_last_active then
-      -- Green color and append '*' to previously active tab.
-      return {
-        { Background = { Color = 'green' } },
-        { Foreground = { Color = 'white' } },
-        { Text = ' ' .. title .. '*' },
-      }
-    end
-    return title
-  end
-)
-
-config.font = wezterm.font("Fira Code", { weight = "DemiBold" })
+config.font = wezterm.font("FiraCode Nerd Font", { weight = "DemiBold" })
 config.font_size = 12
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {
-  border_bottom_height = "0.1cell",
+  -- border_bottom_height = "0.6cell",
   border_bottom_color = "#123456",
 }
 
 config.audible_bell = "Disabled"
 
--- and finally, return the configuration to wezterm
+config.window_decorations = "INTEGRATED_BUTTONS|RESIZE"
+
 wezterm.on("trigger-workspace", function(cmd)
   -- allow `wezterm start -- something` to affect what we spawn
   -- in our initial window
@@ -99,10 +54,7 @@ wezterm.on("trigger-workspace", function(cmd)
     args = cmd.args
   end
 
-  local project_dir = "/Users/Q1524/Documents/" .. args[1]
-
-  print(project_dir)
-
+  local project_dir = "d:/git/" .. args[1]
   local tab, pane, window = mux.spawn_window({
     workspace = "work",
     cwd = project_dir,
@@ -158,123 +110,60 @@ else
   config.default_prog = wezterm.Default_prog
 end
 
+config.window_frame = {
+  -- The font used in the tab bar.
+  -- Roboto Bold is the default; this font is bundled
+  -- with wezterm.
+  -- Whatever font is selected here, it will have the
+  -- main font setting appended to it to pick up any
+  -- fallback fonts you may have used there.
+  font = wezterm.font({ family = "Roboto", weight = "Bold" }),
+
+  -- The size of the font in the tab bar.
+  -- Default to 10.0 on Windows but 12.0 on other systems
+  font_size = 9.0,
+}
+
+config.colors = {
+  tab_bar = {
+    -- The color of the inactive tab bar edge/divider
+    inactive_tab_edge = "white",
+    -- The active tab is the one that has focus in the window
+    active_tab = {
+      -- The color of the background area for the tab
+      bg_color = "#a37ade",
+      -- The color of the text for the tab
+      fg_color = "#fff",
+    },
+    inactive_tab = {
+      -- The color of the background area for the tab
+      bg_color = "#525c81",
+      -- The color of the text for the tab
+      fg_color = "white",
+    },
+  },
+}
+
 config.keys = {
   {
+    key = "w",
+    mods = "CTRL",
+    action = wezterm.action.CloseCurrentPane({ confirm = false }),
+  },
+  {
     key = "v",
-    mods = "CMD",
+    mods = "CTRL",
     action = wezterm.action.PasteFrom("Clipboard"),
   },
   {
-    key = "j",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "j",
-      mods = "CTRL",
-    }),
+    key = "t",
+    mods = "CTRL",
+    action = wezterm.action.SpawnTab("CurrentPaneDomain"),
   },
   {
-    key = "y",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "y",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "o",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "o",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "i",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "i",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "d",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "d",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "u",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "u",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "n",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "n",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "p",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "p",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "h",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "h",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "l",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "l",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "k",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "k",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "j",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "j",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "b",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "b",
-      mods = "CTRL",
-    }),
-  },
-  {
-    key = "r",
-    mods = "CMD",
-    action = wezterm.action.SendKey({
-      key = "r",
-      mods = "CTRL",
-    }),
+    key = "w",
+    mods = "CTRL",
+    action = wezterm.action.CloseCurrentTab({ confirm = true }),
   },
   {
     key = "1",
@@ -312,5 +201,17 @@ config.keys = {
     action = wezterm.action.ActivateTab(6),
   },
 }
+
+for i = 1, 8 do
+  -- CTRL+ALT + number to move to that position
+  table.insert(config.keys, {
+    key = tostring(i),
+    mods = "CTRL|ALT",
+    action = wezterm.action.MoveTab(i - 1),
+  })
+end
+
+--- Default config settings
+config.launch_menu = launch_menu
 
 return config
