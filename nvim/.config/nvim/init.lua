@@ -65,7 +65,7 @@ vim.opt.scrolloff = 10
 -- Configure diagnostics for Neovim 0.11
 vim.diagnostic.config({
   virtual_text = true, -- Enable virtual text for diagnostics
-  inline = false,      -- Set to true for inline diagnostics (optional)
+  inline = false,     -- Set to true for inline diagnostics (optional)
   signs = {
     text = {
       [vim.diagnostic.severity.ERROR] = "",
@@ -229,8 +229,7 @@ require("lazy").setup({
 
           map("gd", function()
             require("telescope.builtin").lsp_definitions({ initial_mode = "normal" })
-          end
-          , "[G]oto [D]efinition")
+          end, "[G]oto [D]efinition")
           map("gr", require("telescope.builtin").lsp_references, "[G]oto [R]eferences")
           map("gI", require("telescope.builtin").lsp_implementations, "[G]oto [I]mplementation")
           map("<leader>D", require("telescope.builtin").lsp_type_definitions, "Type [D]efinition")
@@ -247,7 +246,8 @@ require("lazy").setup({
 
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client.server_capabilities.documentHighlightProvider then
-            local highlight_augroup = vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
+            local highlight_augroup =
+                vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
             vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
               buffer = event.buf,
               group = highlight_augroup,
@@ -315,7 +315,7 @@ require("lazy").setup({
         },
       })
 
-      lspconfig.ts_ls.setup {
+      lspconfig.ts_ls.setup({
         capabilities = capabilities,
         init_options = {
           plugins = {
@@ -327,7 +327,7 @@ require("lazy").setup({
           },
         },
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
-      }
+      })
     end,
   },
 
@@ -347,7 +347,9 @@ require("lazy").setup({
           {
             "rafamadriz/friendly-snippets",
             config = function()
-              require("luasnip.loaders.from_vscode").lazy_load()
+              require("luasnip.loaders.from_vscode").lazy_load({
+                paths = { "C:/Users/Q1524/AppData/Roaming/Code/User/snippets/" },
+              })
             end,
           },
         },
@@ -537,6 +539,6 @@ require("lazy").setup({
 
 require("custom.kevin")
 
-vim.cmd.highlight('DiagnosticUnderlineError guifg=#D64A4A gui=underline')
+vim.cmd.highlight("DiagnosticUnderlineError guifg=#D64A4A gui=underline")
 
 -- vim: ts=2 sts=2 sw=2 et
