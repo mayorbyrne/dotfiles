@@ -499,7 +499,6 @@ require("lazy").setup({
         "luadoc",
         "markdown",
         "query",
-        "tmux",
         "typescript",
         "vim",
         "vimdoc",
