@@ -1,0 +1,172 @@
+{
+  "Code Section": {
+    "prefix": "addCodeSection",
+    "body": [
+      "//==========================================",
+      "// BEGIN $1",
+      "//==========================================",
+      "",
+      "//==========================================",
+      "// END $1",
+      "//=========================================="
+    ],
+    "description": "Add Code Section"
+  },
+
+  "printClip": {
+    "scope": "dart",
+    "prefix": "printClipboard",
+    "body": "print('$CLIPBOARD : ${$CLIPBOARD}');",
+    "description": "Print clipboard"
+  },
+
+  "getterSetter": {
+    "scope": "dart",
+    "prefix": "getterSetter",
+    "body": ["bool get $1 => _$1;", "set $1(bool value) => _$1 = value;"]
+  },
+
+  "getterSetterJson-bool": {
+    "scope": "dart",
+    "prefix": "getterSetterJson-bool",
+    "body": [
+      "bool get $1 => _data['$1'];",
+      "set $1(bool value) => _data['$1'] = value;"
+    ]
+  },
+
+  "getterSetterJson-string": {
+    "scope": "dart",
+    "prefix": "getterSetterJson-string",
+    "body": [
+      "String get $1 => _data['$1'] ?? '';",
+      "set $1(String value) => _data['$1'] = value;"
+    ]
+  },
+
+  "getterSetterJson-int": {
+    "scope": "dart",
+    "prefix": "getterSetterJson-int",
+    "body": [
+      "int get $1 => _data['$1'] ?? -1;",
+      "set $1(int value) => _data['$1'] = value;"
+    ]
+  },
+
+  "wrapInDelay": {
+    "scope": "dart",
+    "prefix": "wrapInDelay",
+    "body": [
+      "new Future.delayed(new Duration(milliseconds: 60), ()",
+      "{",
+      "  $CLIPBOARD",
+      "});"
+    ]
+  },
+
+  "logMetrics": {
+    "scope": "dart",
+    "prefix": "logMetrics",
+    "body": [
+      "new Future.delayed(new Duration(milliseconds: 60), ()",
+      "{",
+      "  AccessibilityEngine().logMetrics();",
+      "});"
+    ]
+  },
+
+  "console.log": {
+    "scope": "dart",
+    "prefix": "console.log",
+    "body": "print('$CLIPBOARD : ${$CLIPBOARD}');"
+  },
+
+  "logXY": {
+    "prefix": "logXY",
+    "body": [
+      " Shape target = new Shape()",
+      "  ..graphics.rect(0, 0, 10, 10)",
+      "  ..graphics.fillColor(Color.Green)",
+      "  ..addTo(this.stage!);",
+      "",
+      "html.window.onKeyDown.listen((html.KeyboardEvent e)",
+      "{",
+      "",
+      "   switch (e.keyCode)",
+      "   {",
+      "      case 37: // left",
+      "         (e.shiftKey) ? target.x -= 10 : target.x --;",
+      "      break;",
+      "",
+      "      case 38: // up",
+      "         (e.shiftKey) ? target.y -= 10 : target.y --;",
+      "      break;",
+
+      "      case 39: // right",
+      "         (e.shiftKey) ? target.x += 10 : target.x ++;",
+      "      break;",
+      "",
+      "      case 40: // down",
+      "         (e.shiftKey) ? target.y += 10 : target.y ++;",
+      "      break;",
+      "",
+
+      "      default:",
+      "         return;",
+      "   }",
+      "",
+
+      "   print('${target.x.round()} : ${target.y.round()}');",
+      "});"
+    ],
+    "description": "use arrow keys to move an object. best for StageXL objects that can't be dragged"
+  },
+
+  "classSetup": {
+    "scope": "dart",
+    "prefix": "classSetup",
+    "body": [
+      "import 'package:stagexl/stagexl.dart';",
+      "",
+      "class $1 extends Sprite",
+      "{",
+      "  bool _enabled = false;",
+      "",
+      "  bool get enabled => _enabled;",
+      "  set enabled(bool value) => value ? _enable() : _disable();",
+      "",
+      "  $1()",
+      "  {",
+      "    _buildGui();",
+      "  }",
+      "",
+      "  void dispose()",
+      "  {",
+      "    this.children.clear();",
+      "  }",
+      "",
+      "  void init()",
+      "  {",
+      "",
+      "  }",
+      "",
+      "  void _enable()",
+      "  {",
+      "    if (_enabled) return;",
+      "",
+      "    _enabled = true;",
+      "  }",
+      "",
+      "  void _disable()",
+      "  {",
+      "    _enabled = false;",
+      "  }",
+      "",
+      "  void _buildGui()",
+      "  {",
+      "",
+      "  }",
+      "}"
+    ]
+  }
+}
