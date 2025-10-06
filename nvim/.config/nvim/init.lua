@@ -353,7 +353,7 @@ require("lazy").setup({
             "rafamadriz/friendly-snippets",
             config = function()
               require("luasnip.loaders.from_vscode").lazy_load({
-                paths = { "C:/Users/Q1524/AppData/Roaming/Code/User/snippets/"},
+                paths = { "/Users/Q1524/tools/snippets"},
               })
               require("luasnip.loaders.from_vscode").lazy_load()
             end,
