@@ -74,8 +74,10 @@ autocmd FileType dart,js,ts,html,css,md autocmd BufWritePre <buffer> %s/\s\+$//e
 -- [[ Basic Keymaps ]]
 vim.keymap.set("n", "d", '"_d', {})
 vim.keymap.set("v", "d", '"_d', {})
+vim.keymap.set("n", "D", '"_D', {})
 vim.keymap.set("n", "c", '"_c', {})
 vim.keymap.set("v", "c", '"_c', {})
+vim.keymap.set("n", "C", '"_C', {})
 vim.keymap.set("n", "diw", '"_diw', {})
 vim.keymap.set("v", "diw", '"_diw', {})
 vim.keymap.set("n", "ciw", '"_ciw', {})
@@ -93,6 +95,7 @@ vim.keymap.set("i", "<C-J>", 'copilot#Accept("\\<CR>")', {
 })
 vim.g.copilot_no_tab_map = true
 vim.keymap.set("n", "<leader>cc", ":CopilotChatToggle<CR>", { desc = "Copilot Chat" })
+vim.keymap.set("n", "<leader>cx", ":CopilotChatCommit<CR>", { desc = "Copilot Chat Commit" })
 
 vim.keymap.set("n", "<leader>dd", ":Dashboard<CR>")
 vim.keymap.set("n", "<leader>dr", ":Telescope oldfiles<CR>")
