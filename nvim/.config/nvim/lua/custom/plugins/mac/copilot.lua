@@ -1,14 +1,17 @@
 return {
-  { "github/copilot.vim" },
+  {
+    "github/copilot.vim",
+    version = "1.41.0"
+  },
   {
     "CopilotC-Nvim/CopilotChat.nvim",
     dependencies = {
-      { "github/copilot.vim" }, -- or zbirenbaum/copilot.lua
+      { "github/copilot.vim" },    -- or zbirenbaum/copilot.lua
       { "nvim-lua/plenary.nvim" }, -- for curl, log wrapper
     },
-    build = "make tiktoken",    -- Only on MacOS or Linux
+    build = "make tiktoken",       -- Only on MacOS or Linux
     opts = {
-      debug = true,             -- Enable debug mode
+      debug = true,                -- Enable debug mode
       prompts = {
         Commit = {
           prompt = [[
