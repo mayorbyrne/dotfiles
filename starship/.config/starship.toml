@@ -1,32 +1,36 @@
-# Match original prompt: green path + git status + white $
+# Match git-prompt.sh from mayorbyrne/dotfiles
 format = """
-[](green)$directory\
+[](white)$directory\
 $git_branch\
 $git_status\
 [](white) \\$ """
 
 [directory]
-style = "green"
+style = "white"
 format = "[$path]($style)"
 truncation_length = 100
 truncate_to_repo = false
 
 [git_branch]
-style = "white"
-format = " on [$branch]($style)"
+style = "bright-cyan"
+format = " [\\[](bright-yellow)[$branch]($style)"
 
 [git_status]
-style = "white"
-format = '([\[$all_status$ahead_behind\]]($style))'
-ahead = "⇡${count}"
-behind = "⇣${count}"
-diverged = "⇕${ahead_count}⇣${behind_count}"
-untracked = "?"
-stashed = "\\$"
-modified = "!"
-staged = "+"
-renamed = "»"
-deleted = "✘"
+format = '([$ahead_behind]($style)([+$staged ~$renamed -$deleted ](green))([!$conflicted ](green))([ |](bright-yellow))([+$untracked ~$modified -$deleted ](red))([!$conflicted](red))$stashed[\]](bright-yellow))'
+style = "bright-yellow"
+ahead = "↑${count} "
+behind = "↓${count} "
+diverged = "↕${ahead_count}↓${behind_count} "
+up_to_date = "≡ "
+untracked = "${count} "
+stashed = ""
+modified = "${count} "
+staged = "${count} "
+renamed = "${count} "
+deleted = "${count} "
+conflicted = "${count}"
+ignore_submodules = false
+disabled = false
 
 [character]
 disabled = true
