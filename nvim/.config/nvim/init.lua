@@ -1,4 +1,3 @@
-
 -- Disable netrw
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
@@ -178,10 +177,10 @@ require("lazy").setup({
       require("telescope").setup({
         defaults = {
           sorting_strategy = "ascending",
-          layout_strategy = "horizontal",
+          layout_strategy = "vertical",
           layout_config = {
             prompt_position = "top",
-            -- preview_cutoff = 10000000000000000000,
+            preview_cutoff = 10000000000000000000,
           },
           border = true,
         },
@@ -301,25 +300,23 @@ require("lazy").setup({
           function(server_name)
             local server = servers[server_name] or {}
             server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-            vim.lsp.config[server_name] = server
-            vim.lsp.enable(server_name)
+            require("lspconfig")[server_name].setup(server)
           end,
         },
       })
 
-      vim.lsp.config.dartls = {
+      local lspconfig = require("lspconfig")
+      lspconfig.dartls.setup({
         capabilities = capabilities,
         settings = {
           dart = {
             lineLength = 300,
           },
         },
-      }
-      vim.lsp.enable('dartls')
+      })
 
-      vim.lsp.config.ts_ls = {
+      lspconfig.ts_ls.setup({
         capabilities = capabilities,
-        cmd = { 'typescript-language-server', '--stdio' },
         init_options = {
           plugins = {
             {
@@ -330,8 +327,7 @@ require("lazy").setup({
           },
         },
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
-      }
-      vim.lsp.enable('ts_ls')
+      })
     end,
   },
 
