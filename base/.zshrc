@@ -16,19 +16,15 @@ alias gfp="git fetch -p"
 alias grh="git reset --hard"
 alias mux="bash ~/.config/scripts/mux.sh"
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion export NVM_DIR="$HOME/.nvm"
-
 export PATH=$HOME/.npm-global/bin:$HOME/Desktop/dart-sdk/bin:$HOME/.config/scripts:$PATH
 source ~/git-prompt.sh
 
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
 
-precmd() {
- __posh_git_ps1 '$fg[green]%~$fg[white]' ' $ '
-}
+# Fast prompt with full git status (use starship)
+eval "$(starship init zsh)"
+
 export PATH="/usr/local/sbin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
 export PATH="$PATH":"$HOME/.pub-cache/bin"
 
