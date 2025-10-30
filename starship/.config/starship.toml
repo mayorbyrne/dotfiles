@@ -13,7 +13,7 @@ truncate_to_repo = false
 
 [git_branch]
 style = "bright-cyan"
-format = " [\\[](bright-yellow)[$branch]($style)"
+format = " [\\[](bright-yellow)[$branch]($style) "
 
 [git_status]
 format = '([$ahead_behind]($style)([+$staged ~$renamed -$deleted ](green))([!$conflicted ](green))([ |](bright-yellow))([+$untracked ~$modified -$deleted ](red))([!$conflicted](red))$stashed[\]](bright-yellow))'
