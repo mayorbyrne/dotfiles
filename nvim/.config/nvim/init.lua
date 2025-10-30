@@ -301,23 +301,25 @@ require("lazy").setup({
           function(server_name)
             local server = servers[server_name] or {}
             server.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server.capabilities or {})
-            require("lspconfig")[server_name].setup(server)
+            vim.lsp.config[server_name] = server
+            vim.lsp.enable(server_name)
           end,
         },
       })
 
-      local lspconfig = require("lspconfig")
-      lspconfig.dartls.setup({
+      vim.lsp.config.dartls = {
         capabilities = capabilities,
         settings = {
           dart = {
             lineLength = 300,
           },
         },
-      })
+      }
+      vim.lsp.enable('dartls')
 
-      lspconfig.ts_ls.setup({
+      vim.lsp.config.ts_ls = {
         capabilities = capabilities,
+        cmd = { 'typescript-language-server', '--stdio' },
         init_options = {
           plugins = {
             {
@@ -328,7 +330,8 @@ require("lazy").setup({
           },
         },
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
-      })
+      }
+      vim.lsp.enable('ts_ls')
     end,
   },
 
