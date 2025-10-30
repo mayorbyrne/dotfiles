@@ -1,14 +1,6 @@
-typeset -gaU path=(
-  /home/linuxbrew/.linuxbrew/bin
-  /home/linuxbrew/.linuxbrew/sbin
-  $path
-)
-
 # Add deno completions to search path
 if [[ ":$FPATH:" != *":/Users/Q1524/.zsh/completions:"* ]]; then export FPATH="/Users/Q1524/.zsh/completions:$FPATH"; fi
-# Path to your oh-my-zsh installation.
-export ZSH=$HOME/.oh-my-zsh
-# ZSH_THEME="kevin" # set by `omz`
+
 plugins=(git)
 
 alias gs="git status"
@@ -28,6 +20,7 @@ eval "$(starship init zsh)"
 export PATH="/usr/local/sbin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
 export PATH="$PATH":"$HOME/.pub-cache/bin"
 
-source $ZSH/oh-my-zsh.sh
-
 eval "$(fnm env --use-on-cd --shell zsh)"
+
+bindkey '\e[A' history-search-backward
+bindkey '\e[B' history-search-forward
