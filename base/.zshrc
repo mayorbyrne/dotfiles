@@ -22,5 +22,8 @@ export PATH="$PATH":"$HOME/.pub-cache/bin"
 
 eval "$(fnm env --use-on-cd --shell zsh)"
 
-bindkey '\e[A' history-search-backward
-bindkey '\e[B' history-search-forward
+bindkey '\e[A' history-beginning-search-backward
+bindkey '\e[B' history-beginning-search-forward
+
+# Initialize completion
+autoload -U compinit; compinit
