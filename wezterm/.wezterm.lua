@@ -80,7 +80,7 @@ wezterm.on(
 )
 
 config.font = wezterm.font("FiraCode Nerd Font", { weight = "DemiBold" })
-config.font_size = 14
+config.font_size = 12
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {
@@ -99,7 +99,7 @@ wezterm.on("trigger-workspace", function(cmd)
     args = cmd.args
   end
 
-  local project_dir = "/Users/Q1524/Documents/" .. args[1]
+  local project_dir = "D:/git/" .. args[1]
 
   print(project_dir)
 
