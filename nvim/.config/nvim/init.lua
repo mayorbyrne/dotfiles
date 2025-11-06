@@ -321,7 +321,7 @@ require("lazy").setup({
           plugins = {
             {
               name = "@vue/typescript-plugin",
-              location = "/Users/Q1524/tools/node_modules/@vue/language-server",
+              location = "C:/tools/node_modules/@vue/language-server",
               languages = { "vue" },
             },
           },

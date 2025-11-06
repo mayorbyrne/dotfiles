@@ -136,7 +136,35 @@ vim.keymap.set("n", "<leader>qp", ":cprev<CR>", { desc = "Quickfix Previous" })
 vim.keymap.set("n", "<leader>qf", ":cfirst<CR>", { desc = "Quickfix First" })
 vim.keymap.set("n", "<leader>ql", ":clast<CR>", { desc = "Quickfix Last" })
 
-vim.keymap.set("n", "<leader>lr", ":LspRestart<CR>", { desc = "LSP Restart" })
+vim.keymap.set("n", "<leader>lr", function()
+  -- Get all buffers and their attached clients before restart
+  local buf_clients = {}
+  for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(bufnr) then
+      local clients = vim.lsp.get_clients({ bufnr = bufnr })
+      if #clients > 0 then
+        buf_clients[bufnr] = {}
+        for _, client in ipairs(clients) do
+          table.insert(buf_clients[bufnr], client.name)
+        end
+      end
+    end
+  end
+  
+  -- Stop all LSP clients
+  vim.lsp.stop_client(vim.lsp.get_clients())
+  
+  -- Wait for clients to stop and restart
+  vim.defer_fn(function()
+    -- Trigger LSP start on all buffers that had clients
+    for bufnr, _ in pairs(buf_clients) do
+      if vim.api.nvim_buf_is_loaded(bufnr) then
+        local ft = vim.api.nvim_get_option_value("filetype", { buf = bufnr })
+        vim.api.nvim_set_option_value("filetype", ft, { buf = bufnr })
+      end
+    end
+  end, 100)
+end, { desc = "LSP Restart" })
 vim.keymap.set("n", "<leader>li", ":LspInfo<CR>", { desc = "LSP Info" })
 
 vim.keymap.set("n", "<leader>to", ":NvimTreeOpen<CR>", { desc = "NvimTree Open" })

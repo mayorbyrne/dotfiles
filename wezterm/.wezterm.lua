@@ -153,7 +153,7 @@ config.cursor_blink_ease_in = "Constant"
 config.cursor_blink_ease_out = "Constant"
 
 if wezterm.target_triple == "x86_64-pc-windows-msvc" then
-  config.default_prog = { "powershell.exe" }
+  config.default_prog = { "pwsh.exe" }
 else
   config.default_prog = wezterm.Default_prog
 end
