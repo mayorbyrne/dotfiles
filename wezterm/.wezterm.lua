@@ -311,6 +311,16 @@ config.keys = {
     mods = "ALT",
     action = wezterm.action.ActivateTab(6),
   },
+  {
+    key = "t",
+    mods = "CTRL",
+    action = wezterm.action.SpawnTab("CurrentPaneDomain"),
+  },
+  {
+    key = "v",
+    mods = "CTRL",
+    action = wezterm.action.PasteFrom("Clipboard"),
+  },
 }
 
 return config
