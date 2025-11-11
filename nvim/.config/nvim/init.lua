@@ -8,7 +8,7 @@ vim.g.mapleader = " "
 vim.g.maplocalleader = " "
 
 -- Set Nerd Font flag
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = true
 
 -- Enable line numbers
 vim.opt.number = true

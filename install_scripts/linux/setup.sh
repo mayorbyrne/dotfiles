@@ -1,133 +1,225 @@
-#!/bin/sh
-# Description: Setup script for dotfiles
-echo "Install curl..."
-sudo apt install curl
+#!/bin/bash
+# Linux Setup Script
+# Run this script with: bash setup.sh
 
-echo "Install unzip..."
-sudo apt install unzip
+set -e
 
-echo "Installing ZSH..."
-sudo apt install zsh
+echo "===================================="
+echo "Linux Setup Script - Starting Installation"
+echo "===================================="
+echo ""
 
-echo "Add zsh to etc/shells"
-command -v zsh | sudo tee -a /etc/shells
-
-echo "Making zsh default shell..."
-sudo chsh -s $(which zsh) $USER
-
-echo "Installing wezterm..."
-curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/wezterm-fury.gpg
-echo 'deb [signed-by=/etc/apt/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
+# Update package lists
+echo "Updating package lists..."
 sudo apt update
-sudo apt install wezterm
 
-echo "Installing git..."
-sudo apt install git-all
+# Install essential packages
+echo "Installing essential packages..."
+ESSENTIAL_PACKAGES=("curl" "wget" "unzip" "build-essential" "git-all" "zsh")
 
-# install homebrew
-echo "Installing homebrew..."
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+for package in "${ESSENTIAL_PACKAGES[@]}"; do
+    if dpkg -l | grep -q "^ii  $package "; then
+        echo "$package already installed"
+    else
+        echo "Installing $package..."
+        sudo apt install -y "$package"
+    fi
+done
 
-echo >> /home/$USER/.bashrc
-echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/$USER/.bashrc
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# Clone dotfiles first
+DOTFILES_DIR="$HOME/.dotfiles"
+if [ ! -d "$DOTFILES_DIR" ]; then
+    echo "Cloning dotfiles..."
+    git clone https://www.github.com/mayorbyrne/dotfiles.git "$DOTFILES_DIR"
+else
+    echo "Dotfiles directory already exists"
+fi
 
-echo "Installing stow..."
-brew install stow
+# Set zsh as default shell
+if [ "$SHELL" != "$(which zsh)" ]; then
+    echo "Setting zsh as default shell..."
+    command -v zsh | sudo tee -a /etc/shells
+    sudo chsh -s "$(which zsh)" "$USER"
+else
+    echo "zsh already set as default shell"
+fi
 
-echo "Cloning dotfiles..."
-git clone https://www.github.com/mayorbyrne/dotfiles.git ~/.dotfiles
+# Install Homebrew
+if ! command -v brew &> /dev/null; then
+    echo "Installing Homebrew..."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    
+    echo "Configuring Homebrew..."
+    echo >> "$HOME/.bashrc"
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> "$HOME/.bashrc"
+    echo >> "$HOME/.zshrc"
+    echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> "$HOME/.zshrc"
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+else
+    echo "Homebrew already installed"
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+fi
 
-echo "Stowing dotfiles..."
-cd ~/.dotfiles
-stow --adopt -v base
-stow --adopt -v lazygit
-stow --adopt -v nvim
-stow --adopt -v scripts
-stow --adopt -v tmux
-stow --adopt -v wezterm
-stow --adopt -v yazi
-git restore .
-source ~/.zshrc
+# Install packages via Homebrew
+echo "Installing packages via Homebrew..."
+echo "This may take several minutes. Please be patient..."
+echo ""
 
-echo "SWITCH TO wezterm now and continue"
-return 1
+PACKAGES=(
+    "neovim"
+    "lazygit"
+    "yazi"
+    "fzf"
+    "ripgrep"
+    "starship"
+)
 
-echo "Install curl..."
-sudo apt install curl
+for package in "${PACKAGES[@]}"; do
+    if brew list "$package" &> /dev/null; then
+        echo "$package already installed"
+    else
+        echo "Installing $package..."
+        brew install "$package"
+    fi
+done
 
-echo "Install unzip..."
-sudo apt install unzip
+# Install wezterm
+if ! command -v wezterm &> /dev/null; then
+    echo "Installing wezterm..."
+    curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/wezterm-fury.gpg
+    echo 'deb [signed-by=/etc/apt/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
+    sudo apt update
+    sudo apt install -y wezterm
+else
+    echo "wezterm already installed"
+fi
 
-echo "Installing ZSH..."
-sudo apt install zsh
+# Install nvm and Node.js
+if [ ! -d "$HOME/.nvm" ]; then
+    echo "Installing nvm..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+    
+    export NVM_DIR="$HOME/.nvm"
+    [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+else
+    echo "nvm already installed"
+fi
 
-echo "Installing git..."
-sudo apt install git-all
+echo "Installing Node.js LTS..."
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+nvm install --lts
+nvm use --lts
 
-echo "oh my zsh"
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+echo "Installing GitHub Copilot CLI..."
+npm install -g @githubnext/github-copilot-cli
 
-echo "fire up terminal once more and continue"
-return 1
+# Create symlinks for configurations
+echo "Creating configuration symlinks..."
 
-# Install nodejs
-echo "Installing fnm..."
-curl -fsSL https://fnm.vercel.app/install | bash
+# Neovim
+NVIM_TARGET="$HOME/.config/nvim"
+NVIM_SOURCE="$DOTFILES_DIR/nvim/.config/nvim"
 
-echo "Install latest LTS version of node..."
-fnm install --lts
+if [ -L "$NVIM_TARGET" ] || [ -d "$NVIM_TARGET" ]; then
+    rm -rf "$NVIM_TARGET"
+fi
 
-# install homebrew
-echo "Installing homebrew..."
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+mkdir -p "$HOME/.config"
+echo "Creating nvim symlink..."
+ln -sf "$NVIM_SOURCE" "$NVIM_TARGET"
 
-echo >> /home/$USER/.bashrc
-echo 'eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> /home/$USER/.bashrc
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+# Wezterm
+WEZTERM_TARGET="$HOME/.wezterm.lua"
+WEZTERM_SOURCE="$DOTFILES_DIR/wezterm/.wezterm.lua"
 
-echo "Installing programs..."
+if [ -L "$WEZTERM_TARGET" ] || [ -f "$WEZTERM_TARGET" ]; then
+    rm -f "$WEZTERM_TARGET"
+fi
 
-echo "Installing tmux..."
-brew install tmux
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+echo "Creating wezterm config symlink..."
+ln -sf "$WEZTERM_SOURCE" "$WEZTERM_TARGET"
 
-echo "Installing neovim..."
-brew install neovim
+# Lazygit
+LAZYGIT_TARGET="$HOME/.config/lazygit/config.yml"
+LAZYGIT_SOURCE="$DOTFILES_DIR/lazygit/Library/Application Support/lazygit/config.yml"
 
-echo "Installing lazygit..."
-brew install lazygit
+mkdir -p "$HOME/.config/lazygit"
 
-echo "Installing lazyvim..."
-brew install lazyvim
+if [ -L "$LAZYGIT_TARGET" ] || [ -f "$LAZYGIT_TARGET" ]; then
+    rm -f "$LAZYGIT_TARGET"
+fi
 
-echo "Installing yazi..."
-brew install yazi
+echo "Creating lazygit config symlink..."
+ln -sf "$LAZYGIT_SOURCE" "$LAZYGIT_TARGET"
 
-echo "Installing wezterm..."
-curl -fsSL https://apt.fury.io/wez/gpg.key | sudo gpg --yes --dearmor -o /etc/apt/keyrings/wezterm-fury.gpg
-echo 'deb [signed-by=/etc/apt/keyrings/wezterm-fury.gpg] https://apt.fury.io/wez/ * *' | sudo tee /etc/apt/sources.list.d/wezterm.list
-sudo apt update
-sudo apt install wezterm
+# Yazi
+YAZI_TARGET="$HOME/.config/yazi"
+YAZI_SOURCE="$DOTFILES_DIR/yazi/.config/yazi"
 
-echo "Installing fzf..."
-brew install fzf
+if [ -L "$YAZI_TARGET" ] || [ -d "$YAZI_TARGET" ]; then
+    rm -rf "$YAZI_TARGET"
+fi
 
-echo "Installing ripgrep..."
-brew install ripgrep
+echo "Creating yazi config symlink..."
+ln -sf "$YAZI_SOURCE" "$YAZI_TARGET"
 
-echo "build-essentials..."
-sudo apt install build-essential
+# Starship
+STARSHIP_TARGET="$HOME/.config/starship.toml"
+STARSHIP_SOURCE="$DOTFILES_DIR/starship/.config/starship.toml"
 
-echo "firacode"
-sudo apt install fonts-firacode
+if [ -L "$STARSHIP_TARGET" ] || [ -f "$STARSHIP_TARGET" ]; then
+    rm -f "$STARSHIP_TARGET"
+fi
 
-cd ~
-wget https://github.com/GitCredentialManager/git-credential-manager/releases/download/v2.0.935/gcm-linux_amd64.2.0.935.deb
-sudo dpkg -i gcm-linux_amd64.2.0.935.deb
-git-credential-manager configure
-git config --global credential.credentialStore cache
-git config --global user.name "Kevin Moritz"
-git config --global user.email ""
+echo "Creating starship config symlink..."
+ln -sf "$STARSHIP_SOURCE" "$STARSHIP_TARGET"
 
-echo "Done!"
+# Zsh configuration
+ZSH_TARGET="$HOME/.zshrc"
+ZSH_SOURCE="$DOTFILES_DIR/base/.zshrc"
+
+if [ -f "$ZSH_SOURCE" ]; then
+    if [ -L "$ZSH_TARGET" ] || [ -f "$ZSH_TARGET" ]; then
+        rm -f "$ZSH_TARGET"
+    fi
+    echo "Creating zsh config symlink..."
+    ln -sf "$ZSH_SOURCE" "$ZSH_TARGET"
+fi
+
+# Git prompt
+GIT_PROMPT_TARGET="$HOME/.git-prompt.sh"
+GIT_PROMPT_SOURCE="$DOTFILES_DIR/base/git-prompt.sh"
+
+if [ -f "$GIT_PROMPT_SOURCE" ]; then
+    if [ -L "$GIT_PROMPT_TARGET" ] || [ -f "$GIT_PROMPT_TARGET" ]; then
+        rm -f "$GIT_PROMPT_TARGET"
+    fi
+    echo "Creating git-prompt.sh symlink..."
+    ln -sf "$GIT_PROMPT_SOURCE" "$GIT_PROMPT_TARGET"
+fi
+
+# Install FiraCode Nerd Font
+echo "Installing FiraCode Nerd Font..."
+FONT_PATH="$DOTFILES_DIR/fonts/FiraCode Nerd Font-Regular.ttf"
+FONT_DIR="$HOME/.local/share/fonts"
+
+if [ -f "$FONT_PATH" ]; then
+    mkdir -p "$FONT_DIR"
+    cp "$FONT_PATH" "$FONT_DIR/"
+    fc-cache -fv
+    echo "Font installed successfully!"
+else
+    echo "Font file not found, skipping..."
+fi
+
+echo ""
+echo "===================================="
+echo "Setup Complete!"
+echo "===================================="
+echo ""
+echo "Next steps:"
+echo "1. Log out and log back in (or restart) for zsh to be your default shell"
+echo "2. Run 'bash install_scripts/setup_git.sh' to configure git user and credentials"
+echo "3. Open wezterm and run 'nvim' to set up Neovim plugins"
+echo ""
