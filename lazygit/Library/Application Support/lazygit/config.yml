@@ -6,3 +6,4 @@
   # One of: 'none' | 'onlyArrow'  | 'arrowAndNumber'
 gui:
   showDivergenceFromBaseBranch: arrowAndNumber
+  nerdFontsVersion: "3"
