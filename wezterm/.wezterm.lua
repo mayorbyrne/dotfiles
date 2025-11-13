@@ -84,7 +84,7 @@ config.font_size = 12
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {
-  border_bottom_height = "0.1cell",
+  border_bottom_height = "0.1 cell",
   border_bottom_color = "#123456",
 }
 

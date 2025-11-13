@@ -214,7 +214,6 @@ require("lazy").setup({
     dependencies = {
       { "mason-org/mason.nvim",           version = "^1.0.0" },
       { "mason-org/mason-lspconfig.nvim", version = "^1.0.0" },
-      "WhoIsSethDaniel/mason-tool-installer.nvim",
       { "j-hui/fidget.nvim", opts = {} },
       { "folke/neodev.nvim", opts = {} },
     },
@@ -281,21 +280,26 @@ require("lazy").setup({
       local servers = {} -- Moved lua_ls to ~/.config/nvim/lsp/lua_ls.lua
 
       require("mason").setup()
-      local ensure_installed = vim.tbl_keys(servers or {})
-      vim.list_extend(ensure_installed, {
-        "stylua",
-        "cssls",
-        "eslint-lsp",
-        "html",
-        "lua_ls",
-        "prettier",
-        "prettierd",
-        "tailwindcss",
-        "typescript-language-server",
-      })
-      require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
+
+      -- Install formatters/tools via Mason
+      local mason_registry = require("mason-registry")
+      local tools = { "stylua", "prettier", "prettierd" }
+      for _, tool in ipairs(tools) do
+        local p = mason_registry.get_package(tool)
+        if not p:is_installed() then
+          p:install()
+        end
+      end
 
       require("mason-lspconfig").setup({
+        ensure_installed = {
+          "cssls",
+          "eslint",
+          "html",
+          "lua_ls",
+          "tailwindcss",
+          "ts_ls",
+        },
         handlers = {
           function(server_name)
             local server = servers[server_name] or {}
