@@ -114,6 +114,19 @@ nvm use --lts
 echo "Installing GitHub Copilot CLI..."
 npm install -g @githubnext/github-copilot-cli
 
+# Prompt for Vue language server path
+echo ""
+echo "===================================="
+echo "Configuration Paths"
+echo "===================================="
+echo ""
+echo "Please provide the path to your Vue language server."
+echo "This is typically installed via npm and located in your node_modules."
+echo "Example: $HOME/tools/node_modules/@vue/language-server"
+echo ""
+read -p "Vue language server path (press Enter to skip): " VUE_LANGUAGE_SERVER_PATH
+echo ""
+
 # Create symlinks for configurations
 echo "Creating configuration symlinks..."
 
@@ -129,6 +142,12 @@ mkdir -p "$HOME/.config"
 echo "Creating nvim symlink..."
 ln -sf "$NVIM_SOURCE" "$NVIM_TARGET"
 
+# Update nvim init.lua with Vue language server path if provided
+if [ -n "$VUE_LANGUAGE_SERVER_PATH" ]; then
+    echo "Updating nvim config with Vue language server path..."
+    sed -i "s|location = \".*/@vue/language-server\"|location = \"$VUE_LANGUAGE_SERVER_PATH\"|g" "$NVIM_SOURCE/init.lua"
+fi
+
 # Wezterm
 WEZTERM_TARGET="$HOME/.wezterm.lua"
 WEZTERM_SOURCE="$DOTFILES_DIR/wezterm/.wezterm.lua"
@@ -139,6 +158,18 @@ fi
 
 echo "Creating wezterm config symlink..."
 ln -sf "$WEZTERM_SOURCE" "$WEZTERM_TARGET"
+
+# Prompt for wezterm project directory path
+echo ""
+read -p "Enter your default project directory path (press Enter to skip): " PROJECT_DIR_PATH
+echo ""
+
+if [ -n "$PROJECT_DIR_PATH" ]; then
+    echo "Updating wezterm config with project directory..."
+    # Escape forward slashes for sed
+    ESCAPED_PATH=$(echo "$PROJECT_DIR_PATH" | sed 's/\//\\\//g')
+    sed -i "s|local project_dir = \".*\" \.\. args\[1\]|local project_dir = \"$ESCAPED_PATH/\" .. args[1]|g" "$WEZTERM_SOURCE"
+fi
 
 # Lazygit
 LAZYGIT_TARGET="$HOME/.config/lazygit/config.yml"

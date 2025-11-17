@@ -76,6 +76,19 @@ Write-Host "Installing PowerShell modules..." -ForegroundColor Green
 Install-Module -Name posh-git -Scope CurrentUser -Force -SkipPublisherCheck
 Install-Module -Name PSReadLine -Scope CurrentUser -Force -SkipPublisherCheck
 
+# Prompt for Vue language server path
+Write-Host ""
+Write-Host "====================================" -ForegroundColor Cyan
+Write-Host "Configuration Paths" -ForegroundColor Cyan
+Write-Host "====================================" -ForegroundColor Cyan
+Write-Host ""
+Write-Host "Please provide the path to your Vue language server." -ForegroundColor Yellow
+Write-Host "This is typically installed via npm and located in your node_modules." -ForegroundColor Yellow
+Write-Host "Example: C:\Users\YourName\tools\node_modules\@vue\language-server" -ForegroundColor Gray
+Write-Host ""
+$vueLanguageServerPath = Read-Host "Vue language server path (press Enter to skip)"
+Write-Host ""
+
 $nvimTarget = "$env:LOCALAPPDATA\nvim"
 $nvimSource = "$dotfilesDir\nvim\.config\nvim"
 
@@ -85,6 +98,14 @@ if (Test-Path $nvimTarget) {
 
 Write-Host "Creating nvim symlink..." -ForegroundColor Green
 New-Item -ItemType SymbolicLink -Path $nvimTarget -Target $nvimSource -Force | Out-Null
+
+# Update nvim init.lua with Vue language server path if provided
+if ($vueLanguageServerPath) {
+    Write-Host "Updating nvim config with Vue language server path..." -ForegroundColor Green
+    $initLuaPath = "$nvimSource\init.lua"
+    $escapedPath = $vueLanguageServerPath -replace '\\', '\\'
+    (Get-Content $initLuaPath) -replace 'location = ".*/@vue/language-server"', "location = `"$escapedPath`"" | Set-Content $initLuaPath
+}
 
 # PowerShell profile for both PowerShell 5 and PowerShell 6+
 $psProfileSource = "$dotfilesDir\base\Microsoft.PowerShell_profile.ps1"
@@ -128,6 +149,17 @@ if (Test-Path $weztermTarget) {
 
 Write-Host "Creating wezterm config symlink..." -ForegroundColor Green
 New-Item -ItemType SymbolicLink -Path $weztermTarget -Target $weztermSource -Force | Out-Null
+
+# Prompt for wezterm project directory path
+Write-Host ""
+$projectDirPath = Read-Host "Enter your default project directory path (press Enter to skip)"
+Write-Host ""
+
+if ($projectDirPath) {
+    Write-Host "Updating wezterm config with project directory..." -ForegroundColor Green
+    $escapedPath = $projectDirPath -replace '\\', '/'
+    (Get-Content $weztermSource) -replace 'local project_dir = ".*" \.\. args\[1\]', "local project_dir = `"$escapedPath/`" .. args[1]" | Set-Content $weztermSource
+}
 
 $lazygitConfigDir = "$env:APPDATA\lazygit"
 $lazygitTarget = "$lazygitConfigDir\config.yml"
