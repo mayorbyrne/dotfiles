@@ -136,7 +136,25 @@ vim.keymap.set("n", "<leader>qp", ":cprev<CR>", { desc = "Quickfix Previous" })
 vim.keymap.set("n", "<leader>qf", ":cfirst<CR>", { desc = "Quickfix First" })
 vim.keymap.set("n", "<leader>ql", ":clast<CR>", { desc = "Quickfix Last" })
 
-vim.keymap.set("n", "<leader>lr", ":LspRestart<CR>", { desc = "LSP Restart" })
+vim.keymap.set("n", "<leader>lr", function()
+  -- Kill any running webdev serve processes
+  vim.fn.system("pkill -f 'webdev serve'")
+
+  -- Kill any Dart Tooling Daemon processes
+  vim.fn.system("pkill -f 'dart.*tooling-daemon'")
+
+  -- Stop and restart dartls
+  local clients = vim.lsp.get_clients({ name = 'dartls' })
+  for _, client in ipairs(clients) do
+    vim.lsp.stop_client(client.id)
+  end
+
+  -- Wait a moment then trigger reattach
+  vim.defer_fn(function()
+    vim.cmd('edit')
+    vim.notify("Dart LSP and related processes restarted", vim.log.levels.INFO)
+  end, 500)
+end, { desc = "LSP Restart (Full)" })
 vim.keymap.set("n", "<leader>li", ":LspInfo<CR>", { desc = "LSP Info" })
 
 vim.keymap.set("n", "<leader>to", ":NvimTreeOpen<CR>", { desc = "NvimTree Open" })
