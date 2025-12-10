@@ -279,14 +279,15 @@ require("lazy").setup({
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
 
-      local servers = {} -- Moved lua_ls to ~/.config/nvim/lsp/lua_ls.lua
+      local servers = {
+        eslint = {},
+      }
 
       require("mason").setup()
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         "stylua",
         "cssls",
-        "eslint-lsp",
         "html",
         "lua_ls",
         "prettier",
@@ -324,7 +325,7 @@ require("lazy").setup({
           plugins = {
             {
               name = "@vue/typescript-plugin",
-              location = "/Users/Q1524/tools/node_modules/@vue/language-server",
+              location = "C:/tools/node_modules/@vue/language-server",
               languages = { "vue" },
             },
           },
