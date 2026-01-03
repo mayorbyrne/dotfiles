@@ -333,7 +333,7 @@ require("lazy").setup({
           plugins = {
             {
               name = "@vue/typescript-plugin",
-              location = "C:/tools/node_modules/@vue/language-server",
+              location = vim.fn.has('win32') == 1 and "C:/tools/node_modules/@vue/language-server" or "/Users/Q1524/tools/node_modules/@vue/language-server",
               languages = { "vue" },
             },
           },
