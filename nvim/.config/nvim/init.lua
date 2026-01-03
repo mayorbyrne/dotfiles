@@ -247,25 +247,31 @@ require("lazy").setup({
 
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client.server_capabilities.documentHighlightProvider then
-            local highlight_augroup =
-                vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
-            vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-              buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.document_highlight,
-            })
-            vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
-              buffer = event.buf,
-              group = highlight_augroup,
-              callback = vim.lsp.buf.clear_references,
-            })
-            vim.api.nvim_create_autocmd("LspDetach", {
-              group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
-              callback = function(event2)
-                vim.lsp.buf.clear_references()
-                vim.api.nvim_clear_autocmds({ group = "kickstart-lsp-highlight", buffer = event2.buf })
-              end,
-            })
+            -- Disable document highlighting for html/cssls in vue files to avoid spurious highlights
+            local filetype = vim.bo[event.buf].filetype
+            if filetype == "vue" and (client.name == "html" or client.name == "cssls") then
+              client.server_capabilities.documentHighlightProvider = false
+            else
+              local highlight_augroup =
+                  vim.api.nvim_create_augroup("kickstart-lsp-highlight", { clear = false })
+              vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+                buffer = event.buf,
+                group = highlight_augroup,
+                callback = vim.lsp.buf.document_highlight,
+              })
+              vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+                buffer = event.buf,
+                group = highlight_augroup,
+                callback = vim.lsp.buf.clear_references,
+              })
+              vim.api.nvim_create_autocmd("LspDetach", {
+                group = vim.api.nvim_create_augroup("kickstart-lsp-detach", { clear = true }),
+                callback = function(event2)
+                  vim.lsp.buf.clear_references()
+                  vim.api.nvim_clear_autocmds({ group = "kickstart-lsp-highlight", buffer = event2.buf })
+                end,
+              })
+            end
           end
 
           if client and client.server_capabilities.inlayHintProvider and vim.lsp.inlay_hint then
@@ -279,14 +285,17 @@ require("lazy").setup({
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       capabilities = vim.tbl_deep_extend("force", capabilities, require("cmp_nvim_lsp").default_capabilities())
 
-      local servers = {} -- Moved lua_ls to ~/.config/nvim/lsp/lua_ls.lua
+      local servers = {
+        eslint = {},
+        cssls = {},
+        html = {},
+      }
 
       require("mason").setup()
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         "stylua",
         "cssls",
-        "eslint-lsp",
         "html",
         "lua_ls",
         "prettier",
@@ -324,7 +333,7 @@ require("lazy").setup({
           plugins = {
             {
               name = "@vue/typescript-plugin",
-              location = "/Users/Q1524/tools/node_modules/@vue/language-server",
+              location = vim.fn.has('win32') == 1 and "C:/tools/node_modules/@vue/language-server" or "/Users/Q1524/tools/node_modules/@vue/language-server",
               languages = { "vue" },
             },
           },
@@ -332,6 +341,26 @@ require("lazy").setup({
         filetypes = { "typescript", "javascript", "javascriptreact", "typescriptreact", "vue" },
       }
       vim.lsp.enable('ts_ls')
+
+      vim.lsp.config.html = {
+        capabilities = capabilities,
+        filetypes = { "html", "vue" },
+        on_attach = function(client, bufnr)
+          client.server_capabilities.documentFormattingProvider = false
+          client.server_capabilities.documentRangeFormattingProvider = false
+        end,
+      }
+      vim.lsp.enable('html')
+
+      vim.lsp.config.cssls = {
+        capabilities = capabilities,
+        filetypes = { "css", "scss", "less", "vue" },
+        on_attach = function(client, bufnr)
+          client.server_capabilities.documentFormattingProvider = false
+          client.server_capabilities.documentRangeFormattingProvider = false
+        end,
+      }
+      vim.lsp.enable('cssls')
     end,
   },
 
@@ -490,6 +519,7 @@ require("lazy").setup({
       ensure_installed = {
         "bash",
         "c",
+        "css",
         "csv",
         "dart",
         "diff",
@@ -513,9 +543,8 @@ require("lazy").setup({
       auto_install = true,
       highlight = {
         enable = true,
-        additional_vim_regex_highlighting = { "ruby", "html" },
       },
-      indent = { enable = true, disable = { "ruby", "html" } },
+      indent = { enable = true, disable = { "ruby" } },
       sync_install = false, -- Install parsers asynchronously
     },
     config = function(_, opts)
