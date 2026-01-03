@@ -18,7 +18,7 @@ return {
         vim.lsp.buf.format({
           filter = function(client)
             -- print("client.name: " .. client.name)
-            return client.name ~= "ts_ls" and client.name ~= "eslint" and client.name ~= "volar"
+            return client.name ~= "ts_ls" and client.name ~= "eslint" and client.name ~= "volar" and client.name ~= "html" and client.name ~= "cssls"
           end,
         })
       end
