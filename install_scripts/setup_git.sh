@@ -77,9 +77,15 @@ case "$OS_TYPE" in
             echo "Git Credential Manager already installed"
         fi
         
-        git-credential-manager configure
-        git config --global credential.credentialStore cache
-        echo "Git Credential Manager configured to use cache store"
+        if command -v git-credential-manager &> /dev/null; then
+            git-credential-manager configure
+            git config --global credential.credentialStore cache
+            # Disable GUI to avoid SkiaSharp dependency issues
+            git config --global credential.guiPrompt false
+            echo "Git Credential Manager configured to use cache store (GUI disabled)"
+        else
+            echo "Warning: Git Credential Manager installation may have issues. Skipping configuration."
+        fi
         ;;
         
     Darwin*)
