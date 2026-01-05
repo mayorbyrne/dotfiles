@@ -39,8 +39,37 @@ case "$OS_TYPE" in
             GCM_VERSION="2.0.935"
             TEMP_DIR=$(mktemp -d)
             cd "$TEMP_DIR"
-            wget "https://github.com/GitCredentialManager/git-credential-manager/releases/download/v${GCM_VERSION}/gcm-linux_amd64.${GCM_VERSION}.deb"
-            sudo dpkg -i "gcm-linux_amd64.${GCM_VERSION}.deb"
+            
+            # Try package manager-specific installation
+            if command -v pacman &> /dev/null; then
+                # Arch Linux
+                echo "Detected Arch Linux, using AUR..."
+                if command -v yay &> /dev/null; then
+                    yay -S --noconfirm git-credential-manager
+                elif command -v paru &> /dev/null; then
+                    paru -S --noconfirm git-credential-manager
+                else
+                    echo "Installing from tarball (AUR helpers not found)..."
+                    wget "https://github.com/GitCredentialManager/git-credential-manager/releases/download/v${GCM_VERSION}/gcm-linux_amd64.${GCM_VERSION}.tar.gz"
+                    tar -xzf "gcm-linux_amd64.${GCM_VERSION}.tar.gz"
+                    sudo install -m 755 git-credential-manager /usr/local/bin/
+                fi
+            elif command -v dpkg &> /dev/null; then
+                # Debian/Ubuntu
+                wget "https://github.com/GitCredentialManager/git-credential-manager/releases/download/v${GCM_VERSION}/gcm-linux_amd64.${GCM_VERSION}.deb"
+                sudo dpkg -i "gcm-linux_amd64.${GCM_VERSION}.deb"
+            elif command -v rpm &> /dev/null; then
+                # Fedora/RHEL
+                wget "https://github.com/GitCredentialManager/git-credential-manager/releases/download/v${GCM_VERSION}/gcm-linux_amd64.${GCM_VERSION}.rpm"
+                sudo rpm -i "gcm-linux_amd64.${GCM_VERSION}.rpm"
+            else
+                # Generic tarball installation
+                echo "Installing from tarball..."
+                wget "https://github.com/GitCredentialManager/git-credential-manager/releases/download/v${GCM_VERSION}/gcm-linux_amd64.${GCM_VERSION}.tar.gz"
+                tar -xzf "gcm-linux_amd64.${GCM_VERSION}.tar.gz"
+                sudo install -m 755 git-credential-manager /usr/local/bin/
+            fi
+            
             cd -
             rm -rf "$TEMP_DIR"
             echo "Git Credential Manager installed successfully!"
