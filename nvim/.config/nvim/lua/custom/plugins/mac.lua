@@ -20,4 +20,5 @@ return {
   require("custom.plugins.mac.workspace-diagnostics"),
   require("custom.plugins.mac.snippet-converter"),
   require("custom.plugins.mac.neo-test"),
+  require("custom.plugins.mac.nvim-spectre"),
 }
