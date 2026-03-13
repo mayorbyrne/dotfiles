@@ -33,3 +33,24 @@ Set-Alias -Name dpl -Value dart-pub-list
 Set-Alias mux "~/scripts/mux.bat"
 fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 
+# Auto-update Vue Language Server (once per day)
+$vueCheckFile = "$env:TEMP\.vue-language-server-last-check"
+$shouldCheck = $true
+
+if (Test-Path $vueCheckFile) {
+    $lastCheck = Get-Content $vueCheckFile -ErrorAction SilentlyContinue
+    if ($lastCheck) {
+        $lastCheckDate = [DateTime]::Parse($lastCheck)
+        if ((Get-Date) - $lastCheckDate -lt [TimeSpan]::FromDays(1)) {
+            $shouldCheck = $false
+        }
+    }
+}
+
+if ($shouldCheck) {
+    Push-Location "C:\tools"
+    & "C:\tools\update-vue-language-server.ps1"
+    Pop-Location
+    Get-Date -Format "o" | Out-File $vueCheckFile
+}
+
