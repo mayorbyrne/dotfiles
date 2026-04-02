@@ -1,6 +1,7 @@
 return {
   {
     "christoomey/vim-tmux-navigator",
+    cond = function() return vim.fn.executable("tmux") == 1 end,
     cmd = {
       "TmuxNavigateLeft",
       "TmuxNavigateDown",
@@ -18,6 +19,7 @@ return {
   },
   {
     "preservim/vimux",
+    cond = function() return vim.fn.executable("tmux") == 1 end,
     config = function() end,
   },
 }

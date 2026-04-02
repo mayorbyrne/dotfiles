@@ -1,3 +1,6 @@
+-- Suppress built-in intro screen (flashes before custom dashboard)
+vim.opt.shortmess:append("I")
+
 -- Disable netrw
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
@@ -215,7 +218,7 @@ require("lazy").setup({
       { "mason-org/mason.nvim",           version = "^1.0.0" },
       { "mason-org/mason-lspconfig.nvim", version = "^1.0.0" },
       { "j-hui/fidget.nvim", opts = {} },
-      { "folke/neodev.nvim", opts = {} },
+      { "folke/lazydev.nvim", ft = "lua", opts = {} },
     },
     commit = "master",
     config = function()

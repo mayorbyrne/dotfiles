@@ -1,7 +1,6 @@
 return {
   {
     "github/copilot.vim",
-    version = "1.41.0"
   },
   {
     "CopilotC-Nvim/CopilotChat.nvim",
