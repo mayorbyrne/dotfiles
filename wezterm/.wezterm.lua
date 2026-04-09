@@ -119,6 +119,9 @@ wezterm.on("trigger-workspace", function(cmd)
 
   local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
   gitPane:send_text("lazygit\r\n")
+
+  local claudeTab, claudePane = window:spawn_tab({ cwd = project_dir })
+  claudePane:send_text("claude\r\n")
   --
   tab:activate()
   mux.set_active_workspace("work")
