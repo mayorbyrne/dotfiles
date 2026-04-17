@@ -14,7 +14,7 @@ vim.o.guicursor = "i:ver25,a:blinkwait60-blinkoff500-blinkon500"
 
 vim.o.foldlevel = 20
 vim.o.foldmethod = "expr"
-vim.o.foldexpr = "nvim_treesitter#foldexpr()"
+vim.o.foldexpr = "v:lua.vim.treesitter.foldexpr()"
 
 vim.cmd([[
 let g:lsc_auto_map = {

@@ -1,6 +1,18 @@
 -- Suppress built-in intro screen (flashes before custom dashboard)
 vim.opt.shortmess:append("I")
 
+-- Workaround: Neovim 0.12 changed directive match tables from table<id,TSNode>
+-- to table<id,TSNode[]>, but nvim-treesitter's shim still expects single nodes.
+-- Unwrap array captures and guard nil before forwarding.
+local _orig_get_node_text = vim.treesitter.get_node_text
+vim.treesitter.get_node_text = function(node, source, opts)
+  if type(node) == "table" then
+    node = node[1]
+  end
+  if node == nil then return "" end
+  return _orig_get_node_text(node, source, opts)
+end
+
 -- Disable netrw
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
@@ -524,6 +536,10 @@ require("lazy").setup({
       highlight = {
         enable = true,
         additional_vim_regex_highlighting = { "ruby", "html" },
+        disable = function(lang, _)
+          -- Workaround: nil node in conceal query predicates on Neovim 0.12
+          return lang == "markdown_inline"
+        end,
       },
       indent = { enable = true, disable = { "ruby", "html" } },
       sync_install = false, -- Install parsers asynchronously
