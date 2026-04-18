@@ -1,0 +1,235 @@
+
+
+==============================================================================
+vim.lsp:                                                                    ✅
+
+- LSP log level : WARN
+- Log path: C:/Users/Q1524/AppData/Local/nvim-data/lsp.log
+- Log size: 304 KB
+
+vim.lsp: Active Clients ~
+- GitHub Copilot (id: 1)
+  - Version: 1.236.0
+  - Root directory: nil
+  - Command: { "node", "C:\\Users\\Q1524\\AppData\\Local\\nvim-data\\lazy\\copilot.vim/dist/language-server.js", "--stdio" }
+  - Settings: {
+      ["github-enterprise"] = {
+        uri = vim.NIL
+      },
+      http = {
+        proxy = vim.NIL,
+        proxyStrictSSL = vim.NIL
+      }
+    }
+  - Attached buffers: 9
+- eslint (id: 2)
+  - Version: ? (no serverInfo.version response)
+  - Root directory: D:/git/gradebook
+  - Command: { "C:\\Users\\Q1524\\AppData\\Local\\nvim-data\\mason\\bin\\vscode-eslint-language-server.CMD", "--stdio" }
+  - Settings: {
+      codeAction = {
+        disableRuleComment = {
+          enable = true,
+          location = "separateLine"
+        },
+        showDocumentation = {
+          enable = true
+        }
+      },
+      codeActionOnSave = {
+        enable = false,
+        mode = "all"
+      },
+      experimental = {
+        useFlatConfig = true
+      },
+      format = true,
+      nodePath = "",
+      onIgnoredFiles = "off",
+      problems = {
+        shortenToSingleLine = false
+      },
+      quiet = false,
+      rulesCustomizations = {},
+      run = "onType",
+      useESLintClass = false,
+      validate = "on",
+      workingDirectory = {
+        mode = "location"
+      },
+      workspaceFolder = {
+        name = "gradebook",
+        uri = "D:/git/gradebook"
+      }
+    }
+  - Attached buffers: 9
+- ts_ls (id: 3)
+  - Version: ? (no serverInfo.version response)
+  - Root directory: D:/git/gradebook
+  - Command: { "C:\\Users\\Q1524\\AppData\\Local\\nvim-data\\mason\\bin\\typescript-language-server.CMD", "--stdio" }
+  - Settings: vim.empty_dict()
+  - Attached buffers: 9
+- null-ls (id: 4)
+  - Version: ? (no serverInfo.version response)
+  - Root directory: D:/git/gradebook
+  - Command: <function @C:/Users/Q1524/AppData/Local/nvim-data/lazy/none-ls.nvim/lua/null-ls/rpc.lua:61>
+  - Settings: {}
+  - Attached buffers: 9
+
+vim.lsp: Enabled Configurations ~
+
+vim.lsp: File Watcher ~
+- file watching "(workspace/didChangeWatchedFiles)" disabled on all clients
+
+vim.lsp: Position Encodings ~
+- No buffers contain mixed position encodings
+
+*****
+
+==============================================================================
+vim.lsp:                                                                  2 ⚠️
+
+- LSP log level : WARN
+- Log path: C:/Users/Q1524/AppData/Local/nvim-data/lsp.log
+- Log size: 306 KB
+
+vim.lsp: Active Clients ~
+- GitHub Copilot (id: 1)
+  - Version: 1.236.0
+  - Root directory: nil
+  - Command: { "node", "C:\\Users\\Q1524\\AppData\\Local\\nvim-data\\lazy\\copilot.vim/dist/language-server.js", "--stdio" }
+  - Settings: {
+      ["github-enterprise"] = {
+        uri = vim.NIL
+      },
+      http = {
+        proxy = vim.NIL,
+        proxyStrictSSL = vim.NIL
+      }
+    }
+  - Attached buffers: 
+- null-ls (id: 4)
+  - Version: ? (no serverInfo.version response)
+  - Root directory: D:/git/gradebook
+  - Command: <function @C:/Users/Q1524/AppData/Local/nvim-data/lazy/none-ls.nvim/lua/null-ls/rpc.lua:61>
+  - Settings: {}
+  - Attached buffers: 
+- eslint (id: 5)
+  - Version: ? (no serverInfo.version response)
+  - Root directory: D:/git/gradebook
+  - Command: { "vscode-eslint-language-server", "--stdio" }
+  - Settings: {
+      codeAction = {
+        disableRuleComment = {
+          enable = true,
+          location = "separateLine"
+        },
+        showDocumentation = {
+          enable = true
+        }
+      },
+      codeActionOnSave = {
+        enable = false,
+        mode = "all"
+      },
+      experimental = {
+        useFlatConfig = true
+      },
+      format = true,
+      nodePath = "",
+      onIgnoredFiles = "off",
+      problems = {
+        shortenToSingleLine = false
+      },
+      quiet = false,
+      rulesCustomizations = {},
+      run = "onType",
+      useESLintClass = false,
+      validate = "on",
+      workingDirectory = {
+        mode = "auto"
+      },
+      workspaceFolder = {
+        name = "gradebook",
+        uri = "D:/git/gradebook"
+      }
+    }
+  - Attached buffers: 9
+
+vim.lsp: Enabled Configurations ~
+- ⚠️ WARNING 'GitHub Copilot' config not found. Ensure that vim.lsp.config('GitHub Copilot') was called.
+- GitHub Copilot:
+
+- eslint:
+  - before_init: <function @C:/Users/Q1524/AppData/Local/nvim-data/lazy/nvim-lspconfig/lsp/eslint.lua:157>
+  - cmd: { "vscode-eslint-language-server", "--stdio" }
+  - filetypes: javascript, javascriptreact, javascript.jsx, typescript, typescriptreact, typescript.tsx, vue, svelte, astro, htmlangular
+  - handlers: {
+      ["eslint/confirmESLintExecution"] = <function 1>,
+      ["eslint/noLibrary"] = <function 2>,
+      ["eslint/openDoc"] = <function 3>,
+      ["eslint/probeFailed"] = <function 4>
+    }
+  - on_attach: <function @C:/Users/Q1524/AppData/Local/nvim-data/lazy/nvim-lspconfig/lsp/eslint.lua:76>
+  - root_dir: <function @C:/Users/Q1524/AppData/Local/nvim-data/lazy/nvim-lspconfig/lsp/eslint.lua:89>
+  - settings: {
+      codeAction = {
+        disableRuleComment = {
+          enable = true,
+          location = "separateLine"
+        },
+        showDocumentation = {
+          enable = true
+        }
+      },
+      codeActionOnSave = {
+        enable = false,
+        mode = "all"
+      },
+      experimental = {
+        useFlatConfig = false
+      },
+      format = true,
+      nodePath = "",
+      onIgnoredFiles = "off",
+      problems = {
+        shortenToSingleLine = false
+      },
+      quiet = false,
+      rulesCustomizations = {},
+      run = "onType",
+      useESLintClass = false,
+      validate = "on",
+      workingDirectory = {
+        mode = "auto"
+      }
+    }
+  - workspace_required: true
+
+- ⚠️ WARNING 'null-ls' config not found. Ensure that vim.lsp.config('null-ls') was called.
+- null-ls:
+
+- ts_ls:
+  - cmd: { "typescript-language-server", "--stdio" }
+  - commands: {
+      ["editor.action.showReferences"] = <function 1>
+    }
+  - filetypes: javascript, javascriptreact, javascript.jsx, typescript, typescriptreact, typescript.tsx
+  - handlers: {
+      ["_typescript.rename"] = <function 1>
+    }
+  - init_options: {
+      hostInfo = "neovim"
+    }
+  - on_attach: <function @C:/Users/Q1524/AppData/Local/nvim-data/lazy/nvim-lspconfig/lsp/ts_ls.lua:111>
+  - root_dir: <function @C:/Users/Q1524/AppData/Local/nvim-data/lazy/nvim-lspconfig/lsp/ts_ls.lua:56>
+
+
+vim.lsp: File Watcher ~
+- file watching "(workspace/didChangeWatchedFiles)" disabled on all clients
+
+vim.lsp: Position Encodings ~
+- No buffers contain mixed position encodings
+
+
+
