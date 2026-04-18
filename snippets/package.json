@@ -11,7 +11,7 @@
       },
       {
         "language": "vue",
-        "path": ".\\snippets\\vue.json"
+        "path": "./snippets/vue.json"
       }
     ]
   }

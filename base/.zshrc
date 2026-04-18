@@ -1,28 +1,6 @@
-export TERM=xterm-256color
-
-# Detect OS
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  # macOS
-  typeset -gaU path=(
-    /opt/homebrew/bin
-    /opt/homebrew/sbin
-    /usr/local/bin
-    $path
-  )
-else
-  # Linux
-  typeset -gaU path=(
-    /home/linuxbrew/.linuxbrew/bin
-    /home/linuxbrew/.linuxbrew/sbin
-    $path
-  )
-fi
-
 # Add deno completions to search path
 if [[ ":$FPATH:" != *":/Users/Q1524/.zsh/completions:"* ]]; then export FPATH="/Users/Q1524/.zsh/completions:$FPATH"; fi
-# Path to your oh-my-zsh installation.
-export ZSH=$HOME/.oh-my-zsh
-# ZSH_THEME="kevin" # set by `omz`
+
 plugins=(git)
 
 alias gs="git status"
@@ -47,14 +25,10 @@ source <(fzf --zsh)
 
 export PATH="$PATH":"$HOME/.pub-cache/bin"
 
-# macOS-specific paths
-if [[ "$OSTYPE" == "darwin"* ]]; then
-  export PATH="/usr/local/sbin:/opt/homebrew/opt/gnu-sed/libexec/gnubin:$PATH"
-fi
+eval "$(fnm env --use-on-cd --shell zsh)"
 
-source $ZSH/oh-my-zsh.sh
+bindkey '\e[A' history-beginning-search-backward
+bindkey '\e[B' history-beginning-search-forward
 
-# fnm (Node.js version manager)
-if [ -d "$HOME/.local/share/fnm" ]; then
-  eval "$($HOME/.local/share/fnm/fnm env --use-on-cd --shell zsh)"
-fi
+# Initialize completion
+autoload -U compinit; compinit
