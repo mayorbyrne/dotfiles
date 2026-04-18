@@ -79,12 +79,16 @@ wezterm.on(
   end
 )
 
-config.font = wezterm.font("FiraCode Nerd Font", { weight = "DemiBold" })
-config.font_size = 14
+config.font = wezterm.font_with_fallback({
+  { family = "FiraCode Nerd Font", weight = "DemiBold" },
+  { family = "Symbols Nerd Font Mono" },
+  { family = "Noto Color Emoji" },
+})
+config.font_size = 12
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {
-  border_bottom_height = "0.1cell",
+  border_bottom_height = "0.1 cell",
   border_bottom_color = "#123456",
 }
 
@@ -99,7 +103,7 @@ wezterm.on("trigger-workspace", function(cmd)
     args = cmd.args
   end
 
-  local project_dir = "/Users/Q1524/Documents/" .. args[1]
+  local project_dir = "D:/git/" .. args[1]
 
   print(project_dir)
 
@@ -115,6 +119,9 @@ wezterm.on("trigger-workspace", function(cmd)
 
   local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
   gitPane:send_text("lazygit\r\n")
+
+  local claudeTab, claudePane = window:spawn_tab({ cwd = project_dir })
+  claudePane:send_text("claude\r\n")
   --
   tab:activate()
   mux.set_active_workspace("work")
@@ -153,7 +160,7 @@ config.cursor_blink_ease_in = "Constant"
 config.cursor_blink_ease_out = "Constant"
 
 if wezterm.target_triple == "x86_64-pc-windows-msvc" then
-  config.default_prog = { "powershell.exe" }
+  config.default_prog = { "pwsh.exe" }
 else
   config.default_prog = wezterm.Default_prog
 end
@@ -310,6 +317,16 @@ config.keys = {
     key = "7",
     mods = "ALT",
     action = wezterm.action.ActivateTab(6),
+  },
+  {
+    key = "t",
+    mods = "CTRL",
+    action = wezterm.action.SpawnTab("CurrentPaneDomain"),
+  },
+  {
+    key = "v",
+    mods = "CTRL",
+    action = wezterm.action.PasteFrom("Clipboard"),
   },
 }
 
