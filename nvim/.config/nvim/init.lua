@@ -545,8 +545,15 @@ require("lazy").setup({
       sync_install = false, -- Install parsers asynchronously
     },
     config = function(_, opts)
-      require("nvim-treesitter.install").prefer_git = true
-      require("nvim-treesitter.configs").setup(opts)
+      -- Guard requires so headless/setup runs won't error if plugin isn't yet installed.
+      local ok_install, install = pcall(require, "nvim-treesitter.install")
+      if ok_install and install then
+        install.prefer_git = true
+      end
+      local ok_configs, configs = pcall(require, "nvim-treesitter.configs")
+      if ok_configs and configs then
+        configs.setup(opts)
+      end
     end,
   },
 
