@@ -152,7 +152,7 @@ require("lazy").setup({
     event = "VimEnter",
     tag = "v2.1.0", -- Kept v2.1.0 to avoid v3 breaking changes
     config = function()
-      require("which-key").setup()
+      require("which-key").setup({ notify = false })
       require("which-key").register({
         { "<leader>b", group = "[B]uffer" },
         { "<leader>b_", hidden = true },
