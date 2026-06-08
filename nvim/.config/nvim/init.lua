@@ -121,7 +121,6 @@ require("lazy").setup({
 
   {
     "lewis6991/gitsigns.nvim",
-    commit = "main", -- Updated to latest
     opts = {
       signs = {
         add = { text = "+" },
@@ -219,7 +218,6 @@ require("lazy").setup({
       { "j-hui/fidget.nvim", opts = {} },
       { "folke/neodev.nvim", opts = {} },
     },
-    commit = "main",
     config = function()
       vim.api.nvim_create_autocmd("LspAttach", {
         group = vim.api.nvim_create_augroup("kickstart-lsp-attach", { clear = true }),

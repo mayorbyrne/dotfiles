@@ -58,3 +58,4 @@ source $ZSH/oh-my-zsh.sh
 if [ -d "$HOME/.local/share/fnm" ]; then
   eval "$($HOME/.local/share/fnm/fnm env --use-on-cd --shell zsh)"
 fi
+export PATH=$HOME/.local/bin:$PATH

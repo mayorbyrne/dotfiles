@@ -11,7 +11,10 @@ return {
 
       -- This sets up the colorized brackets ala vscode
       vim.g.rainbow_delimiters = {
-        blacklist = { "html" },
+        condition = function(bufnr)
+          return vim.treesitter.get_parser(bufnr, nil, { error = false }) ~= nil
+        end,
+        blacklist = { "html", "dashboard" },
         highlight = {
           "RainbowDelimiterYellow",
           "RainbowDelimiterRed",
