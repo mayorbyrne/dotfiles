@@ -120,6 +120,58 @@ vim.api.nvim_create_autocmd("TextYankPost", {
   end,
 })
 
+vim.api.nvim_create_autocmd("FileType", {
+  desc = "Continue Vue comments on new lines",
+  group = vim.api.nvim_create_augroup("vue-comment-continuation", { clear = true }),
+  pattern = "vue",
+  callback = function()
+    vim.opt_local.autoindent = true
+    vim.opt_local.cindent = false
+    vim.opt_local.smartindent = true
+    vim.opt_local.indentexpr = ""
+    vim.opt_local.shiftwidth = 2
+    vim.opt_local.softtabstop = 2
+    vim.opt_local.tabstop = 2
+    vim.opt_local.formatoptions:append({ "r", "o" })
+    vim.opt_local.comments = "s1:/*,mb:*,ex:*/,://,b:#,s1:<!--,mb:*,ex:-->"
+    vim.keymap.set("i", "<CR>", function()
+      local cursor = vim.api.nvim_win_get_cursor(0)
+      local row = cursor[1] - 1
+      local col = cursor[2]
+      local line = vim.api.nvim_buf_get_lines(0, row, row + 1, false)[1]
+      local indent = line:match("^([ \t]*)/%*%*")
+      local prefix = indent and (indent .. " * ")
+
+      if line:sub(1, col):match("{%s*$") and line:sub(col + 1):match("^}") then
+        local outer_indent = line:match("^([ \t]*)") or ""
+        local inner_indent = outer_indent .. string.rep(" ", vim.bo.shiftwidth)
+        vim.api.nvim_buf_set_text(0, row, col, row, col, { "", inner_indent, outer_indent })
+        vim.api.nvim_win_set_cursor(0, { row + 2, #inner_indent })
+        return
+      end
+
+      if not prefix then
+        indent = line:match("^([ \t]*)%*")
+        prefix = indent and (indent .. "* ")
+      end
+
+      if not prefix then
+        indent = line:match("^([ \t]*)//")
+        prefix = indent and (indent .. "// ")
+      end
+
+      if prefix then
+        vim.api.nvim_buf_set_text(0, row, col, row, col, { "", prefix })
+        vim.api.nvim_win_set_cursor(0, { row + 2, #prefix })
+        return
+      end
+
+      local enter = vim.api.nvim_replace_termcodes("<C-g>u<CR>", true, false, true)
+      vim.api.nvim_feedkeys(enter, "n", false)
+    end, { buffer = true })
+  end,
+})
+
 -- [[ Install lazy.nvim ]]
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not vim.loop.fs_stat(lazypath) then
@@ -131,7 +183,15 @@ vim.opt.autochdir = true
 
 -- [[ Configure Plugins ]]
 require("lazy").setup({
-  { "numToStr/Comment.nvim",      opts = {} },
+  {
+    "numToStr/Comment.nvim",
+    dependencies = { "JoosepAlviste/nvim-ts-context-commentstring" },
+    opts = function()
+      return {
+        pre_hook = require("ts_context_commentstring.integrations.comment_nvim").create_pre_hook(),
+      }
+    end,
+  },
 
   {
     "lewis6991/gitsigns.nvim",
