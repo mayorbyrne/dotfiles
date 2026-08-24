@@ -371,11 +371,32 @@ require("lazy").setup({
       -- Install formatters/tools via Mason
       local mason_registry = require("mason-registry")
       local tools = { "stylua", "prettier", "prettierd" }
-      for _, tool in ipairs(tools) do
-        local p = mason_registry.get_package(tool)
-        if not p:is_installed() then
-          p:install()
+      local install_tools = function()
+        for _, tool in ipairs(tools) do
+          if mason_registry.has_package(tool) then
+            local p = mason_registry.get_package(tool)
+            if not p:is_installed() then
+              p:install()
+            end
+          else
+            vim.notify(
+              string.format("Mason package %q is unavailable; skipping installation", tool),
+              vim.log.levels.WARN
+            )
+          end
         end
+      end
+
+      if mason_registry.has_package(tools[1]) then
+        install_tools()
+      else
+        mason_registry.refresh(function(success, error)
+          if success then
+            install_tools()
+          else
+            vim.notify("Unable to refresh the Mason registry: " .. tostring(error), vim.log.levels.ERROR)
+          end
+        end)
       end
 
       require("mason-lspconfig").setup({
