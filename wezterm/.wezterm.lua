@@ -127,7 +127,7 @@ wezterm.on("gui-startup", function(cmd)
   local count = 0
   cmd = cmd or {}
 
-  if cmd.args then
+  if cmd.args and #cmd.args > 0 then
     wezterm.emit("trigger-workspace", cmd)
   else
     -- Pick the active screen to maximize into, there are also other options, see the docs.
