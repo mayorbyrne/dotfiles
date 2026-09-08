@@ -103,7 +103,7 @@ wezterm.on("trigger-workspace", function(cmd)
   local projects_root = wezterm.home_dir .. "/Documents"
   -- wezterm-launcher:projects-root
   if wezterm.target_triple == "x86_64-pc-windows-msvc" then
-    projects_root = "C:/Users/Kevin/Documents/code"
+    projects_root = "C:/Users/Kevin/Documents"
   end
   -- wezterm-launcher:linux-projects-root
   if string.find(wezterm.target_triple, "linux") then
@@ -136,6 +136,32 @@ wezterm.on("trigger-workspace", function(cmd)
   window:gui_window():maximize()
 end)
 
+-- Commands listed in ~/.config/wezterm/ai_clis.txt (written by setup_ai_clis).
+local function load_ai_clis()
+  local path = wezterm.home_dir .. "/.config/wezterm/ai_clis.txt"
+  local file = io.open(path, "r")
+  if not file then
+    return {}
+  end
+  local clis = {}
+  for line in file:lines() do
+    line = line:match("^%s*(.-)%s*$")
+    if line and #line > 0 and not line:match("^#") then
+      table.insert(clis, line)
+    end
+  end
+  file:close()
+  return clis
+end
+
+local function spawn_ai_cli_tabs(window, cwd)
+  for _, cmd in ipairs(load_ai_clis()) do
+    local tab, pane = window:spawn_tab({ cwd = cwd })
+    tab:set_title(cmd)
+    pane:send_text(cmd .. "\r\n")
+  end
+end
+
 -- and finally, return the configuration to wezterm
 wezterm.on("gui-startup", function(cmd)
   local count = 0
@@ -158,6 +184,9 @@ wezterm.on("gui-startup", function(cmd)
     window:gui_window():set_position(active.x, active.y)
     window:gui_window():set_inner_size(active.width, active.height)
     window:gui_window():maximize()
+
+    spawn_ai_cli_tabs(window, wezterm.home_dir)
+    tab:activate()
   end
 end)
 
@@ -328,4 +357,5 @@ config.keys = {
 }
 
 return config
+
 

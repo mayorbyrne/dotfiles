@@ -276,6 +276,11 @@ else
     echo "Font file not found, skipping..."
 fi
 
+# Optional AI CLIs (Cursor / Codex / Claude) + WezTerm startup tabs
+if [ -f "$DOTFILES_DIR/shared/install/setup_ai_clis.sh" ]; then
+    bash "$DOTFILES_DIR/shared/install/setup_ai_clis.sh"
+fi
+
 echo ""
 echo "===================================="
 echo "Setup Complete!"

@@ -345,6 +345,11 @@ $objShell = New-Object -ComObject Shell.Application
 $objFolder = $objShell.Namespace($FONTS)
 $objFolder.CopyHere($fontPath, 0x10)
 
+$aiClisSetup = "$dotfilesDir\shared\install\setup_ai_clis.ps1"
+if (Test-Path $aiClisSetup) {
+    & $aiClisSetup
+}
+
 Write-Host ""
 Write-Host "Setup Complete!" -ForegroundColor Green
 Write-Host "Restart your terminal and run 'nvim'" -ForegroundColor Yellow
