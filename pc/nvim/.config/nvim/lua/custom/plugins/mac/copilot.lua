@@ -1,6 +1,11 @@
 return {
   {
     "github/copilot.vim",
+    init = function()
+      -- Windows cmd treats ^ as an escape char, so npx gets "^^^^1.408.0" and fails.
+      -- Use the plugin-bundled language server instead.
+      vim.g.copilot_version = false
+    end,
   },
   {
     "CopilotC-Nvim/CopilotChat.nvim",

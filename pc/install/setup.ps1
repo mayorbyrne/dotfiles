@@ -45,7 +45,7 @@ if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
 Write-Host "Installing packages via Chocolatey..." -ForegroundColor Green
 Write-Host "This may take several minutes. Please be patient..." -ForegroundColor Yellow
 
-$packages = @("git", "neovim", "lazygit", "yazi", "wezterm", "fzf", "ripgrep", "powershell-core")
+$packages = @("git", "neovim", "lazygit", "yazi", "wezterm", "fzf", "ripgrep", "powershell-core", "powertoys")
 foreach ($package in $packages) {
     Write-Host "Installing $package..." -ForegroundColor Gray
     choco install -y $package --limit-output
@@ -184,6 +184,160 @@ if (Test-Path $muxTarget) {
 Write-Host "Creating mux.sh symlink..." -ForegroundColor Green
 New-Item -ItemType SymbolicLink -Path $muxTarget -Target $muxSource -Force | Out-Null
 
+Write-Host "Configuring PowerToys Win+Shift+R -> wezterm-launcher..." -ForegroundColor Green
+try {
+    $powerToysRoot = Join-Path $env:LOCALAPPDATA "Microsoft\PowerToys"
+    $kbmDir = Join-Path $powerToysRoot "Keyboard Manager"
+    $kbmSettingsPath = Join-Path $kbmDir "settings.json"
+    $kbmDefaultPath = Join-Path $kbmDir "default.json"
+    $generalSettingsPath = Join-Path $powerToysRoot "settings.json"
+    $launcherBat = Join-Path $dotfilesDir "pc\wezterm-launcher\launch.bat"
+    $launcherDir = Split-Path $launcherBat -Parent
+
+    function Read-JsonFile([string]$path) {
+        if (-not (Test-Path $path)) { return $null }
+        if ((Get-Item $path).Length -le 0) { return $null }
+        $raw = Get-Content -Path $path -Raw -ErrorAction Stop
+        if ([string]::IsNullOrWhiteSpace($raw)) { return $null }
+        return $raw | ConvertFrom-Json -ErrorAction Stop
+    }
+
+    function Write-JsonFile([string]$path, $object) {
+        $dir = Split-Path $path -Parent
+        if (-not (Test-Path $dir)) {
+            New-Item -ItemType Directory -Path $dir -Force | Out-Null
+        }
+        $json = $object | ConvertTo-Json -Depth 10
+        [System.IO.File]::WriteAllText($path, $json)
+    }
+
+    # Win+Shift+R as PowerToys UI serializes it (VK_WIN_BOTH=260, VK_SHIFT=16, R=82)
+    $hotkeyOriginalKeys = "260;16;82"
+    $hotkeyOriginalKeysLegacy = "91;160;82"
+    $launcherRemap = [pscustomobject]@{
+        originalKeys                   = $hotkeyOriginalKeys
+        exactMatch                     = $false
+        operationType                  = 1
+        runProgramFilePath             = $launcherBat
+        runProgramArgs                 = ""
+        runProgramStartInDir           = $launcherDir
+        runProgramElevationLevel       = 0
+        runProgramAlreadyRunningAction = 1
+        runProgramStartWindowType      = 0
+        unicodeText                    = "*Unsupported*"
+    }
+
+    New-Item -ItemType Directory -Path $kbmDir -Force | Out-Null
+
+    $existingKbm = Read-JsonFile $kbmDefaultPath
+    $globalRemaps = [System.Collections.Generic.List[object]]::new()
+    $appSpecificRemaps = @()
+    if ($existingKbm -and $existingKbm.remapShortcuts -and $existingKbm.remapShortcuts.global) {
+        foreach ($remap in @($existingKbm.remapShortcuts.global)) {
+            if ($remap -and $remap.originalKeys -ne $hotkeyOriginalKeys -and $remap.originalKeys -ne $hotkeyOriginalKeysLegacy) {
+                $globalRemaps.Add($remap)
+            }
+        }
+    }
+    if ($existingKbm -and $existingKbm.remapShortcuts -and $existingKbm.remapShortcuts.appSpecific) {
+        $appSpecificRemaps = @($existingKbm.remapShortcuts.appSpecific)
+    }
+    $globalRemaps.Add($launcherRemap)
+
+    $kbmConfig = [pscustomobject]@{
+        remapKeys            = if ($existingKbm -and $existingKbm.remapKeys) { $existingKbm.remapKeys } else { [pscustomobject]@{ inProcess = @() } }
+        remapKeysToText      = if ($existingKbm -and $existingKbm.remapKeysToText) { $existingKbm.remapKeysToText } else { [pscustomobject]@{ inProcess = @() } }
+        remapShortcuts       = [pscustomobject]@{
+            global      = @($globalRemaps.ToArray())
+            appSpecific = @($appSpecificRemaps)
+        }
+        remapShortcutsToText = if ($existingKbm -and $existingKbm.remapShortcutsToText) {
+            $existingKbm.remapShortcutsToText
+        } else {
+            [pscustomobject]@{ global = @(); appSpecific = @() }
+        }
+    }
+    Write-JsonFile $kbmDefaultPath $kbmConfig
+
+    $kbmModuleSettings = Read-JsonFile $kbmSettingsPath
+    if (-not $kbmModuleSettings) {
+        $kbmModuleSettings = [pscustomobject]@{
+            name       = "Keyboard Manager"
+            properties = [pscustomobject]@{
+                activeConfiguration = [pscustomobject]@{ value = "default" }
+            }
+        }
+    } else {
+        if (-not $kbmModuleSettings.properties) {
+            $kbmModuleSettings | Add-Member -NotePropertyName properties -NotePropertyValue ([pscustomobject]@{}) -Force
+        }
+        $kbmModuleSettings.properties | Add-Member -NotePropertyName activeConfiguration -NotePropertyValue ([pscustomobject]@{ value = "default" }) -Force
+    }
+    Write-JsonFile $kbmSettingsPath $kbmModuleSettings
+
+    $generalSettings = Read-JsonFile $generalSettingsPath
+    if (-not $generalSettings) {
+        $generalSettings = [pscustomobject]@{
+            startup = $true
+            enabled = [pscustomobject]@{ "Keyboard Manager" = $true }
+        }
+    } else {
+        if (-not $generalSettings.enabled) {
+            $generalSettings | Add-Member -NotePropertyName enabled -NotePropertyValue ([pscustomobject]@{}) -Force
+        }
+        $generalSettings.enabled | Add-Member -NotePropertyName "Keyboard Manager" -NotePropertyValue $true -Force
+        $generalSettings | Add-Member -NotePropertyName startup -NotePropertyValue $true -Force
+    }
+    Write-JsonFile $generalSettingsPath $generalSettings
+
+    function Enable-KeyboardManager {
+        $gs = Read-JsonFile $generalSettingsPath
+        if (-not $gs) { return $false }
+        if (-not $gs.enabled) {
+            $gs | Add-Member -NotePropertyName enabled -NotePropertyValue ([pscustomobject]@{}) -Force
+        }
+        $gs.enabled | Add-Member -NotePropertyName "Keyboard Manager" -NotePropertyValue $true -Force
+        $gs | Add-Member -NotePropertyName startup -NotePropertyValue $true -Force
+        Write-JsonFile $generalSettingsPath $gs
+        return $true
+    }
+
+    $powerToysExe = @(
+        "C:\Program Files\PowerToys\PowerToys.exe",
+        "${env:ProgramFiles}\PowerToys\PowerToys.exe",
+        "${env:LOCALAPPDATA}\PowerToys\PowerToys.exe"
+    ) | Where-Object { Test-Path $_ } | Select-Object -First 1
+
+    if ($powerToysExe) {
+        Get-Process -Name "PowerToys*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        Start-Sleep -Seconds 2
+        # Re-assert enable after stop (PowerToys may rewrite settings.json on exit/start)
+        Enable-KeyboardManager | Out-Null
+        # Launch via explorer so PowerToys is not elevated (hotkeys fail against non-admin windows otherwise)
+        Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
+        Start-Sleep -Seconds 4
+        $gsAfter = Read-JsonFile $generalSettingsPath
+        if (-not $gsAfter -or -not $gsAfter.enabled.'Keyboard Manager') {
+            Get-Process -Name "PowerToys*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+            Start-Sleep -Seconds 2
+            Enable-KeyboardManager | Out-Null
+            Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
+            Start-Sleep -Seconds 3
+        }
+        $engine = Get-Process -Name "PowerToys.KeyboardManagerEngine" -ErrorAction SilentlyContinue
+        if ($engine) {
+            Write-Host "  Keyboard Manager on; Win+Shift+R -> wezterm-launcher" -ForegroundColor Green
+        } else {
+            Write-Host "  PowerToys started but Keyboard Manager engine not seen yet - open PowerToys settings and enable Keyboard Manager" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "  PowerToys installed but executable not found yet - sign out/in or start PowerToys, then enable Keyboard Manager" -ForegroundColor Yellow
+    }
+} catch {
+    Write-Host "  Warning: PowerToys hotkey setup failed: $($_.Exception.Message)" -ForegroundColor Yellow
+    Write-Host "  You can set Win+Shift+R manually in PowerToys > Keyboard Manager > Remap a shortcut" -ForegroundColor Yellow
+}
+
 Write-Host "Installing FiraCode Nerd Font..." -ForegroundColor Green
 $fontPath = "$dotfilesDir\shared\fonts\FiraCode Nerd Font-Regular.ttf"
 $FONTS = 0x14
@@ -197,5 +351,6 @@ Write-Host "Restart your terminal and run 'nvim'" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Yellow
 Write-Host "1. Run 'shared\install\setup_git.ps1' to configure git user and credentials" -ForegroundColor Yellow
+Write-Host "2. Press Win+Shift+R to open wezterm-launcher (requires PowerToys running)" -ForegroundColor Yellow
 Write-Host ""
 Read-Host "Press Enter to exit"

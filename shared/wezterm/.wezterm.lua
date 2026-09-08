@@ -1,4 +1,4 @@
--- Pull in the wezterm API
+﻿-- Pull in the wezterm API
 local wezterm = require("wezterm")
 local mux = wezterm.mux
 -- This will hold the configuration.
@@ -99,7 +99,13 @@ wezterm.on("trigger-workspace", function(cmd)
     args = cmd.args
   end
 
-  local project_dir = "/Users/Q1524/Documents/" .. args[1]
+  -- Windows projects root is set by wezterm-launcher on first run; other OSes use ~/Documents.
+  local projects_root = wezterm.home_dir .. "/Documents"
+  -- wezterm-launcher:projects-root
+  if wezterm.target_triple == "x86_64-pc-windows-msvc" then
+    projects_root = "C:/Users/Kevin/Documents/code"
+  end
+  local project_dir = projects_root .. "/" .. args[1]
 
   print(project_dir)
 
@@ -110,8 +116,12 @@ wezterm.on("trigger-workspace", function(cmd)
 
   pane:send_text("nvim\r\n")
 
-  local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
-  nodePane:send_text(args[2] .. "\r\n")
+  if args[2] then
+    local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
+    nodePane:send_text(args[2] .. "\r\n")
+  else
+    window:spawn_tab({ cwd = project_dir })
+  end
 
   local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
   gitPane:send_text("lazygit\r\n")
@@ -314,3 +324,4 @@ config.keys = {
 }
 
 return config
+
