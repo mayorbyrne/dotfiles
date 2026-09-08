@@ -15,7 +15,7 @@ sudo pacman -Sy
 
 # Install essential packages
 echo "Installing essential packages..."
-ESSENTIAL_PACKAGES=("base-devel" "git" "curl" "wget" "unzip" "zsh")
+ESSENTIAL_PACKAGES=("base-devel" "git" "curl" "wget" "unzip" "zsh" "python-gobject" "gtk3")
 
 for package in "${ESSENTIAL_PACKAGES[@]}"; do
     if pacman -Q "$package" &> /dev/null; then
@@ -229,6 +229,39 @@ if [ -f "$MUX_SOURCE" ]; then
     ln -sf "$MUX_SOURCE" "$MUX_TARGET"
 fi
 
+# wezterm-launcher
+LAUNCHER_DIR="$DOTFILES_DIR/linux/wezterm-launcher"
+LAUNCHER_SH="$LAUNCHER_DIR/launch.sh"
+DESKTOP_TARGET="$HOME/.local/share/applications/wezterm-launcher.desktop"
+
+if [ -f "$LAUNCHER_SH" ]; then
+    chmod +x "$LAUNCHER_SH" "$LAUNCHER_DIR/launcher.py"
+    mkdir -p "$HOME/.local/share/applications"
+    echo "Installing wezterm-launcher desktop entry..."
+    sed "s|Exec=PLACEHOLDER_LAUNCH|Exec=$LAUNCHER_SH|" \
+        "$LAUNCHER_DIR/wezterm-launcher.desktop" > "$DESKTOP_TARGET"
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+
+    BINDINGS_FILE="$HOME/.config/hypr/bindings.lua"
+    BIND_MARKER='-- wezterm-launcher (dotfiles)'
+    BIND_LINE='o.bind("SUPER + SHIFT + R", "WezTerm launcher", "'"$LAUNCHER_SH"'")'
+    if [ -f "$BINDINGS_FILE" ]; then
+        if grep -Fq "$BIND_MARKER" "$BINDINGS_FILE"; then
+            echo "Hyprland Super+Shift+R binding already present"
+        else
+            echo "Adding Hyprland Super+Shift+R -> wezterm-launcher..."
+            {
+                echo ""
+                echo "$BIND_MARKER"
+                echo "$BIND_LINE"
+            } >> "$BINDINGS_FILE"
+            hyprctl reload 2>/dev/null || true
+        fi
+    else
+        echo "No ~/.config/hypr/bindings.lua found; skip Super+Shift+R binding"
+    fi
+fi
+
 # Install FiraCode Nerd Font
 echo "Installing FiraCode Nerd Font..."
 FONT_PATH="$DOTFILES_DIR/shared/fonts/FiraCode Nerd Font-Regular.ttf"
@@ -251,5 +284,6 @@ echo ""
 echo "Next steps:"
 echo "1. Log out and log back in (or restart) for zsh to be your default shell"
 echo "2. Run 'bash shared/install/setup_git.sh' to configure git user and credentials"
-echo "3. Open wezterm and run 'nvim' to set up Neovim plugins"
+echo "3. Press Super+Shift+R to open wezterm-launcher (or run linux/wezterm-launcher/launch.sh)"
+echo "4. Open wezterm and run 'nvim' to set up Neovim plugins"
 echo ""
