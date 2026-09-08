@@ -15,7 +15,7 @@ sudo apt update
 
 # Install essential packages
 echo "Installing essential packages..."
-ESSENTIAL_PACKAGES=("curl" "wget" "unzip" "build-essential" "git-all" "zsh")
+ESSENTIAL_PACKAGES=("curl" "wget" "unzip" "build-essential" "git-all" "zsh" "python3-gi" "gir1.2-gtk-3.0")
 
 for package in "${ESSENTIAL_PACKAGES[@]}"; do
     if dpkg -l | grep -q "^ii  $package "; then
@@ -224,6 +224,20 @@ if [ -f "$MUX_SOURCE" ]; then
     ln -sf "$MUX_SOURCE" "$MUX_TARGET"
 fi
 
+# wezterm-launcher
+LAUNCHER_DIR="$DOTFILES_DIR/linux/wezterm-launcher"
+LAUNCHER_SH="$LAUNCHER_DIR/launch.sh"
+DESKTOP_TARGET="$HOME/.local/share/applications/wezterm-launcher.desktop"
+
+if [ -f "$LAUNCHER_SH" ]; then
+    chmod +x "$LAUNCHER_SH" "$LAUNCHER_DIR/launcher.py"
+    mkdir -p "$HOME/.local/share/applications"
+    echo "Installing wezterm-launcher desktop entry..."
+    sed "s|Exec=PLACEHOLDER_LAUNCH|Exec=$LAUNCHER_SH|" \
+        "$LAUNCHER_DIR/wezterm-launcher.desktop" > "$DESKTOP_TARGET"
+    update-desktop-database "$HOME/.local/share/applications" 2>/dev/null || true
+fi
+
 # Install FiraCode Nerd Font
 echo "Installing FiraCode Nerd Font..."
 FONT_PATH="$DOTFILES_DIR/shared/fonts/FiraCode Nerd Font-Regular.ttf"
@@ -246,5 +260,6 @@ echo ""
 echo "Next steps:"
 echo "1. Log out and log back in (or restart) for zsh to be your default shell"
 echo "2. Run 'bash shared/install/setup_git.sh' to configure git user and credentials"
-echo "3. Open wezterm and run 'nvim' to set up Neovim plugins"
+echo "3. Run linux/wezterm-launcher/launch.sh (or open WezTerm Launcher from the app menu)"
+echo "4. Open wezterm and run 'nvim' to set up Neovim plugins"
 echo ""

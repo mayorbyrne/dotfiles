@@ -7,7 +7,7 @@ One branch for all machines. Shared configs live in `shared/`; OS-specific overl
 ```
 shared/   # wezterm, yazi, starship, lazygit, fonts, tmux, snippets, git-prompt, git setup
 pc/       # Windows nvim + PowerShell profile + wezterm-launcher
-linux/    # Linux nvim + zsh + waybar
+linux/    # Linux nvim + zsh + waybar + wezterm-launcher
 mac/      # macOS nvim + zsh + iTerm2
 ```
 

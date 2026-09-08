@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=WezTerm Launcher
+Comment=Launch WezTerm workspaces for project folders
+Exec=PLACEHOLDER_LAUNCH
+Icon=utilities-terminal
+Terminal=false
+Categories=Development;Utility;
+StartupNotify=true

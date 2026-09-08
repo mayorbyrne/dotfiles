@@ -99,11 +99,15 @@ wezterm.on("trigger-workspace", function(cmd)
     args = cmd.args
   end
 
-  -- Windows projects root is set by wezterm-launcher on first run; other OSes use ~/Documents.
+  -- Projects root is set by wezterm-launcher on first run; otherwise ~/Documents.
   local projects_root = wezterm.home_dir .. "/Documents"
   -- wezterm-launcher:projects-root
   if wezterm.target_triple == "x86_64-pc-windows-msvc" then
     projects_root = "C:/Users/Kevin/Documents/code"
+  end
+  -- wezterm-launcher:linux-projects-root
+  if string.find(wezterm.target_triple, "linux") then
+    projects_root = "/home/kevin/Documents"
   end
   local project_dir = projects_root .. "/" .. args[1]
 
