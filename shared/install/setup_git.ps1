@@ -31,7 +31,7 @@ Write-Host ""
 # Create symlink for git-prompt.sh
 Write-Host "Setting up git-prompt.sh..." -ForegroundColor Green
 $dotfilesPath = Split-Path -Parent $PSScriptRoot
-$gitPromptSource = Join-Path $dotfilesPath "base\git-prompt.sh"
+$gitPromptSource = Join-Path $dotfilesPath "git-prompt.sh"
 $gitPromptTarget = Join-Path $env:USERPROFILE ".git-prompt.sh"
 
 if (Test-Path $gitPromptTarget) {
