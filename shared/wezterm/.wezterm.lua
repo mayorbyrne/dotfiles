@@ -90,6 +90,32 @@ config.window_frame = {
 
 config.audible_bell = "Disabled"
 
+-- Commands listed in ~/.config/wezterm/ai_clis.txt (written by setup_ai_clis).
+local function load_ai_clis()
+  local path = wezterm.home_dir .. "/.config/wezterm/ai_clis.txt"
+  local file = io.open(path, "r")
+  if not file then
+    return {}
+  end
+  local clis = {}
+  for line in file:lines() do
+    line = line:match("^%s*(.-)%s*$")
+    if line and #line > 0 and not line:match("^#") then
+      table.insert(clis, line)
+    end
+  end
+  file:close()
+  return clis
+end
+
+local function spawn_ai_cli_tabs(window, cwd)
+  for _, cmd in ipairs(load_ai_clis()) do
+    local tab, pane = window:spawn_tab({ cwd = cwd })
+    tab:set_title(cmd)
+    pane:send_text(cmd .. "\r\n")
+  end
+end
+
 -- and finally, return the configuration to wezterm
 wezterm.on("trigger-workspace", function(cmd)
   -- allow `wezterm start -- something` to affect what we spawn
@@ -129,40 +155,15 @@ wezterm.on("trigger-workspace", function(cmd)
 
   local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
   gitPane:send_text("lazygit\r\n")
-  --
+
+  spawn_ai_cli_tabs(window, project_dir)
+
   tab:activate()
   mux.set_active_workspace("work")
 
   window:gui_window():maximize()
 end)
 
--- Commands listed in ~/.config/wezterm/ai_clis.txt (written by setup_ai_clis).
-local function load_ai_clis()
-  local path = wezterm.home_dir .. "/.config/wezterm/ai_clis.txt"
-  local file = io.open(path, "r")
-  if not file then
-    return {}
-  end
-  local clis = {}
-  for line in file:lines() do
-    line = line:match("^%s*(.-)%s*$")
-    if line and #line > 0 and not line:match("^#") then
-      table.insert(clis, line)
-    end
-  end
-  file:close()
-  return clis
-end
-
-local function spawn_ai_cli_tabs(window, cwd)
-  for _, cmd in ipairs(load_ai_clis()) do
-    local tab, pane = window:spawn_tab({ cwd = cwd })
-    tab:set_title(cmd)
-    pane:send_text(cmd .. "\r\n")
-  end
-end
-
--- and finally, return the configuration to wezterm
 wezterm.on("gui-startup", function(cmd)
   local count = 0
   cmd = cmd or {}
