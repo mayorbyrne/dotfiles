@@ -22,18 +22,6 @@ CONFIG_FILE = CONFIG_DIR / "config.json"
 HISTORY_FILE = CONFIG_DIR / "history.json"
 HISTORY_LIMIT = 50
 
-LINUX_ROOT_PATTERN = re.compile(
-    r'(-- wezterm-launcher:linux-projects-root\s*\n'
-    r'\s*if string\.find\(wezterm\.target_triple, "linux"\) then\s*\n'
-    r'\s*projects_root = )[^\n]+',
-    re.MULTILINE,
-)
-LINUX_ROOT_FALLBACK = re.compile(
-    r'(if string\.find\(wezterm\.target_triple, "linux"\) then\s*\n'
-    r'\s*projects_root = )[^\n]+',
-    re.MULTILINE,
-)
-
 
 def load_json(path: Path, default):
     if not path.exists():
@@ -49,41 +37,12 @@ def save_json(path: Path, data) -> None:
     path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 
 
-def get_wezterm_lua_path() -> Path | None:
-    candidate = Path.home() / ".wezterm.lua"
-    if not candidate.exists():
-        return None
-    try:
-        if candidate.is_symlink():
-            target = candidate.resolve()
-            if target.exists():
-                return target
-    except OSError:
-        pass
-    return candidate
-
-
 def update_wezterm_projects_root(projects_root: str) -> None:
-    lua_path = get_wezterm_lua_path()
-    if lua_path is None:
-        show_message("Could not find ~/.wezterm.lua to update the projects path.", Gtk.MessageType.WARNING)
-        return
-
-    lua_root = projects_root.replace("\\", "/")
-    content = lua_path.read_text(encoding="utf-8")
-    replacement = rf'\g<1>"{lua_root}"'
-    if LINUX_ROOT_PATTERN.search(content):
-        updated = LINUX_ROOT_PATTERN.sub(replacement, content)
-    elif LINUX_ROOT_FALLBACK.search(content):
-        updated = LINUX_ROOT_FALLBACK.sub(replacement, content)
-    else:
-        show_message(
-            "Could not find the Linux projects_root setting in .wezterm.lua.",
-            Gtk.MessageType.WARNING,
-        )
-        return
-
-    lua_path.write_text(updated, encoding="utf-8")
+    """WezTerm reads the projects root from this file, so the tracked
+    .wezterm.lua stays free of machine-specific paths."""
+    path = Path.home() / ".config" / "wezterm" / "projects_root.txt"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(projects_root.replace("\\", "/") + "\n", encoding="utf-8")
 
 
 def get_projects_root() -> str | None:
@@ -131,6 +90,7 @@ def choose_projects_root(parent: Gtk.Window | None = None) -> str | None:
 def ensure_projects_root() -> str | None:
     root = get_projects_root()
     if root:
+        update_wezterm_projects_root(root)
         return root
 
     selected = choose_projects_root()

@@ -6,7 +6,7 @@ A lightweight WPF GUI launcher for [WezTerm](https://wezfurlong.org/wezterm/) wo
 
 ## Features
 
-- **First-run setup** — asks where your projects live, saves it, and updates `.wezterm.lua` so workspace launches use the same root.
+- **First-run setup** — asks where your projects live and saves it to `~/.config/wezterm/projects_root.txt` so WezTerm workspace launches use the same root.
 - **Recent tab** — lists workspaces from launcher history and the Windows Run MRU.
 - **New Workspace tab** — browses folders under your projects root and launches a WezTerm workspace with a chosen dev server command.
 - **Command preview** — shows the exact `wezterm start` command before you launch it.
@@ -35,7 +35,7 @@ You can also pin `launch.bat` to your taskbar, or use **Win+Shift+R** after Powe
 
 1. Pick the folder that contains your project directories (e.g. `D:\git` or `Documents`).
 2. That path is saved to `%APPDATA%\wezterm-launcher\config.json`.
-3. The Windows `projects_root` in `.wezterm.lua` is updated to match.
+3. `~/.config/wezterm/projects_root.txt` is written so `.wezterm.lua` picks up the same root.
 
 To change it later, delete `%APPDATA%\wezterm-launcher\config.json` and run the launcher again.
 
@@ -62,7 +62,7 @@ Select a workspace and click **Launch** (or press Enter) to reopen it.
 | Value | Location |
 |-------|----------|
 | Projects root | `%APPDATA%\wezterm-launcher\config.json` (`projectsRoot`) |
-| WezTerm Windows root | `shared/wezterm/.wezterm.lua` (`-- wezterm-launcher:projects-root`) |
+| WezTerm projects root | `~/.config/wezterm/projects_root.txt` |
 | Script path | `launch.bat` → `%~dp0launcher.ps1` |
 
 This lives in the dotfiles repo at `pc/wezterm-launcher/`.
