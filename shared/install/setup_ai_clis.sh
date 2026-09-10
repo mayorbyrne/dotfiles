@@ -45,15 +45,6 @@ else
     echo "Skipping Cursor CLI"
 fi
 
-if ask_yes_no "Install Codex CLI?"; then
-    echo "Installing Codex CLI..."
-    ensure_local_bin_path
-    curl -fsSL https://chatgpt.com/codex/install.sh | sh
-    SELECTED+=("codex")
-else
-    echo "Skipping Codex CLI"
-fi
-
 if ask_yes_no "Install Claude CLI?"; then
     echo "Installing Claude CLI..."
     ensure_local_bin_path
@@ -61,6 +52,15 @@ if ask_yes_no "Install Claude CLI?"; then
     SELECTED+=("claude")
 else
     echo "Skipping Claude CLI"
+fi
+
+if ask_yes_no "Install Codex CLI?"; then
+    echo "Installing Codex CLI..."
+    ensure_local_bin_path
+    curl -fsSL https://chatgpt.com/codex/install.sh | sh
+    SELECTED+=("codex")
+else
+    echo "Skipping Codex CLI"
 fi
 
 CONFIG_DIR="$HOME/.config/wezterm"

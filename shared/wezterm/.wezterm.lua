@@ -105,7 +105,43 @@ local function load_ai_clis()
     end
   end
   file:close()
-  return clis
+
+  -- Always order tabs Cursor, Claude, Codex; anything else keeps file order after.
+  local rank = { agent = 1, claude = 2, codex = 3 }
+  local ordered = {}
+  for index, cmd in ipairs(clis) do
+    table.insert(ordered, { cmd = cmd, index = index, rank = rank[cmd:match("^%S+")] or 99 })
+  end
+  table.sort(ordered, function(a, b)
+    if a.rank ~= b.rank then
+      return a.rank < b.rank
+    end
+    return a.index < b.index
+  end)
+
+  local sorted = {}
+  for _, entry in ipairs(ordered) do
+    table.insert(sorted, entry.cmd)
+  end
+  return sorted
+end
+
+-- Projects root is machine-specific, so it lives outside the repo.
+-- Written by wezterm-launcher on first run; defaults to ~/Documents.
+local function load_projects_root()
+  local default_root = wezterm.home_dir .. "/Documents"
+  local file = io.open(wezterm.home_dir .. "/.config/wezterm/projects_root.txt", "r")
+  if not file then
+    return default_root
+  end
+
+  local root = file:read("l") or ""
+  file:close()
+  root = root:match("^%s*(.-)%s*$"):gsub("\\", "/")
+  if #root == 0 then
+    return default_root
+  end
+  return root
 end
 
 local function spawn_ai_cli_tabs(window, cwd)
@@ -125,17 +161,7 @@ wezterm.on("trigger-workspace", function(cmd)
     args = cmd.args
   end
 
-  -- Projects root is set by wezterm-launcher on first run; otherwise ~/Documents.
-  local projects_root = wezterm.home_dir .. "/Documents"
-  -- wezterm-launcher:projects-root
-  if wezterm.target_triple == "x86_64-pc-windows-msvc" then
-    projects_root = "C:/Users/Kevin/Documents"
-  end
-  -- wezterm-launcher:linux-projects-root
-  if string.find(wezterm.target_triple, "linux") then
-    projects_root = "/home/kevin/Documents"
-  end
-  local project_dir = projects_root .. "/" .. args[1]
+  local project_dir = load_projects_root() .. "/" .. args[1]
 
   print(project_dir)
 
@@ -358,5 +384,3 @@ config.keys = {
 }
 
 return config
-
-

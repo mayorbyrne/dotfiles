@@ -25,20 +25,20 @@ if (Ask-YesNo "Install Cursor CLI (agent)?") {
     Write-Host "Skipping Cursor CLI" -ForegroundColor Gray
 }
 
-if (Ask-YesNo "Install Codex CLI?") {
-    Write-Host "Installing Codex CLI..." -ForegroundColor Green
-    irm https://chatgpt.com/codex/install.ps1 | iex
-    $selected.Add("codex")
-} else {
-    Write-Host "Skipping Codex CLI" -ForegroundColor Gray
-}
-
 if (Ask-YesNo "Install Claude CLI?") {
     Write-Host "Installing Claude CLI..." -ForegroundColor Green
     irm https://claude.ai/install.ps1 | iex
     $selected.Add("claude")
 } else {
     Write-Host "Skipping Claude CLI" -ForegroundColor Gray
+}
+
+if (Ask-YesNo "Install Codex CLI?") {
+    Write-Host "Installing Codex CLI..." -ForegroundColor Green
+    irm https://chatgpt.com/codex/install.ps1 | iex
+    $selected.Add("codex")
+} else {
+    Write-Host "Skipping Codex CLI" -ForegroundColor Gray
 }
 
 $configDir = Join-Path $env:USERPROFILE ".config\wezterm"
