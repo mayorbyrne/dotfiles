@@ -35,59 +35,20 @@ function Save-LauncherConfig([string]$projectsRoot) {
     [pscustomobject]@{ projectsRoot = $projectsRoot } | ConvertTo-Json | Set-Content $script:configFile -Encoding UTF8
 }
 
-function Get-WeztermLuaPath {
-    $candidate = Join-Path $env:USERPROFILE ".wezterm.lua"
-    if (-not (Test-Path $candidate)) { return $null }
-    try {
-        $item = Get-Item $candidate -Force
-        if ($item.LinkType -and $item.Target) {
-            $target = $item.Target
-            if ($target -is [array]) { $target = $target[0] }
-            if ($target -and (Test-Path $target)) { return [string]$target }
-        }
-    } catch {}
-    return $candidate
-}
-
 function Update-WeztermProjectsRoot([string]$projectsRoot) {
-    $luaPath = Get-WeztermLuaPath
-    if (-not $luaPath) {
-        [System.Windows.MessageBox]::Show(
-            "Could not find ~/.wezterm.lua to update the projects path.",
-            "Wezterm Launcher",
-            "OK",
-            "Warning"
-        ) | Out-Null
-        return
-    }
-
-    $luaRoot = ($projectsRoot -replace '\\', '/')
-    $content = Get-Content $luaPath -Raw
-    $pattern = '(?ms)(-- wezterm-launcher:projects-root\s*\r?\n\s*if wezterm\.target_triple == "x86_64-pc-windows-msvc" then\r?\n\s*projects_root = ")[^"]*(")'
-    if ($content -match $pattern) {
-        $updated = [regex]::Replace($content, $pattern, "`${1}$luaRoot`${2}")
-    } else {
-        # Fallback: replace any Windows projects_root assignment
-        $fallback = '(?m)(if wezterm\.target_triple == "x86_64-pc-windows-msvc" then\r?\n\s*projects_root = ")[^"]*(")'
-        if ($content -notmatch $fallback) {
-            [System.Windows.MessageBox]::Show(
-                "Could not find the Windows projects_root setting in .wezterm.lua.",
-                "Wezterm Launcher",
-                "OK",
-                "Warning"
-            ) | Out-Null
-            return
-        }
-        $updated = [regex]::Replace($content, $fallback, "`${1}$luaRoot`${2}")
-    }
-
-    Set-Content -Path $luaPath -Value $updated -Encoding UTF8
+    # WezTerm reads the projects root from this file so the tracked
+    # .wezterm.lua stays free of machine-specific paths.
+    $dir = Join-Path $env:USERPROFILE ".config\wezterm"
+    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
+    $luaRoot = $projectsRoot.Replace('\', '/')
+    Set-Content -Path (Join-Path $dir "projects_root.txt") -Value $luaRoot -Encoding UTF8
 }
 
 function Ensure-ProjectsRoot {
     $config = Get-LauncherConfig
     if ($config -and $config.projectsRoot -and (Test-Path $config.projectsRoot)) {
         $script:projectsRoot = [string]$config.projectsRoot
+        Update-WeztermProjectsRoot -projectsRoot $script:projectsRoot
         return $true
     }
 
