@@ -99,7 +99,7 @@ local function load_ai_clis()
   end
   local clis = {}
   for line in file:lines() do
-    line = line:match("^%s*(.-)%s*$")
+    line = line:gsub("^98791", ""):match("^%s*(.-)%s*$")
     if line and #line > 0 and not line:match("^#") then
       table.insert(clis, line)
     end
@@ -137,6 +137,7 @@ local function load_projects_root()
 
   local root = file:read("l") or ""
   file:close()
+  root = root:gsub("^98791", "")
   root = root:match("^%s*(.-)%s*$"):gsub("\\", "/")
   if #root == 0 then
     return default_root
