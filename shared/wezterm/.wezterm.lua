@@ -105,7 +105,25 @@ local function load_ai_clis()
     end
   end
   file:close()
-  return clis
+
+  -- Always order tabs Cursor, Claude, Codex; anything else keeps file order after.
+  local rank = { agent = 1, claude = 2, codex = 3 }
+  local ordered = {}
+  for index, cmd in ipairs(clis) do
+    table.insert(ordered, { cmd = cmd, index = index, rank = rank[cmd:match("^%S+")] or 99 })
+  end
+  table.sort(ordered, function(a, b)
+    if a.rank ~= b.rank then
+      return a.rank < b.rank
+    end
+    return a.index < b.index
+  end)
+
+  local sorted = {}
+  for _, entry in ipairs(ordered) do
+    table.insert(sorted, entry.cmd)
+  end
+  return sorted
 end
 
 local function spawn_ai_cli_tabs(window, cwd)
