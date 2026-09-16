@@ -9,7 +9,9 @@ return {
         replace_engine = {
           ["sed"] = {
             cmd = "sed",
-            args = nil,
+            -- Keep LF files as LF on Windows. Without -b, GNU sed opens files
+            -- in text mode and Spectre's line-by-line replacements leave ^M.
+            args = { "-i", "-b", "-E" },
           },
         },
       })
