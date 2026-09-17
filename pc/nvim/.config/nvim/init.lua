@@ -214,30 +214,20 @@ require("lazy").setup({
     config = function()
       require("which-key").setup({ notify = false })
       require("which-key").register({
-        { "<leader>b", group = "[B]uffer" },
-        { "<leader>b_", hidden = true },
-        { "<leader>c", group = "[C]ode" },
-        { "<leader>c_", hidden = true },
-        { "<leader>d", group = "[D]ocument" },
-        { "<leader>d_", hidden = true },
-        { "<leader>fr", group = "[F]ind and [R]eplace" },
-        { "<leader>fr_", hidden = true },
-        { "<leader>h", group = "Git [H]unk" },
-        { "<leader>h_", hidden = true },
-        { "<leader>q", group = "[Q]uickfix" },
-        { "<leader>q_", hidden = true },
-        { "<leader>r", group = "[R]ename" },
-        { "<leader>r_", hidden = true },
-        { "<leader>s", group = "[S]earch" },
-        { "<leader>s_", hidden = true },
-        { "<leader>t", group = "Nvim[T]ree" },
-        { "<leader>t_", hidden = true },
-        { "<leader>w", group = "[W]orkspace" },
-        { "<leader>w_", hidden = true },
+        ["<leader>b"] = { name = "[B]uffer", _ = "which_key_ignore" },
+        ["<leader>c"] = { name = "[C]ode", _ = "which_key_ignore" },
+        ["<leader>d"] = { name = "[D]ocument", _ = "which_key_ignore" },
+        ["<leader>fr"] = { name = "[F]ind and [R]eplace", _ = "which_key_ignore" },
+        ["<leader>h"] = { name = "Git [H]unk", _ = "which_key_ignore" },
+        ["<leader>q"] = { name = "[Q]uickfix", _ = "which_key_ignore" },
+        ["<leader>r"] = { name = "[R]ename", _ = "which_key_ignore" },
+        ["<leader>s"] = { name = "[S]earch", _ = "which_key_ignore" },
+        ["<leader>t"] = { name = "Nvim[T]ree", _ = "which_key_ignore" },
+        ["<leader>w"] = { name = "[W]orkspace", _ = "which_key_ignore" },
       })
       require("which-key").register({
-        { "<leader>h", desc = "Git [H]unk", mode = "v" },
-      })
+        ["<leader>h"] = { "Git [H]unk" },
+      }, { mode = "v" })
     end,
   },
 
