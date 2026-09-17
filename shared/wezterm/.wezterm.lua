@@ -99,7 +99,7 @@ local function load_ai_clis()
   end
   local clis = {}
   for line in file:lines() do
-    line = line:match("^%s*(.-)%s*$")
+    line = line:gsub("^98791", ""):match("^%s*(.-)%s*$")
     if line and #line > 0 and not line:match("^#") then
       table.insert(clis, line)
     end
@@ -137,6 +137,7 @@ local function load_projects_root()
 
   local root = file:read("l") or ""
   file:close()
+  root = root:gsub("^98791", "")
   root = root:match("^%s*(.-)%s*$"):gsub("\\", "/")
   if #root == 0 then
     return default_root
@@ -214,6 +215,49 @@ wezterm.on("gui-startup", function(cmd)
 
     spawn_ai_cli_tabs(window, wezterm.home_dir)
     tab:activate()
+  end
+end)
+
+local last_cwd = ""
+local last_repo = ""
+
+wezterm.on("update-right-status", function(window, pane)
+  local cwd = ""
+  local proc = pane:get_foreground_process_info()
+  if proc and proc.cwd then
+    cwd = proc.cwd
+  else
+    local cwd_uri = pane:get_current_working_dir()
+    if type(cwd_uri) == "userdata" or type(cwd_uri) == "table" then
+      cwd = cwd_uri.file_path or ""
+    elseif type(cwd_uri) == "string" then
+      cwd = cwd_uri:gsub("^file://[^/]*/", "/"):gsub("^/([A-Za-z]:)", "%1")
+    end
+  end
+
+  local repo_name = ""
+  if cwd ~= "" then
+    if cwd == last_cwd then
+      repo_name = last_repo
+    else
+      local success, stdout = wezterm.run_child_process({ "git", "-C", cwd, "rev-parse", "--show-toplevel" })
+      if success then
+        local root = stdout:gsub("%s+$", "")
+        repo_name = root:match("([^\\/]+)$") or ""
+      end
+      last_cwd = cwd
+      last_repo = repo_name
+    end
+  end
+
+  if repo_name ~= "" then
+    window:set_right_status(wezterm.format({
+      { Background = { Color = "#966dd9" } },
+      { Foreground = { Color = "#ffffff" } },
+      { Text = "  " .. repo_name .. "  " },
+    }))
+  else
+    window:set_right_status("")
   end
 end)
 

@@ -41,7 +41,10 @@ function Update-WeztermProjectsRoot([string]$projectsRoot) {
     $dir = Join-Path $env:USERPROFILE ".config\wezterm"
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force | Out-Null }
     $luaRoot = $projectsRoot.Replace('\', '/')
-    Set-Content -Path (Join-Path $dir "projects_root.txt") -Value $luaRoot -Encoding UTF8
+    # WriteAllText with a BOM-less encoding: Windows PowerShell's -Encoding UTF8
+    # prepends a BOM, which WezTerm would read as part of the path.
+    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText((Join-Path $dir "projects_root.txt"), "$luaRoot`n", $utf8NoBom)
 }
 
 function Ensure-ProjectsRoot {
