@@ -1,0 +1,61 @@
+approvals_reviewer = "auto_review"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+[projects.'d:\git\gradebook']
+trust_level = "trusted"
+
+[projects.'d:\git\resource_manager_vue']
+trust_level = "trusted"
+
+[projects.'d:\git\lesson_plan_presenter']
+trust_level = "trusted"
+
+[projects.'d:\git\qnpm_skunkworks_tools']
+trust_level = "trusted"
+
+[projects.'d:\git\quaver-claude-plugin-marketplace']
+trust_level = "trusted"
+
+[projects.'d:\git\qnpm_quaver_tools']
+trust_level = "trusted"
+
+[projects.'d:\git\qnpm_edit_notes_panel']
+trust_level = "trusted"
+
+[projects.'d:\git\customdashboard']
+trust_level = "trusted"
+
+[projects.'d:\git\melody_composer_vue']
+trust_level = "trusted"
+
+[projects.'c:\users\q1524']
+trust_level = "trusted"
+
+[projects.'d:\git\quiz_challenge']
+trust_level = "trusted"
+
+[projects.'c:\users\q1524\.dotfiles']
+trust_level = "trusted"
+
+[projects.'d:\git\lpp_lite_2']
+trust_level = "trusted"
+
+[projects.'d:\git\dosagereport']
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 1
+gpt-6-astra = 4
+
+[windows]
+sandbox = "unelevated"
+
+[marketplaces.quaver-plugins]
+source_type = "local"
+source = '\\?\D:\git\Quaver-Claude-Plugin-Marketplace'
+
+[plugins."azure-pr-reviewer@quaver-plugins"]
+enabled = true
+
+[plugins."artisan-mode@quaver-plugins"]
+enabled = true

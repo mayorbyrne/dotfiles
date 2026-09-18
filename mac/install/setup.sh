@@ -205,6 +205,10 @@ if [ -f "$DOTFILES_DIR/shared/install/setup_ai_clis.sh" ]; then
     bash "$DOTFILES_DIR/shared/install/setup_ai_clis.sh"
 fi
 
+if [ -f "$DOTFILES_DIR/shared/install/setup_ai_config.sh" ]; then
+    bash "$DOTFILES_DIR/shared/install/setup_ai_config.sh"
+fi
+
 echo ""
 echo "===================================="
 echo "Setup Complete!"
