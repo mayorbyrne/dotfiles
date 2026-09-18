@@ -1,0 +1,4 @@
+interface:
+  display_name: "Artisan Mode"
+  short_description: "Plan code in place for human implementation"
+  default_prompt: "Use $artisan-mode to scaffold this change as implementation comments for me to code manually."
