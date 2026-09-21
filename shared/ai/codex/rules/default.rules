@@ -1,0 +1,3 @@
+prefix_rule(pattern=["az", "repos", "pr"], decision="allow")
+prefix_rule(pattern=["C:\\Program Files\\PowerShell\\7\\pwsh.exe", "-NoProfile", "-Command", "git checkout --detach 4a58f5e2abafb4e718027cf13243f2573b51896c"], decision="allow")
+prefix_rule(pattern=["git", "diff"], decision="allow")

@@ -1,0 +1,196 @@
+{
+  "env": {
+    "CLAUDE_CODE_FORCE_SESSION_PERSISTENCE": "1"
+  },
+  "model": "opus[1m]",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$raw = [Console]::In.ReadToEnd(); $j = $raw | ConvertFrom-Json; $f = $j.tool_response.filePath; if (-not $f) { $f = $j.tool_input.file_path }; if ($f -and (Test-Path $f)) { $d = Split-Path -Parent $f; while ($d -and -not (Test-Path (Join-Path $d 'package.json'))) { $p = Split-Path -Parent $d; if ($p -eq $d) { $d = $null; break }; $d = $p }; if ($d) { Push-Location $d; npx prettier --write \"$f\" 2>&1 | Out-Null; Pop-Location } }; exit 0",
+            "shell": "powershell",
+            "timeout": 60,
+            "statusMessage": "Formatting..."
+          }
+        ]
+      },
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "TeammateIdle": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PermissionRequest": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [ -f '$HOME/.orca/agent-hooks/claude-hook.cmd' ]; then '$HOME/.orca/agent-hooks/claude-hook.cmd'; else { command -p cat 2>/dev/null || cat; } >/dev/null 2>&1 || :; fi",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "if [ -f \"$USERPROFILE/.claude/hooks/statusline.ps1\" ]; then powershell -ExecutionPolicy Bypass -File \"$USERPROFILE/.claude/hooks/statusline.ps1\"; fi"
+  },
+  "enabledPlugins": {
+    "caveman@caveman": true,
+    "azure-pr-reviewer@quaver-plugins": true,
+    "artisan-mode@quaver-plugins": true,
+    "patch-notes-form@quaver-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "caveman": {
+      "source": {
+        "source": "github",
+        "repo": "JuliusBrussee/caveman"
+      }
+    },
+    "quaver-plugins": {
+      "source": {
+        "source": "git",
+        "url": "https://QuaverMusic@dev.azure.com/QuaverMusic/Claude/_git/Quaver-Claude-Plugin-Marketplace"
+      }
+    }
+  },
+  "spinnerVerbs": {
+    "mode": "replace",
+    "verbs": [
+      "Roboting",
+      "Dissociating",
+      "Suffering",
+      "Rotting",
+      "Clenching",
+      "Screaming",
+      "Festering",
+      "Convulsing",
+      "Writhing",
+      "Thrashing",
+      "Spasming",
+      "Drooling"
+    ]
+  },
+  "effortLevel": "medium",
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "medium"
+    }
+  },
+  "autoUpdatesChannel": "latest",
+  "theme": "dark",
+  "editorMode": "vim",
+  "skipAutoPermissionPrompt": true
+}
