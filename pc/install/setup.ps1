@@ -350,6 +350,11 @@ if (Test-Path $aiClisSetup) {
     & $aiClisSetup
 }
 
+$aiConfigSetup = "$dotfilesDir\shared\install\setup_ai_config.ps1"
+if (Test-Path $aiConfigSetup) {
+    & $aiConfigSetup
+}
+
 Write-Host ""
 Write-Host "Setup Complete!" -ForegroundColor Green
 Write-Host "Restart your terminal and run 'nvim'" -ForegroundColor Yellow

@@ -1,0 +1,61 @@
+approvals_reviewer = "auto_review"
+model = "gpt-5.6-sol"
+model_reasoning_effort = "medium"
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[projects.'d:\git\work-project']
+trust_level = "trusted"
+
+[tui.model_availability_nux]
+"gpt-5.5" = 1
+gpt-6-astra = 4
+
+[windows]
+sandbox = "unelevated"
+
+[marketplaces.work-plugins]
+source_type = "local"
+source = '\\?\D:\git\work-plugin-marketplace'
+
+[plugins."azure-pr-reviewer@work-plugins"]
+enabled = true
+
+[plugins."artisan-mode@work-plugins"]
+enabled = true

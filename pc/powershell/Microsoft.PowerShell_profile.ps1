@@ -20,3 +20,6 @@ Set-Alias -Name grh -Value git-reset-hard
 
 function git-commit-no-verify { git commit --no-verify }
 Set-Alias -Name gcv -Value git-commit-no-verify
+
+# Strip NO_COLOR inherited from a parent process (it disables color in lazygit, etc)
+Remove-Item Env:NO_COLOR -ErrorAction SilentlyContinue
