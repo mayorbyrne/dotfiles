@@ -40,16 +40,20 @@ the Windows-only pieces. The installers call `shared/install/setup_ai_config.ps1
 
 | Repo path | Linked to |
 |---|---|
-| `shared/ai/claude/CLAUDE.md` | `~/.claude/CLAUDE.md` |
+| `shared/ai/AGENTS.md` | `~/.claude/CLAUDE.md` |
 | `shared/ai/claude/settings.json` | `~/.claude/settings.json` |
 | `shared/ai/claude/keybindings.json` | `~/.claude/keybindings.json` |
 | `shared/ai/claude/commands/i18n-extract.md` | `~/.claude/commands/i18n-extract.md` |
 | `shared/ai/claude/skills/release-docs` | `~/.claude/skills/release-docs` |
 | `pc/ai/claude/hooks/statusline.ps1` | `~/.claude/hooks/statusline.ps1` (Windows only) |
-| `shared/ai/codex/AGENTS.md` | `~/.codex/AGENTS.md` |
+| `shared/ai/AGENTS.md` | `~/.codex/AGENTS.md` |
 | `shared/ai/codex/config.toml` | `~/.codex/config.toml` |
 | `shared/ai/codex/rules/default.rules` | `~/.codex/rules/default.rules` |
 | `shared/ai/codex/skills/artisan-mode` | `~/.codex/skills/artisan-mode` |
+
+`shared/ai/AGENTS.md` is the single source for global agent instructions. Cursor
+has no file-based global rules, so paste it into Cursor Settings -> Rules -> User
+Rules by hand.
 
 Links are made per file and per skill, not per directory, so the tool-generated
 neighbours in the same folders (`~/.claude/skills/synced/`,

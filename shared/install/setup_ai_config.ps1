@@ -47,21 +47,22 @@ Write-Host "Linking AI config (Claude Code, Codex)..." -ForegroundColor Green
 $claudeDir = Join-Path $env:USERPROFILE ".claude"
 $codexDir = Join-Path $env:USERPROFILE ".codex"
 
+# Keyed by target because one source (AGENTS.md) feeds several targets.
 $links = [ordered]@{
-    (Join-Path $sharedAi "claude\CLAUDE.md")             = (Join-Path $claudeDir "CLAUDE.md")
-    (Join-Path $sharedAi "claude\settings.json")         = (Join-Path $claudeDir "settings.json")
-    (Join-Path $sharedAi "claude\keybindings.json")      = (Join-Path $claudeDir "keybindings.json")
-    (Join-Path $sharedAi "claude\commands\i18n-extract.md") = (Join-Path $claudeDir "commands\i18n-extract.md")
-    (Join-Path $sharedAi "claude\skills\release-docs")   = (Join-Path $claudeDir "skills\release-docs")
-    (Join-Path $pcAi "claude\hooks\statusline.ps1")      = (Join-Path $claudeDir "hooks\statusline.ps1")
-    (Join-Path $sharedAi "codex\AGENTS.md")              = (Join-Path $codexDir "AGENTS.md")
-    (Join-Path $sharedAi "codex\config.toml")            = (Join-Path $codexDir "config.toml")
-    (Join-Path $sharedAi "codex\rules\default.rules")    = (Join-Path $codexDir "rules\default.rules")
-    (Join-Path $sharedAi "codex\skills\artisan-mode")    = (Join-Path $codexDir "skills\artisan-mode")
+    (Join-Path $claudeDir "CLAUDE.md")                   = (Join-Path $sharedAi "AGENTS.md")
+    (Join-Path $claudeDir "settings.json")               = (Join-Path $sharedAi "claude\settings.json")
+    (Join-Path $claudeDir "keybindings.json")            = (Join-Path $sharedAi "claude\keybindings.json")
+    (Join-Path $claudeDir "commands\i18n-extract.md")    = (Join-Path $sharedAi "claude\commands\i18n-extract.md")
+    (Join-Path $claudeDir "skills\release-docs")         = (Join-Path $sharedAi "claude\skills\release-docs")
+    (Join-Path $claudeDir "hooks\statusline.ps1")        = (Join-Path $pcAi "claude\hooks\statusline.ps1")
+    (Join-Path $codexDir "AGENTS.md")                    = (Join-Path $sharedAi "AGENTS.md")
+    (Join-Path $codexDir "config.toml")                  = (Join-Path $sharedAi "codex\config.toml")
+    (Join-Path $codexDir "rules\default.rules")          = (Join-Path $sharedAi "codex\rules\default.rules")
+    (Join-Path $codexDir "skills\artisan-mode")          = (Join-Path $sharedAi "codex\skills\artisan-mode")
 }
 
-foreach ($source in $links.Keys) {
-    New-ConfigLink $source $links[$source]
+foreach ($target in $links.Keys) {
+    New-ConfigLink $links[$target] $target
 }
 
 Write-Host "AI config linked." -ForegroundColor Green
