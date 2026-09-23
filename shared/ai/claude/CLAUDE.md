@@ -35,6 +35,28 @@ When starting work on an Asana task (via the asana skill/plugin or any Asana tas
 
 If the branch already exists, check it out and rebase on fresh main instead of creating a duplicate.
 
+## Code comments
+
+Applies in every language and file type.
+
+- Comment sparingly, if at all. The team is experienced developers who review
+  diffs by hand, and walls of comment text slow that review down.
+- Write a comment only when the code cannot say it: a non-obvious why, a
+  workaround for an external bug, a constraint that is not visible locally.
+- One line is the default. A multi-line comment needs a real reason. Never write
+  paragraphs.
+- Never narrate what the code does, restate a name, or describe the change
+  being made ("added X", "now uses Y"). That belongs in the commit message.
+- No doc-comment blocks on functions whose name and signature already say
+  everything.
+
+## Commit messages
+
+- Keep the body sparse. Many commits need only the subject line.
+- When a body is needed, use short bullet points, not paragraphs.
+- Each bullet says what changed or why, in one line. Skip anything the diff
+  already makes obvious.
+
 ## Code duplication
 
 If a block of code appears more than once, extract it. This holds in every
