@@ -19,7 +19,7 @@
 
 ## Asana task workflow (git)
 
-When starting work on an Asana task (via the asana skill/plugin or any Asana task link), do this before writing code:
+When starting work on an Asana task (from an Asana task link, task ID, the asana skill/plugin, or any Asana-driven request), do this before writing code:
 
 1. `git stash -u` if the working tree is dirty. Tell the user what was stashed.
 2. `git checkout main` then `git pull` (fresh main, not dev, not the current branch).
