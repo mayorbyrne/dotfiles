@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Links the hand-authored Claude Code and Codex config from this repo into
-# ~/.claude and ~/.codex. Tool-generated state (credentials, sessions, caches,
-# synced skills, marketplace plugins) is left alone.
+# Links the hand-authored Claude Code, Codex, and Cursor config from this repo
+# into ~/.claude, ~/.codex, and ~/.cursor. Tool-generated state (credentials,
+# sessions, caches, synced skills, marketplace plugins) is left alone.
 
 set -euo pipefail
 
@@ -42,10 +42,11 @@ link_config() {
     echo "  Linked $target"
 }
 
-echo "Linking AI config (Claude Code, Codex)..."
+echo "Linking AI config (Claude Code, Codex, Cursor)..."
 
 claude_dir="$HOME/.claude"
 codex_dir="$HOME/.codex"
+cursor_dir="$HOME/.cursor"
 
 link_config "$shared_ai/AGENTS.md" "$claude_dir/CLAUDE.md"
 link_config "$shared_ai/claude/settings.json" "$claude_dir/settings.json"
@@ -56,6 +57,8 @@ link_config "$shared_ai/AGENTS.md" "$codex_dir/AGENTS.md"
 link_config "$shared_ai/codex/config.toml" "$codex_dir/config.toml"
 link_config "$shared_ai/codex/rules/default.rules" "$codex_dir/rules/default.rules"
 link_config "$shared_ai/codex/skills/artisan-mode" "$codex_dir/skills/artisan-mode"
+link_config "$shared_ai/AGENTS.md" "$cursor_dir/AGENTS.md"
+link_config "$shared_ai/AGENTS.md" "$cursor_dir/rules/AGENTS.mdc"
 
 echo "AI config linked."
 echo "The synced statusLine is Windows-only. On this OS, override statusLine in ~/.claude/settings.local.json."

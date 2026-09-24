@@ -1,7 +1,8 @@
 # AI dotfiles sync - plan
 
 Goal: sync Claude Code, Codex, and Cursor config across machines.
-Status: Claude Code and Codex are done and linked on this machine. Cursor is not started.
+Status: Claude Code, Codex, and Cursor user rules are linked. Cursor editor
+settings, MCP, and hooks are still unstarted (no hand-authored files yet).
 
 ## Decision
 
@@ -42,7 +43,9 @@ shared/install/
   setup_ai_config.sh
 ```
 
-See the AI config table in `README.md` for the full source-to-target link list.
+`shared/ai/AGENTS.md` is also linked to `~/.cursor/AGENTS.md` and
+`~/.cursor/rules/AGENTS.mdc`. See the AI config table in `README.md` for the
+full source-to-target link list.
 
 Links are per file and per skill, never per directory, because the real config
 folders mix hand-authored files with tool-generated ones
@@ -89,18 +92,26 @@ state filenames, so a stray copy cannot be committed by accident.
 
 ### Cursor
 
-Still not inspected. `~/.cursor` was empty on this machine and
-`%APPDATA%\Cursor\User` did not exist, so Cursor is not installed here.
-Confirm the real paths on a machine that has it before writing the symlink list.
+Confirmed on a machine with Cursor installed.
 
-Expected locations:
-- `%APPDATA%\Cursor\User\settings.json` and `keybindings.json` (Windows)
-- `~/Library/Application Support/Cursor/User/...` (macOS)
-- `~/.cursor/rules/` for project-agnostic rules
-- `~/.cursor/mcp.json` for MCP servers
+Sync: `shared/ai/AGENTS.md` to `~/.cursor/AGENTS.md` and
+`~/.cursor/rules/AGENTS.mdc` (machine-local user rule files).
 
-Ignore: `workspaceStorage/`, `globalStorage/` (except hand-edited files),
-`History/`, `logs/`, anything holding a token.
+Not synced yet (no hand-authored content):
+- `~/.cursor/mcp.json`, `~/.cursor/hooks.json`, `~/.cursor/permissions.json`
+- editor `settings.json` / `keybindings.json` at
+  `%APPDATA%\Cursor\User` (Windows),
+  `~/Library/Application Support/Cursor/User` (macOS),
+  `~/.config/Cursor/User` (Linux)
+
+Not synced: `skills-cursor/` (Cursor-managed), `chats/`, `projects/`,
+`extensions/`, `ai-tracking/`, `plans/`, `cli-config.json`, `argv.json`,
+`statsig-cache.json`, `agent-cli-state.json`, `workspaceStorage/`,
+`globalStorage/`, `History/`, logs, anything holding a token.
+
+Skills already linked under `~/.claude/skills/` and `~/.codex/skills/` are
+visible to Cursor. Do not also link them under `~/.cursor/skills/` or they
+show up twice.
 
 Extensions: do not sync the extension folders. Export a list instead
 (`cursor --list-extensions > shared/ai/cursor/extensions.txt`) and reinstall from it.
@@ -143,8 +154,8 @@ If templating is needed later, chezmoi can pull from a vault at apply time.
 
 ## Next steps
 
-1. Confirm the Cursor config paths on a machine with Cursor installed, then add
-   `shared/ai/cursor/` and extend both `setup_ai_config` scripts.
+1. When there is hand-authored Cursor MCP, hooks, or editor settings, put them
+   under `shared/ai/cursor/` and extend both `setup_ai_config` scripts.
 2. Test on a second machine from a clean clone. Not yet done: everything so far
    has only run on this Windows box.
 3. Decide what to do about the machine-specific `[projects.*]` and

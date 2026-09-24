@@ -1,6 +1,6 @@
-# Links the hand-authored Claude Code and Codex config from this repo into
-# ~/.claude and ~/.codex. Tool-generated state (credentials, sessions, caches,
-# synced skills, marketplace plugins) is left alone.
+# Links the hand-authored Claude Code, Codex, and Cursor config from this repo
+# into ~/.claude, ~/.codex, and ~/.cursor. Tool-generated state (credentials,
+# sessions, caches, synced skills, marketplace plugins) is left alone.
 
 $ErrorActionPreference = "Stop"
 
@@ -42,10 +42,11 @@ function New-ConfigLink([string]$source, [string]$target) {
     Write-Host "  Linked $target" -ForegroundColor Gray
 }
 
-Write-Host "Linking AI config (Claude Code, Codex)..." -ForegroundColor Green
+Write-Host "Linking AI config (Claude Code, Codex, Cursor)..." -ForegroundColor Green
 
 $claudeDir = Join-Path $env:USERPROFILE ".claude"
 $codexDir = Join-Path $env:USERPROFILE ".codex"
+$cursorDir = Join-Path $env:USERPROFILE ".cursor"
 
 # Keyed by target because one source (AGENTS.md) feeds several targets.
 $links = [ordered]@{
@@ -59,6 +60,8 @@ $links = [ordered]@{
     (Join-Path $codexDir "config.toml")                  = (Join-Path $sharedAi "codex\config.toml")
     (Join-Path $codexDir "rules\default.rules")          = (Join-Path $sharedAi "codex\rules\default.rules")
     (Join-Path $codexDir "skills\artisan-mode")          = (Join-Path $sharedAi "codex\skills\artisan-mode")
+    (Join-Path $cursorDir "AGENTS.md")                   = (Join-Path $sharedAi "AGENTS.md")
+    (Join-Path $cursorDir "rules\AGENTS.mdc")            = (Join-Path $sharedAi "AGENTS.md")
 }
 
 foreach ($target in $links.Keys) {
