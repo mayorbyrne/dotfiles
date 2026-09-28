@@ -16,3 +16,4 @@ session_index.jsonl
 *.sqlite-wal
 shared/ai/claude/skills/synced/
 shared/ai/codex/skills/.system/
+bak*
