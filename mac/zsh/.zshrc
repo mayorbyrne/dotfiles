@@ -25,6 +25,14 @@ alias gfp="git fetch -p"
 alias grh="git reset --hard"
 alias mux="bash ~/.config/scripts/mux.sh"
 
+autoload -U up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey "^[[A" up-line-or-beginning-search
+bindkey "^[[B" down-line-or-beginning-search
+bindkey "^[OA" up-line-or-beginning-search
+bindkey "^[OB" down-line-or-beginning-search
+
 export PATH=$HOME/.npm-global/bin:$HOME/Desktop/dart-sdk/bin:$HOME/.config/scripts:$PATH
 DOTFILES="${DOTFILES:-$HOME/.dotfiles}"
 source "$DOTFILES/shared/git-prompt.sh"
