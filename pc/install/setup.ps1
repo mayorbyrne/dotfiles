@@ -45,7 +45,7 @@ if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
 Write-Host "Installing packages via Chocolatey..." -ForegroundColor Green
 Write-Host "This may take several minutes. Please be patient..." -ForegroundColor Yellow
 
-$packages = @("git", "neovim", "lazygit", "yazi", "wezterm", "fzf", "ripgrep", "powershell-core", "powertoys", "gsudo")
+$packages = @("git", "neovim", "lazygit", "yazi", "wezterm", "fzf", "ripgrep", "powershell-core", "powertoys")
 foreach ($package in $packages) {
     Write-Host "Installing $package..." -ForegroundColor Gray
     choco install -y $package --limit-output
