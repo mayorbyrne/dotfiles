@@ -15,7 +15,7 @@ sudo apt update
 
 # Install essential packages
 echo "Installing essential packages..."
-ESSENTIAL_PACKAGES=("curl" "wget" "unzip" "build-essential" "git-all" "zsh" "python3-gi" "gir1.2-gtk-3.0")
+ESSENTIAL_PACKAGES=("curl" "wget" "unzip" "build-essential" "git-all" "zsh" "python3-gi" "gir1.2-gtk-3.0" "jq")
 
 for package in "${ESSENTIAL_PACKAGES[@]}"; do
     if dpkg -l | grep -q "^ii  $package "; then

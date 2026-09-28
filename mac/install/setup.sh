@@ -46,6 +46,7 @@ PACKAGES=(
     "fzf"
     "ripgrep"
     "starship"
+    "jq"
 )
 
 for package in "${PACKAGES[@]}"; do

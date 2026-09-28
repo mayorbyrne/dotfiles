@@ -62,8 +62,9 @@ or authenticates with does not.
 
 ### Claude (`~/.claude`)
 
-Sync: `CLAUDE.md`, `settings.json`, `keybindings.json`, plus the individual
-hand-authored entries in `commands/`, `hooks/`, and `skills/`.
+Sync: `CLAUDE.md`, `keybindings.json`, plus the individual hand-authored
+entries in `commands/`, `hooks/`, and `skills/`. `settings.json` is written, not
+linked: the repo copy merged with `~/.config/dotfiles/claude.work.json`.
 
 Not synced: `.credentials.json`, `settings.local.json`, `settings.json.bak`,
 `history.jsonl`, `projects/`, `sessions/`, `session-env/`, `todos/`,
@@ -78,7 +79,8 @@ Not synced: `.credentials.json`, `settings.local.json`, `settings.json.bak`,
 
 ### Codex (`~/.codex`)
 
-Sync: `AGENTS.md`, `config.toml`, `rules/default.rules`, `skills/artisan-mode/`.
+Sync: `AGENTS.md`, `rules/default.rules`, `skills/artisan-mode/`. `config.toml`
+is seeded once from the repo copy plus `~/.config/dotfiles/codex.work.toml`.
 
 Not synced: `auth.json`, `history.jsonl`, `session_index.jsonl`, `sessions/`,
 all `*.sqlite` plus their `-shm`/`-wal` siblings (goals, logs, memories,
@@ -120,31 +122,29 @@ Extensions: do not sync the extension folders. Export a list instead
 
 Handled in the shipped config:
 
-- Hardcoded `C:\Users\Q1524` paths in `settings.json` were replaced with
+- Hardcoded user-profile paths in `settings.json` were replaced with
   `$USERPROFILE` and `$HOME`. Those hook commands run through a shell, so the
   expansion works on Windows (git bash) and on Linux/macOS alike.
 - The `statusLine` command is wrapped in a file test, so it is a no-op where
   `statusline.ps1` is absent. Non-Windows machines override `statusLine` in
-  `settings.local.json`.
-- `settings.local.json` stays git-ignored and merges over the synced
-  `settings.json`.
+  `~/.config/dotfiles/claude.work.json`.
+- `~/.claude/settings.local.json` is not a user-level file (Claude Code only
+  reads it inside a project), so it cannot carry per-machine overrides.
+- Work-specific entries (plugin marketplace, Codex project trust, local
+  marketplace paths) live in overlays under `~/.config/dotfiles/`, outside the
+  repo. The setup scripts merge them in.
 
 Still open:
 
-- `shared/ai/codex/config.toml` holds per-project `trust_level` entries and a
-  local marketplace path under `D:\git\`. Harmless on a machine with a different
-  layout, but it is dead weight there. Codex has no documented local-override
-  file, so this is unsolved rather than handled.
-- Claude Code and Orca rewrite `settings.json` in place, and it is now a symlink,
-  so those rewrites land in the repo as diffs. Expect churn.
+- Claude Code and Orca rewrite `~/.claude/settings.json` in place. Those edits
+  stay local until copied into the repo file or the overlay.
 
 ## Plugins
 
-The work marketplace repo (`D:\git\work-plugin-marketplace`)
-already solves plugin sync, and the synced `settings.json` declares both
-`extraKnownMarketplaces` and `enabledPlugins`, so a new machine picks them up
-without a manual `claude plugin marketplace add`. Do not copy plugin content
-into dotfiles, it would drift from the marketplace.
+The work plugin marketplace already solves plugin sync. The merged
+`settings.json` declares `extraKnownMarketplaces` and `enabledPlugins`, so a
+new machine picks them up without a manual `claude plugin marketplace add`. Do
+not copy plugin content into dotfiles, it would drift from the marketplace.
 
 ## Secrets
 
@@ -158,5 +158,3 @@ If templating is needed later, chezmoi can pull from a vault at apply time.
    under `shared/ai/cursor/` and extend both `setup_ai_config` scripts.
 2. Test on a second machine from a clean clone. Not yet done: everything so far
    has only run on this Windows box.
-3. Decide what to do about the machine-specific `[projects.*]` and
-   `[marketplaces.*]` blocks in the synced `config.toml`.
