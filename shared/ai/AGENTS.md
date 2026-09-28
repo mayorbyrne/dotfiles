@@ -49,6 +49,8 @@ Applies in every language and file type.
   being made ("added X", "now uses Y"). That belongs in the commit message.
 - No doc-comment blocks on functions whose name and signature already say
   everything.
+- Use `//` for comments. Reserve `/** */` for actual method documentation in
+  JSDuck/JSDoc syntax, nothing else.
 
 ## Commit messages
 
@@ -72,6 +74,18 @@ the part that will be forgotten when one copy changes.
 Say what the extracted thing is for in its name. If a good name does not exist,
 that usually means the two blocks were not the same thing after all, and they
 should stay separate.
+
+### BUZZZZ
+
+When I write or review code and spot a duplicated block, I call it out with
+"BUZZZZ" and extract it before moving on.
+
+- Duplicated across files: extract into a shared util module.
+- Duplicated within one file: extract into a method/function in that file.
+- Needs unit tests: it goes in a util, regardless of where the duplication
+  lived. Then write the tests.
+
+This applies to code I write, code I refactor, and code I review.
 
 ## Vue SFC layout (script setup, lang=ts)
 
