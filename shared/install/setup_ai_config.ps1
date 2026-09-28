@@ -98,6 +98,57 @@ function Request-ClaudeOverlay {
     Write-Host "  Wrote $claudeOverlay" -ForegroundColor Gray
 }
 
+function Request-WorkScope {
+    if (Test-Path $workEnv) {
+        return
+    }
+
+    $scope = Read-Host "Work npm scope to replace @work in AGENTS.md (e.g. @acme, blank to skip)"
+    if (!$scope) {
+        return
+    }
+
+    New-Item -ItemType Directory -Path $overlayDir -Force | Out-Null
+    Write-Utf8File $workEnv "WORK_NPM_SCOPE=$scope`n"
+    Write-Host "  Wrote $workEnv" -ForegroundColor Gray
+}
+
+function Read-WorkScope {
+    if (!(Test-Path $workEnv)) {
+        return ""
+    }
+    $line = Get-Content -LiteralPath $workEnv | Where-Object { $_ -match '^WORK_NPM_SCOPE=' } | Select-Object -Last 1
+    if (!$line) {
+        return ""
+    }
+    return $line.Substring("WORK_NPM_SCOPE=".Length)
+}
+
+# Writes generated content into place, skipping the backup when nothing changed.
+function Install-GeneratedFile([string]$target, [string]$content) {
+    $existing = Get-Item -LiteralPath $target -Force -ErrorAction SilentlyContinue
+    if ($existing -and $existing.LinkType -ne "SymbolicLink" -and (Get-Content -LiteralPath $target -Raw) -eq $content) {
+        Write-Host "  $target is up to date" -ForegroundColor Gray
+        return
+    }
+
+    Clear-ConfigTarget $target
+    Write-Utf8File $target $content
+    Write-Host "  Wrote $target" -ForegroundColor Gray
+}
+
+# Without a work scope the file stays a live symlink.
+function Install-Agents([string]$target) {
+    $source = Join-Path $sharedAi "AGENTS.md"
+    if (!$workScope) {
+        New-ConfigLink $source $target
+        return
+    }
+
+    $content = (Get-Content -LiteralPath $source -Raw).Replace("@work/", "$workScope/")
+    Install-GeneratedFile $target $content
+}
+
 function Write-ClaudeSettings {
     $base = Join-Path $sharedAi "claude\settings.json"
     $target = Join-Path $claudeDir "settings.json"
@@ -106,17 +157,7 @@ function Write-ClaudeSettings {
     if (Test-Path $claudeOverlay) {
         Merge-JsonObject $settings (Get-Content -LiteralPath $claudeOverlay -Raw | ConvertFrom-Json)
     }
-    $merged = $settings | ConvertTo-Json -Depth 100
-
-    $existing = Get-Item -LiteralPath $target -Force -ErrorAction SilentlyContinue
-    if ($existing -and $existing.LinkType -ne "SymbolicLink" -and (Get-Content -LiteralPath $target -Raw) -eq $merged) {
-        Write-Host "  $target is up to date" -ForegroundColor Gray
-        return
-    }
-
-    Clear-ConfigTarget $target
-    Write-Utf8File $target $merged
-    Write-Host "  Wrote $target" -ForegroundColor Gray
+    Install-GeneratedFile $target ($settings | ConvertTo-Json -Depth 100)
 }
 
 # Codex rewrites config.toml itself (trust entries, UI state), so it is seeded
@@ -149,23 +190,31 @@ $cursorDir = Join-Path $env:USERPROFILE ".cursor"
 $overlayDir = Join-Path $env:USERPROFILE ".config\dotfiles"
 $claudeOverlay = Join-Path $overlayDir "claude.work.json"
 $codexOverlay = Join-Path $overlayDir "codex.work.toml"
+$workEnv = Join-Path $overlayDir "work.env"
 
 Request-ClaudeOverlay
+Request-WorkScope
+$workScope = Read-WorkScope
+
 Write-ClaudeSettings
 Initialize-CodexConfig
 
-# Keyed by target because one source (AGENTS.md) feeds several targets.
+foreach ($target in @(
+    (Join-Path $claudeDir "CLAUDE.md"),
+    (Join-Path $codexDir "AGENTS.md"),
+    (Join-Path $cursorDir "AGENTS.md"),
+    (Join-Path $cursorDir "rules\AGENTS.mdc")
+)) {
+    Install-Agents $target
+}
+
 $links = [ordered]@{
-    (Join-Path $claudeDir "CLAUDE.md")                   = (Join-Path $sharedAi "AGENTS.md")
     (Join-Path $claudeDir "keybindings.json")            = (Join-Path $sharedAi "claude\keybindings.json")
     (Join-Path $claudeDir "commands\i18n-extract.md")    = (Join-Path $sharedAi "claude\commands\i18n-extract.md")
     (Join-Path $claudeDir "skills\release-docs")         = (Join-Path $sharedAi "claude\skills\release-docs")
     (Join-Path $claudeDir "hooks\statusline.ps1")        = (Join-Path $pcAi "claude\hooks\statusline.ps1")
-    (Join-Path $codexDir "AGENTS.md")                    = (Join-Path $sharedAi "AGENTS.md")
     (Join-Path $codexDir "rules\default.rules")          = (Join-Path $sharedAi "codex\rules\default.rules")
     (Join-Path $codexDir "skills\artisan-mode")          = (Join-Path $sharedAi "codex\skills\artisan-mode")
-    (Join-Path $cursorDir "AGENTS.md")                   = (Join-Path $sharedAi "AGENTS.md")
-    (Join-Path $cursorDir "rules\AGENTS.mdc")            = (Join-Path $sharedAi "AGENTS.md")
 }
 
 foreach ($target in $links.Keys) {
@@ -173,4 +222,4 @@ foreach ($target in $links.Keys) {
 }
 
 Write-Host "AI config linked." -ForegroundColor Green
-Write-Host "Rerun this script after changing shared\ai\claude\settings.json or $claudeOverlay." -ForegroundColor Yellow
+Write-Host "Rerun this script after changing shared\ai\claude\settings.json, $claudeOverlay, or (with a work scope) shared\ai\AGENTS.md." -ForegroundColor Yellow

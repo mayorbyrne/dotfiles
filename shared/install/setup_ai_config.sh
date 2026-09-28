@@ -77,26 +77,72 @@ prompt_claude_overlay() {
     echo "  Wrote $claude_overlay"
 }
 
+prompt_work_scope() {
+    if [ -e "$work_env" ] || [ ! -t 0 ]; then
+        return
+    fi
+
+    local scope
+    read -r -p "Work npm scope to replace @work in AGENTS.md (e.g. @acme, blank to skip): " scope
+    if [ -z "$scope" ]; then
+        return
+    fi
+
+    mkdir -p "$overlay_dir"
+    echo "WORK_NPM_SCOPE=$scope" > "$work_env"
+    echo "  Wrote $work_env"
+}
+
+read_work_scope() {
+    if [ -f "$work_env" ]; then
+        sed -n 's/^WORK_NPM_SCOPE=//p' "$work_env" | tail -n 1
+    fi
+}
+
+# Moves a freshly generated file into place, skipping the backup when nothing changed.
+install_generated() {
+    local generated="$1"
+    local target="$2"
+
+    if [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$generated" "$target"; then
+        rm -f "$generated"
+        echo "  $target is up to date"
+        return
+    fi
+
+    clear_target "$target"
+    mv "$generated" "$target"
+    echo "  Wrote $target"
+}
+
+# Without a work scope the file stays a live symlink.
+install_agents() {
+    local target="$1"
+    local source="$shared_ai/AGENTS.md"
+
+    if [ -z "$work_scope" ]; then
+        link_config "$source" "$target"
+        return
+    fi
+
+    mkdir -p "$(dirname "$target")"
+    sed "s|@work/|$work_scope/|g" "$source" > "$target.tmp-$stamp"
+    install_generated "$target.tmp-$stamp" "$target"
+}
+
 write_claude_settings() {
     local base="$shared_ai/claude/settings.json"
     local target="$claude_dir/settings.json"
     local merged="$target.tmp-$stamp"
 
+    mkdir -p "$claude_dir"
     if [ -f "$claude_overlay" ]; then
         jq -s '.[0] * .[1]' "$base" "$claude_overlay" > "$merged"
     else
         jq . "$base" > "$merged"
     fi
 
-    if [ -f "$target" ] && [ ! -L "$target" ] && cmp -s "$merged" "$target"; then
-        rm -f "$merged"
-        echo "  $target is up to date"
-        return
-    fi
-
-    clear_target "$target"
-    mv "$merged" "$target"
-    echo "  Wrote $target"
+    install_generated "$merged" "$target"
 }
 
 # Codex rewrites config.toml itself (trust entries, UI state), so it is seeded
@@ -133,21 +179,25 @@ cursor_dir="$HOME/.cursor"
 overlay_dir="${XDG_CONFIG_HOME:-$HOME/.config}/dotfiles"
 claude_overlay="$overlay_dir/claude.work.json"
 codex_overlay="$overlay_dir/codex.work.toml"
+work_env="$overlay_dir/work.env"
 
 prompt_claude_overlay
+prompt_work_scope
+work_scope="$(read_work_scope)"
+
 write_claude_settings
 seed_codex_config
 
-link_config "$shared_ai/AGENTS.md" "$claude_dir/CLAUDE.md"
+install_agents "$claude_dir/CLAUDE.md"
 link_config "$shared_ai/claude/keybindings.json" "$claude_dir/keybindings.json"
 link_config "$shared_ai/claude/commands/i18n-extract.md" "$claude_dir/commands/i18n-extract.md"
 link_config "$shared_ai/claude/skills/release-docs" "$claude_dir/skills/release-docs"
-link_config "$shared_ai/AGENTS.md" "$codex_dir/AGENTS.md"
+install_agents "$codex_dir/AGENTS.md"
 link_config "$shared_ai/codex/rules/default.rules" "$codex_dir/rules/default.rules"
 link_config "$shared_ai/codex/skills/artisan-mode" "$codex_dir/skills/artisan-mode"
-link_config "$shared_ai/AGENTS.md" "$cursor_dir/AGENTS.md"
-link_config "$shared_ai/AGENTS.md" "$cursor_dir/rules/AGENTS.mdc"
+install_agents "$cursor_dir/AGENTS.md"
+install_agents "$cursor_dir/rules/AGENTS.mdc"
 
 echo "AI config linked."
-echo "Rerun this script after changing shared/ai/claude/settings.json or $claude_overlay."
+echo "Rerun this script after changing shared/ai/claude/settings.json, $claude_overlay, or (with a work scope) shared/ai/AGENTS.md."
 echo "The synced statusLine is Windows-only. On this OS, override statusLine in $claude_overlay."

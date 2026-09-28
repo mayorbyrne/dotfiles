@@ -67,6 +67,11 @@ this repo:
 - Codex: seeded once, as the repo file plus the overlay appended, then left
   alone because Codex rewrites the file itself. The overlay must hold only
   `[tables]`, no top-level keys. Delete `~/.codex/config.toml` to reseed.
+- `AGENTS.md`: uses `@work/*` as a placeholder for the employer npm scope. If
+  `~/.config/dotfiles/work.env` sets `WORK_NPM_SCOPE=@yourscope`, the four
+  `AGENTS.md` targets are written as copies with the scope swapped in, so rerun
+  the script after editing `AGENTS.md`. Without `work.env` they stay symlinks.
+  The script prompts for the scope when the file is missing.
 
 `shared/ai/AGENTS.md` is the single source for global agent instructions. Cursor
 picks it up as a machine-local user rule under `~/.cursor/rules/`. Account-synced
