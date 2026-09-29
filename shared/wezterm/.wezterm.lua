@@ -279,6 +279,11 @@ config.keys = {
     action = wezterm.action.PasteFrom("Clipboard"),
   },
   {
+    key = "v",
+    mods = "CTRL",
+    action = wezterm.action.PasteFrom("Clipboard"),
+  },
+  {
     key = "j",
     mods = "CMD",
     action = wezterm.action.SendKey({
