@@ -29,6 +29,21 @@ echo "  Name: $(git config --global user.name)"
 echo "  Email: $(git config --global user.email)"
 echo ""
 
+# Shared settings are included rather than symlinked, so per-machine user and
+# credential settings never get written into the repo.
+SHARED_GITCONFIG="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/git/gitconfig"
+# Git Bash hands git.exe C:/... paths, so match what it stores.
+if command -v cygpath &> /dev/null; then
+    SHARED_GITCONFIG="$(cygpath -m "$SHARED_GITCONFIG")"
+fi
+if git config --global --get-all include.path | grep -qxF "$SHARED_GITCONFIG"; then
+    echo "Shared gitconfig already included"
+else
+    git config --global --add include.path "$SHARED_GITCONFIG"
+    echo "Included shared gitconfig: $SHARED_GITCONFIG"
+fi
+echo ""
+
 # Install Git Credential Manager based on OS
 OS_TYPE="$(uname -s)"
 

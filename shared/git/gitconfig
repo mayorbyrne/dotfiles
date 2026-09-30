@@ -1,0 +1,14 @@
+# Included from ~/.gitconfig by shared/install/setup_git.*; user and credential
+# settings stay in ~/.gitconfig since they differ per machine.
+[core]
+	editor = nvim
+	# Repos pin their own endings with .gitattributes; git should not rewrite them.
+	autocrlf = false
+	safecrlf = false
+[push]
+	autoSetupRemote = true
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true

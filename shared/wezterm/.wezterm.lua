@@ -14,19 +14,61 @@ config.tab_bar_at_bottom = true
 -- Use the defaults as a base
 config.hyperlink_rules = wezterm.default_hyperlink_rules()
 
--- For example, changing the color scheme:
-config.color_scheme = "tokyonight_night"
+local theme_dir = wezterm.home_dir .. "/.dotfiles/shared/theme/lua"
+local elforest = dofile(theme_dir .. "/elforest/palette.lua")
+local active_theme = dofile(theme_dir .. "/theme/active.lua")
 
--- The default background color
-config.colors = {
-  background = "#1c1c1c",
-  cursor_bg = "#ffd900",
-  tab_bar = {
-    background = "#ffffff",
-    -- The color of the inactive tab bar edge/divider
-    inactive_tab_edge = "transparent",
+config.color_schemes = {
+  Elforest = {
+    foreground = elforest.fg,
+    background = elforest.bg,
+    cursor_bg = elforest.yellow,
+    cursor_fg = elforest.bg,
+    cursor_border = elforest.yellow,
+    selection_bg = elforest.bg3,
+    selection_fg = elforest.fg_bright,
+    split = elforest.bg4,
+    scrollbar_thumb = elforest.bg3,
+    ansi = elforest.ansi,
+    brights = elforest.brights,
+    tab_bar = {
+      background = elforest.bg_dim,
+      inactive_tab_edge = "transparent",
+    },
   },
 }
+
+local ui_by_theme = {
+  elforest = {
+    active_bg = elforest.green,
+    active_fg = elforest.bg,
+    inactive_bg = elforest.bg2,
+    inactive_fg = elforest.cyan,
+    border = elforest.bg_dim,
+  },
+  classic = {
+    active_bg = "#966dd9",
+    active_fg = "#ffffff",
+    inactive_bg = "#4b5378",
+    inactive_fg = "#ffffff",
+    border = "#123456",
+  },
+}
+local ui = ui_by_theme[active_theme] or ui_by_theme.elforest
+
+if active_theme == "classic" then
+  config.color_scheme = "tokyonight_night"
+  config.colors = {
+    background = "#1c1c1c",
+    cursor_bg = "#ffd900",
+    tab_bar = {
+      background = "#ffffff",
+      inactive_tab_edge = "transparent",
+    },
+  }
+else
+  config.color_scheme = "Elforest"
+end
 
 -- This function returns the suggested title for a tab.
 -- It prefers the title that was set via `tab:set_title()`
@@ -55,15 +97,15 @@ wezterm.on(
     local title = tab_title(tab)
     if tab.is_active then
       return {
-        { Background = { Color = '#966dd9' } },
-        { Foreground = { Color = '#ffffff' } },
+        { Background = { Color = ui.active_bg } },
+        { Foreground = { Color = ui.active_fg } },
         { Text = '   ' .. title .. '   ' },
       }
 
     else
       return {
-        { Background = { Color = '#4b5378' } },
-        { Foreground = { Color = '#ffffff' } },
+        { Background = { Color = ui.inactive_bg } },
+        { Foreground = { Color = ui.inactive_fg } },
         { Text = '   ' .. title .. '   ' },
       }
     end
@@ -85,7 +127,7 @@ config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
 config.window_frame = {
   border_bottom_height = "0.1cell",
-  border_bottom_color = "#123456",
+  border_bottom_color = ui.border,
 }
 
 config.audible_bell = "Disabled"
@@ -252,8 +294,8 @@ wezterm.on("update-right-status", function(window, pane)
 
   if repo_name ~= "" then
     window:set_right_status(wezterm.format({
-      { Background = { Color = "#966dd9" } },
-      { Foreground = { Color = "#ffffff" } },
+      { Background = { Color = ui.active_bg } },
+      { Foreground = { Color = ui.active_fg } },
       { Text = "  " .. repo_name .. "  " },
     }))
   else

@@ -118,4 +118,10 @@ After that, configure git:
 - Windows: `shared/install/setup_git.ps1`
 - Linux / macOS: `bash shared/install/setup_git.sh`
 
+This sets user and credentials, and adds an `[include]` of
+`shared/git/gitconfig` to `~/.gitconfig` for settings shared across machines
+(editor, `autocrlf = false`, push, lfs). Put shared git settings in that file,
+and per-machine ones in `~/.gitconfig`. Rerunning is safe; the include is only
+added once.
+
 Existing machines that already cloned this repo need a re-run of their installer (or manual recreation of symlinks) after pulling this layout — old paths like `.dotfiles/nvim` no longer exist.

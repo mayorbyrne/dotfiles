@@ -5,6 +5,35 @@
 #       # Whether to show the divergence from the base branch in the branches view.
   # One of: 'none' | 'onlyArrow'  | 'arrowAndNumber'
 gui:
+  # theme:start (toggled by shared/theme/switch)
+  theme:
+    activeBorderColor:
+      - "#b6e07a"
+      - bold
+    inactiveBorderColor:
+      - "#3a4a42"
+    searchingActiveBorderColor:
+      - "#f0d870"
+      - bold
+    optionsTextColor:
+      - "#80a8e8"
+    selectedLineBgColor:
+      - "#2a3832"
+    inactiveViewSelectedLineBgColor:
+      - "#1f2a25"
+    cherryPickedCommitFgColor:
+      - "#121a16"
+    cherryPickedCommitBgColor:
+      - "#5fd7c7"
+    markedBaseCommitFgColor:
+      - "#121a16"
+    markedBaseCommitBgColor:
+      - "#f0d870"
+    unstagedChangesColor:
+      - "#f07878"
+    defaultFgColor:
+      - "#9fe6d6"
+  # theme:end
   showDivergenceFromBaseBranch: arrowAndNumber
   nerdFontsVersion: "3"
   customIcons:
