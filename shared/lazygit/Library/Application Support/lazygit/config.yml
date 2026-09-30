@@ -7,3 +7,7 @@
 gui:
   showDivergenceFromBaseBranch: arrowAndNumber
   nerdFontsVersion: "3"
+  customIcons:
+    extensions:
+      ".yaml": { icon: "\ue8eb", color: "#ffd550" }
+      ".yml": { icon: "\ue8eb", color: "#ffd550" }
