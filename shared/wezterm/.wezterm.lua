@@ -70,6 +70,11 @@ else
   config.color_scheme = "Elforest"
 end
 
+-- Fancy tab bar pads tabs past the formatted text cells; match that padding to the tab colors.
+local tab_bar_colors = active_theme == "classic" and config.colors.tab_bar or config.color_schemes.Elforest.tab_bar
+tab_bar_colors.active_tab = { bg_color = ui.active_bg, fg_color = ui.active_fg }
+tab_bar_colors.inactive_tab = { bg_color = ui.inactive_bg, fg_color = ui.inactive_fg }
+
 -- This function returns the suggested title for a tab.
 -- It prefers the title that was set via `tab:set_title()`
 -- or `wezterm cli set-tab-title`, but falls back to the
