@@ -478,12 +478,15 @@ require("lazy").setup({
   },
 
   {
-    "askfiy/visual_studio_code",
-    priority = 100,
+    dir = vim.fn.expand("~/.dotfiles/shared/theme"),
+    name = "theme",
+    priority = 1000,
     config = function()
-      vim.cmd([[colorscheme visual_studio_code]])
+      require("theme").apply()
     end,
   },
+
+  { "askfiy/visual_studio_code", lazy = true },
 
   {
     "folke/tokyonight.nvim",
@@ -575,7 +578,5 @@ require("lazy").setup({
 })
 
 require("custom.kevin")
-
-vim.cmd.highlight("DiagnosticUnderlineError guifg=#D64A4A gui=underline")
 
 -- vim: ts=2 sts=2 sw=2 et

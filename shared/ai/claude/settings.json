@@ -147,22 +147,13 @@
     "command": "if [ -f \"$USERPROFILE/.claude/hooks/statusline.ps1\" ]; then powershell -ExecutionPolicy Bypass -File \"$USERPROFILE/.claude/hooks/statusline.ps1\"; fi"
   },
   "enabledPlugins": {
-    "caveman@caveman": true,
-    "azure-pr-reviewer@work-plugins": true,
-    "artisan-mode@work-plugins": true,
-    "patch-notes-form@work-plugins": true
+    "caveman@caveman": true
   },
   "extraKnownMarketplaces": {
     "caveman": {
       "source": {
         "source": "github",
         "repo": "JuliusBrussee/caveman"
-      }
-    },
-    "work-plugins": {
-      "source": {
-        "source": "git",
-        "url": "https://example.com/work/plugin-marketplace.git"
       }
     }
   },

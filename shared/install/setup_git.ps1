@@ -28,9 +28,22 @@ Write-Host "  Name: $(git config --global user.name)"
 Write-Host "  Email: $(git config --global user.email)"
 Write-Host ""
 
+$dotfilesPath = Split-Path -Parent $PSScriptRoot
+
+# Shared settings are included rather than symlinked, so per-machine user and
+# credential settings never get written into the repo.
+$sharedGitconfig = (Join-Path $dotfilesPath "git\gitconfig") -replace '\\', '/'
+$includedPaths = @(git config --global --get-all include.path)
+if ($includedPaths -contains $sharedGitconfig) {
+    Write-Host "Shared gitconfig already included" -ForegroundColor Yellow
+} else {
+    git config --global --add include.path "$sharedGitconfig"
+    Write-Host "Included shared gitconfig: $sharedGitconfig" -ForegroundColor Green
+}
+Write-Host ""
+
 # Create symlink for git-prompt.sh
 Write-Host "Setting up git-prompt.sh..." -ForegroundColor Green
-$dotfilesPath = Split-Path -Parent $PSScriptRoot
 $gitPromptSource = Join-Path $dotfilesPath "git-prompt.sh"
 $gitPromptTarget = Join-Path $env:USERPROFILE ".git-prompt.sh"
 
