@@ -1,0 +1,495 @@
+﻿-- Pull in the wezterm API
+local wezterm = require("wezterm")
+local mux = wezterm.mux
+-- This will hold the configuration.
+local config = wezterm.config_builder()
+
+config.check_for_updates = true
+
+-- This is where you actually apply your config choices
+
+config.hide_tab_bar_if_only_one_tab = true
+config.tab_bar_at_bottom = true
+
+-- Use the defaults as a base
+config.hyperlink_rules = wezterm.default_hyperlink_rules()
+
+local theme_dir = wezterm.home_dir .. "/.dotfiles/shared/theme/lua"
+local elforest = dofile(theme_dir .. "/elforest/palette.lua")
+local active_theme = dofile(theme_dir .. "/theme/active.lua")
+
+config.color_schemes = {
+  Elforest = {
+    foreground = elforest.fg,
+    background = elforest.bg,
+    cursor_bg = elforest.yellow,
+    cursor_fg = elforest.bg,
+    cursor_border = elforest.yellow,
+    selection_bg = elforest.bg3,
+    selection_fg = elforest.fg_bright,
+    split = elforest.bg4,
+    scrollbar_thumb = elforest.bg3,
+    ansi = elforest.ansi,
+    brights = elforest.brights,
+    tab_bar = {
+      background = elforest.bg_dim,
+      inactive_tab_edge = "transparent",
+    },
+  },
+}
+
+local ui_by_theme = {
+  elforest = {
+    active_bg = elforest.green,
+    active_fg = elforest.bg,
+    inactive_bg = elforest.bg2,
+    inactive_fg = elforest.cyan,
+    border = elforest.bg_dim,
+  },
+  classic = {
+    active_bg = "#966dd9",
+    active_fg = "#ffffff",
+    inactive_bg = "#4b5378",
+    inactive_fg = "#ffffff",
+    border = "#123456",
+  },
+}
+local ui = ui_by_theme[active_theme] or ui_by_theme.elforest
+
+if active_theme == "classic" then
+  config.color_scheme = "tokyonight_night"
+  config.colors = {
+    background = "#1c1c1c",
+    cursor_bg = "#ffd900",
+    tab_bar = {
+      background = "#ffffff",
+      inactive_tab_edge = "transparent",
+    },
+  }
+else
+  config.color_scheme = "Elforest"
+end
+
+-- Fancy tab bar pads tabs past the formatted text cells; match that padding to the tab colors.
+local tab_bar_colors = active_theme == "classic" and config.colors.tab_bar or config.color_schemes.Elforest.tab_bar
+tab_bar_colors.active_tab = { bg_color = ui.active_bg, fg_color = ui.active_fg }
+tab_bar_colors.inactive_tab = { bg_color = ui.inactive_bg, fg_color = ui.inactive_fg }
+
+-- This function returns the suggested title for a tab.
+-- It prefers the title that was set via `tab:set_title()`
+-- or `wezterm cli set-tab-title`, but falls back to the
+-- title of the active pane in that tab.
+function tab_title(tab_info)
+  local title = tab_info.tab_title
+  -- if the tab title is explicitly set, take that
+  if title and #title > 0 then
+    return title
+  end
+  -- Otherwise, use the title from the active pane
+  -- in that tab
+  return tab_info.active_pane.title
+end
+
+-- The filled in variant of the < symbol
+local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
+
+-- The filled in variant of the > symbol
+local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
+
+wezterm.on(
+  'format-tab-title',
+  function(tab, tabs, panes, config, hover, max_width)
+    local title = tab_title(tab)
+    if tab.is_active then
+      return {
+        { Background = { Color = ui.active_bg } },
+        { Foreground = { Color = ui.active_fg } },
+        { Text = '   ' .. title .. '   ' },
+      }
+
+    else
+      return {
+        { Background = { Color = ui.inactive_bg } },
+        { Foreground = { Color = ui.inactive_fg } },
+        { Text = '   ' .. title .. '   ' },
+      }
+    end
+    if tab.is_last_active then
+      -- Green color and append '*' to previously active tab.
+      return {
+        { Background = { Color = 'green' } },
+        { Foreground = { Color = 'white' } },
+        { Text = ' ' .. title .. '*' },
+      }
+    end
+    return title
+  end
+)
+
+config.font = wezterm.font("FiraCode Nerd Font", { weight = "DemiBold" })
+config.font_size = 14
+config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
+-- Spawn close to a maximized cell grid so ConPTY does not reflow the
+-- first PowerShell prompt from 80x24 to full screen (C wraps to the edge).
+config.initial_cols = 220
+config.initial_rows = 50
+
+config.window_frame = {
+  border_bottom_height = "0.1cell",
+  border_bottom_color = ui.border,
+}
+
+config.audible_bell = "Disabled"
+
+-- Commands listed in ~/.config/wezterm/ai_clis.txt (written by setup_ai_clis).
+local function load_ai_clis()
+  local path = wezterm.home_dir .. "/.config/wezterm/ai_clis.txt"
+  local file = io.open(path, "r")
+  if not file then
+    return {}
+  end
+  local clis = {}
+  for line in file:lines() do
+    line = line:gsub("^98791", ""):match("^%s*(.-)%s*$")
+    if line and #line > 0 and not line:match("^#") then
+      table.insert(clis, line)
+    end
+  end
+  file:close()
+
+  -- Always order tabs Cursor, Claude, Codex; anything else keeps file order after.
+  local rank = { agent = 1, claude = 2, codex = 3 }
+  local ordered = {}
+  for index, cmd in ipairs(clis) do
+    table.insert(ordered, { cmd = cmd, index = index, rank = rank[cmd:match("^%S+")] or 99 })
+  end
+  table.sort(ordered, function(a, b)
+    if a.rank ~= b.rank then
+      return a.rank < b.rank
+    end
+    return a.index < b.index
+  end)
+
+  local sorted = {}
+  for _, entry in ipairs(ordered) do
+    table.insert(sorted, entry.cmd)
+  end
+  return sorted
+end
+
+-- Projects root is machine-specific, so it lives outside the repo.
+-- Written by wezterm-launcher on first run; defaults to ~/Documents.
+local function load_projects_root()
+  local default_root = wezterm.home_dir .. "/Documents"
+  local file = io.open(wezterm.home_dir .. "/.config/wezterm/projects_root.txt", "r")
+  if not file then
+    return default_root
+  end
+
+  local root = file:read("l") or ""
+  file:close()
+  root = root:gsub("^98791", "")
+  root = root:match("^%s*(.-)%s*$"):gsub("\\", "/")
+  if #root == 0 then
+    return default_root
+  end
+  return root
+end
+
+local function spawn_ai_cli_tabs(window, cwd)
+  for _, cmd in ipairs(load_ai_clis()) do
+    local tab, pane = window:spawn_tab({ cwd = cwd })
+    tab:set_title(cmd)
+    pane:send_text(cmd .. "\r\n")
+  end
+end
+
+-- Estimate a full-screen cell size so the first paint is not 80x24.
+local function fullscreen_cells()
+  local active = wezterm.gui.screens().active
+  return {
+    cols = math.max(80, math.floor(active.width / 8)),
+    rows = math.max(24, math.floor(active.height / 18)),
+    x = active.x,
+    y = active.y,
+  }
+end
+
+-- and finally, return the configuration to wezterm
+wezterm.on("trigger-workspace", function(cmd)
+  -- allow `wezterm start -- something` to affect what we spawn
+  -- in our initial window
+  local args = {}
+  if cmd then
+    args = cmd.args
+  end
+
+  local project_dir = load_projects_root() .. "/" .. args[1]
+
+  print(project_dir)
+
+  local tab, pane, window = mux.spawn_window({
+    workspace = "work",
+    cwd = project_dir,
+  })
+
+  pane:send_text("nvim\r\n")
+
+  if args[2] then
+    local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
+    nodePane:send_text(args[2] .. "\r\n")
+  else
+    window:spawn_tab({ cwd = project_dir })
+  end
+
+  local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
+  gitPane:send_text("lazygit\r\n")
+
+  spawn_ai_cli_tabs(window, project_dir)
+
+  tab:activate()
+  mux.set_active_workspace("work")
+
+  window:gui_window():maximize()
+end)
+
+wezterm.on("gui-startup", function(cmd)
+  cmd = cmd or {}
+
+  if cmd.args then
+    wezterm.emit("trigger-workspace", cmd)
+  else
+    local screen = fullscreen_cells()
+    local tab, pane, window = mux.spawn_window({
+      width = screen.cols,
+      height = screen.rows,
+      position = {
+        x = screen.x,
+        y = screen.y,
+        origin = "ScreenCoordinateSystem",
+      },
+    })
+
+    spawn_ai_cli_tabs(window, wezterm.home_dir)
+    tab:activate()
+    -- Maximize after extra tabs exist so the tab bar does not resize
+    -- the pane after PowerShell has already painted the banner.
+    window:gui_window():maximize()
+  end
+end)
+
+local last_cwd = ""
+local last_repo = ""
+
+wezterm.on("update-right-status", function(window, pane)
+  local cwd = ""
+  local proc = pane:get_foreground_process_info()
+  if proc and proc.cwd then
+    cwd = proc.cwd
+  else
+    local cwd_uri = pane:get_current_working_dir()
+    if type(cwd_uri) == "userdata" or type(cwd_uri) == "table" then
+      cwd = cwd_uri.file_path or ""
+    elseif type(cwd_uri) == "string" then
+      cwd = cwd_uri:gsub("^file://[^/]*/", "/"):gsub("^/([A-Za-z]:)", "%1")
+    end
+  end
+
+  local repo_name = ""
+  if cwd ~= "" then
+    if cwd == last_cwd then
+      repo_name = last_repo
+    else
+      local success, stdout = wezterm.run_child_process({ "git", "-C", cwd, "rev-parse", "--show-toplevel" })
+      if success then
+        local root = stdout:gsub("%s+$", "")
+        repo_name = root:match("([^\\/]+)$") or ""
+      end
+      last_cwd = cwd
+      last_repo = repo_name
+    end
+  end
+
+  if repo_name ~= "" then
+    window:set_right_status(wezterm.format({
+      { Background = { Color = ui.active_bg } },
+      { Foreground = { Color = ui.active_fg } },
+      { Text = "  " .. repo_name .. "  " },
+    }))
+  else
+    window:set_right_status("")
+  end
+end)
+
+config.default_cursor_style = "BlinkingBlock"
+config.cursor_blink_rate = 500
+config.cursor_blink_ease_in = "Constant"
+config.cursor_blink_ease_out = "Constant"
+
+if wezterm.target_triple == "x86_64-pc-windows-msvc" then
+  config.default_prog = { "powershell.exe" }
+else
+  config.default_prog = wezterm.Default_prog
+end
+
+config.keys = {
+  {
+    key = "v",
+    mods = "CMD",
+    action = wezterm.action.PasteFrom("Clipboard"),
+  },
+  {
+    key = "v",
+    mods = "CTRL",
+    action = wezterm.action.PasteFrom("Clipboard"),
+  },
+  {
+    key = "j",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "j",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "y",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "y",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "o",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "o",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "i",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "i",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "d",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "d",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "u",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "u",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "n",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "n",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "p",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "p",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "h",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "h",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "l",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "l",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "k",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "k",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "j",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "j",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "b",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "b",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "r",
+    mods = "CMD",
+    action = wezterm.action.SendKey({
+      key = "r",
+      mods = "CTRL",
+    }),
+  },
+  {
+    key = "1",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(0),
+  },
+  {
+    key = "2",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(1),
+  },
+  {
+    key = "3",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(2),
+  },
+  {
+    key = "4",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(3),
+  },
+  {
+    key = "5",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(4),
+  },
+  {
+    key = "6",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(5),
+  },
+  {
+    key = "7",
+    mods = "ALT",
+    action = wezterm.action.ActivateTab(6),
+  },
+}
+
+return config

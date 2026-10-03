@@ -1,0 +1,160 @@
+# AI dotfiles sync - plan
+
+Goal: sync Claude Code, Codex, and Cursor config across machines.
+Status: Claude Code, Codex, and Cursor user rules are linked. Cursor editor
+settings, MCP, and hooks are still unstarted (no hand-authored files yet).
+
+## Decision
+
+Git repo at `~/.dotfiles` plus symlinks into the real config locations.
+
+The original plan called for a flat `claude/ codex/ cursor/` tree at the repo root
+with its own `install.ps1` and `install.sh`. The repo had already moved to
+`shared/` plus `pc/`, `linux/`, `mac/` overlays with one installer per OS, so the
+AI config went into `shared/ai/` and `pc/ai/` instead, driven by
+`shared/install/setup_ai_config.{ps1,sh}` which the existing OS installers call.
+Same outcome, one installer per OS instead of two competing ones.
+
+Alternative considered: `chezmoi` (better if the machine mix is Windows + macOS,
+gives per-machine templating and secret-manager integration).
+Rejected for now: plain git is simpler and enough.
+Rejected outright: OneDrive/Dropbox sync. Conflicts on concurrent edit,
+no history, and it puts credentials in a cloud folder.
+
+## What shipped
+
+```
+shared/ai/
+  claude/
+    CLAUDE.md
+    settings.json
+    keybindings.json
+    commands/i18n-extract.md
+    skills/release-docs/
+  codex/
+    AGENTS.md
+    config.toml
+    rules/default.rules
+    skills/artisan-mode/
+pc/ai/
+  claude/hooks/statusline.ps1
+shared/install/
+  setup_ai_config.ps1
+  setup_ai_config.sh
+```
+
+`shared/ai/AGENTS.md` is also linked to `~/.cursor/AGENTS.md` and
+`~/.cursor/rules/AGENTS.mdc`. See the AI config table in `README.md` for the
+full source-to-target link list.
+
+Links are per file and per skill, never per directory, because the real config
+folders mix hand-authored files with tool-generated ones
+(`~/.claude/skills/synced/`, `~/.codex/skills/.system/`) and with plugin-provided
+symlinks. Linking a whole directory would have swallowed all of it.
+
+Both installers back up an existing real file to `<path>.bak-<timestamp>` before
+linking, and delete only an existing symlink. No delete-before-link anywhere.
+
+## What to sync vs ignore
+
+Rule: hand-authored config syncs. Anything the tool generates, caches,
+or authenticates with does not.
+
+### Claude (`~/.claude`)
+
+Sync: `CLAUDE.md`, `keybindings.json`, plus the individual hand-authored
+entries in `commands/`, `hooks/`, and `skills/`. `settings.json` is written, not
+linked: the repo copy merged with `~/.config/dotfiles/claude.work.json`.
+
+Not synced: `.credentials.json`, `settings.local.json`, `settings.json.bak`,
+`history.jsonl`, `projects/`, `sessions/`, `session-env/`, `todos/`,
+`shell-snapshots/`, `file-history/`, `paste-cache/`, `cache/`, `backups/`,
+`downloads/`, `chrome/`, `ide/`, `daemon/`, `daemon.lock`,
+`daemon.status.json`, `jobs/`, `plans/`, `memory/`, `telemetry/`,
+`stats-cache.json`, `policy-limits.json*`, `remote-settings.json`,
+`.last-cleanup`, `.last-update-result.json`, `.caveman-active*`,
+`skills/synced/`, and the plugin symlinks in `commands/` and `skills/`.
+
+`plugins/` is managed by the marketplace repo, not by dotfiles. See below.
+
+### Codex (`~/.codex`)
+
+Sync: `AGENTS.md`, `rules/default.rules`, `skills/artisan-mode/`. `config.toml`
+is seeded once from the repo copy plus `~/.config/dotfiles/codex.work.toml`.
+
+Not synced: `auth.json`, `history.jsonl`, `session_index.jsonl`, `sessions/`,
+all `*.sqlite` plus their `-shm`/`-wal` siblings (goals, logs, memories,
+queue, state, thread_history), `cache/`, `models_cache.json`, `packages/`,
+`tmp/`, `.tmp/`, `.sandbox/`, `.sandbox-bin/`, `sandbox.*.log`,
+`thread-writer-locks/`, `installation_id`, `cap_sid`, `version.json`,
+`.personality_migration`, `.sandbox_migration`, `skills/.system/`.
+
+`.gitignore` at the repo root carries guard patterns for the credential and
+state filenames, so a stray copy cannot be committed by accident.
+
+### Cursor
+
+Confirmed on a machine with Cursor installed.
+
+Sync: `shared/ai/AGENTS.md` to `~/.cursor/AGENTS.md` and
+`~/.cursor/rules/AGENTS.mdc` (machine-local user rule files).
+
+Not synced yet (no hand-authored content):
+- `~/.cursor/mcp.json`, `~/.cursor/hooks.json`, `~/.cursor/permissions.json`
+- editor `settings.json` / `keybindings.json` at
+  `%APPDATA%\Cursor\User` (Windows),
+  `~/Library/Application Support/Cursor/User` (macOS),
+  `~/.config/Cursor/User` (Linux)
+
+Not synced: `skills-cursor/` (Cursor-managed), `chats/`, `projects/`,
+`extensions/`, `ai-tracking/`, `plans/`, `cli-config.json`, `argv.json`,
+`statsig-cache.json`, `agent-cli-state.json`, `workspaceStorage/`,
+`globalStorage/`, `History/`, logs, anything holding a token.
+
+Skills already linked under `~/.claude/skills/` and `~/.codex/skills/` are
+visible to Cursor. Do not also link them under `~/.cursor/skills/` or they
+show up twice.
+
+Extensions: do not sync the extension folders. Export a list instead
+(`cursor --list-extensions > shared/ai/cursor/extensions.txt`) and reinstall from it.
+
+## Machine drift
+
+Handled in the shipped config:
+
+- Hardcoded user-profile paths in `settings.json` were replaced with
+  `$USERPROFILE` and `$HOME`. Those hook commands run through a shell, so the
+  expansion works on Windows (git bash) and on Linux/macOS alike.
+- The `statusLine` command is wrapped in a file test, so it is a no-op where
+  `statusline.ps1` is absent. Non-Windows machines override `statusLine` in
+  `~/.config/dotfiles/claude.work.json`.
+- `~/.claude/settings.local.json` is not a user-level file (Claude Code only
+  reads it inside a project), so it cannot carry per-machine overrides.
+- Work-specific entries (plugin marketplace, Codex project trust, local
+  marketplace paths) live in overlays under `~/.config/dotfiles/`, outside the
+  repo. The setup scripts merge them in.
+
+Still open:
+
+- Claude Code and Orca rewrite `~/.claude/settings.json` in place. Those edits
+  stay local until copied into the repo file or the overlay.
+
+## Plugins
+
+The work plugin marketplace already solves plugin sync. The merged
+`settings.json` declares `extraKnownMarketplaces` and `enabledPlugins`, so a
+new machine picks them up without a manual `claude plugin marketplace add`. Do
+not copy plugin content into dotfiles, it would drift from the marketplace.
+
+## Secrets
+
+Never in the repo, even a private one. `auth.json` and `.credentials.json`
+stay machine-local and get regenerated by logging in.
+If templating is needed later, chezmoi can pull from a vault at apply time.
+
+## Next steps
+
+1. When there is hand-authored Cursor MCP, hooks, or editor settings, put them
+   under `shared/ai/cursor/` and extend both `setup_ai_config` scripts.
+2. Test on a second machine from a clean clone. Not yet done: everything so far
+   has only run on this Windows box.
