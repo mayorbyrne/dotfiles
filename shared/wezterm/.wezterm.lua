@@ -53,13 +53,26 @@ local ui_by_theme = {
     inactive_fg = "#ffffff",
     border = "#123456",
   },
+  ["classic-green"] = {
+    active_bg = "#4fa86a",
+    active_fg = "#ffffff",
+    inactive_bg = "#4b6b57",
+    inactive_fg = "#ffffff",
+    border = "#12452a",
+  },
 }
 local ui = ui_by_theme[active_theme] or ui_by_theme.elforest
 
-if active_theme == "classic" then
+local classic_bg_by_theme = {
+  classic = "#1c1c1c",
+  ["classic-green"] = "#1a1f1b",
+}
+local classic_bg = classic_bg_by_theme[active_theme]
+
+if classic_bg then
   config.color_scheme = "tokyonight_night"
   config.colors = {
-    background = "#1c1c1c",
+    background = classic_bg,
     cursor_bg = "#ffd900",
     tab_bar = {
       background = "#ffffff",
@@ -71,7 +84,7 @@ else
 end
 
 -- Fancy tab bar pads tabs past the formatted text cells; match that padding to the tab colors.
-local tab_bar_colors = active_theme == "classic" and config.colors.tab_bar or config.color_schemes.Elforest.tab_bar
+local tab_bar_colors = classic_bg and config.colors.tab_bar or config.color_schemes.Elforest.tab_bar
 tab_bar_colors.active_tab = { bg_color = ui.active_bg, fg_color = ui.active_fg }
 tab_bar_colors.inactive_tab = { bg_color = ui.inactive_bg, fg_color = ui.inactive_fg }
 
