@@ -142,6 +142,10 @@ wezterm.on(
 config.font = wezterm.font("FiraCode Nerd Font", { weight = "DemiBold" })
 config.font_size = 14
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
+-- Spawn close to a maximized cell grid so ConPTY does not reflow the
+-- first PowerShell prompt from 80x24 to full screen (C wraps to the edge).
+config.initial_cols = 220
+config.initial_rows = 50
 
 config.window_frame = {
   border_bottom_height = "0.1cell",
@@ -213,6 +217,17 @@ local function spawn_ai_cli_tabs(window, cwd)
   end
 end
 
+-- Estimate a full-screen cell size so the first paint is not 80x24.
+local function fullscreen_cells()
+  local active = wezterm.gui.screens().active
+  return {
+    cols = math.max(80, math.floor(active.width / 8)),
+    rows = math.max(24, math.floor(active.height / 18)),
+    x = active.x,
+    y = active.y,
+  }
+end
+
 -- and finally, return the configuration to wezterm
 wezterm.on("trigger-workspace", function(cmd)
   -- allow `wezterm start -- something` to affect what we spawn
@@ -252,29 +267,27 @@ wezterm.on("trigger-workspace", function(cmd)
 end)
 
 wezterm.on("gui-startup", function(cmd)
-  local count = 0
   cmd = cmd or {}
 
   if cmd.args then
     wezterm.emit("trigger-workspace", cmd)
   else
-    -- Pick the active screen to maximize into, there are also other options, see the docs.
-    local active = wezterm.gui.screens().active
-    -- Set the window coords on spawn.
-    local tab, pane, window = mux.spawn_window(cmd or {
-      -- x = active.x,
-      -- y = active.y,
-      -- width = active.width,
-      -- height = active.height,
+    local screen = fullscreen_cells()
+    local tab, pane, window = mux.spawn_window({
+      width = screen.cols,
+      height = screen.rows,
+      position = {
+        x = screen.x,
+        y = screen.y,
+        origin = "ScreenCoordinateSystem",
+      },
     })
-
-    -- You probably don't need both, but you can also set the positions after spawn.
-    window:gui_window():set_position(active.x, active.y)
-    window:gui_window():set_inner_size(active.width, active.height)
-    window:gui_window():maximize()
 
     spawn_ai_cli_tabs(window, wezterm.home_dir)
     tab:activate()
+    -- Maximize after extra tabs exist so the tab bar does not resize
+    -- the pane after PowerShell has already painted the banner.
+    window:gui_window():maximize()
   end
 end)
 

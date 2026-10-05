@@ -2,9 +2,31 @@
 
 Import-Module posh-git
 Import-Module PSReadLine
+Set-PSReadLineOption -PredictionSource None
 
-[Console]::OutputEncoding = [Text.UTF8Encoding]::UTF8
-$OutputEncoding = [Text.UTF8Encoding]::UTF8
+# PS 7 is already UTF-8. Re-assigning encoding here can poke ConPTY and
+# leave the cursor on the last column (C:\ wraps, typed chars ghost).
+if ($PSVersionTable.PSVersion.Major -lt 6) {
+  $utf8 = New-Object System.Text.UTF8Encoding $false
+  [Console]::InputEncoding = $utf8
+  [Console]::OutputEncoding = $utf8
+  $OutputEncoding = $utf8
+}
+
+# WezTerm/ConPTY often reports X at the wrap column after a startup resize.
+$PoshGitPrompt = $function:prompt
+function prompt {
+  try {
+    $ui = $Host.UI.RawUI
+    $cursor = $ui.CursorPosition
+    if ($cursor.X -ne 0) {
+      $cursor.X = 0
+      $ui.CursorPosition = $cursor
+    }
+  } catch {
+  }
+  & $PoshGitPrompt
+}
 
 function git-checkout { git checkout $args }
 Set-Alias -Name gcc -Value git-checkout
