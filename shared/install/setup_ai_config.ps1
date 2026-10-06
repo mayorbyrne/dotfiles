@@ -160,6 +160,31 @@ function Write-ClaudeSettings {
     Install-GeneratedFile $target ($settings | ConvertTo-Json -Depth 100)
 }
 
+# cli-config.json is Cursor-managed (auth, model, caches). Only the statusLine
+# key is ours. Leave the rest of the file alone when the command is already set.
+function Set-CursorStatusLine {
+    $target = Join-Path $cursorDir "cli-config.json"
+    if (!(Test-Path $target)) {
+        Write-Host "  Skipping Cursor statusLine ($target not found)" -ForegroundColor Yellow
+        return
+    }
+
+    $command = 'if exist "%USERPROFILE%\.cursor\hooks\statusline.ps1" powershell -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\.cursor\hooks\statusline.ps1"'
+    $config = Get-Content -LiteralPath $target -Raw | ConvertFrom-Json
+    if ($config.statusLine.type -eq "command" -and $config.statusLine.command -eq $command) {
+        Write-Host "  Cursor statusLine is up to date" -ForegroundColor Gray
+        return
+    }
+
+    $statusLine = [pscustomobject]@{
+        type = "command"
+        command = $command
+        timeoutMs = 5000
+    }
+    $config | Add-Member -NotePropertyName statusLine -NotePropertyValue $statusLine -Force
+    Install-GeneratedFile $target ($config | ConvertTo-Json -Depth 100)
+}
+
 # Codex rewrites config.toml itself (trust entries, UI state), so it is seeded
 # once and then left alone.
 function Initialize-CodexConfig {
@@ -213,6 +238,11 @@ $links = [ordered]@{
     (Join-Path $claudeDir "commands\i18n-extract.md")    = (Join-Path $sharedAi "claude\commands\i18n-extract.md")
     (Join-Path $claudeDir "skills\release-docs")         = (Join-Path $sharedAi "claude\skills\release-docs")
     (Join-Path $claudeDir "hooks\statusline.ps1")        = (Join-Path $pcAi "claude\hooks\statusline.ps1")
+    (Join-Path $claudeDir "hooks\agent-state.ps1")       = (Join-Path $pcAi "hooks\agent-state.ps1")
+    (Join-Path $claudeDir "hooks\WeztermPaneActivate.cs") = (Join-Path $pcAi "hooks\WeztermPaneActivate.cs")
+    (Join-Path $cursorDir "hooks\agent-state.ps1")       = (Join-Path $pcAi "hooks\agent-state.ps1")
+    (Join-Path $cursorDir "hooks\WeztermPaneActivate.cs") = (Join-Path $pcAi "hooks\WeztermPaneActivate.cs")
+    (Join-Path $cursorDir "hooks.json")                  = (Join-Path $pcAi "cursor\hooks.json")
     (Join-Path $codexDir "rules\default.rules")          = (Join-Path $sharedAi "codex\rules\default.rules")
     (Join-Path $codexDir "skills\artisan-mode")          = (Join-Path $sharedAi "codex\skills\artisan-mode")
 }

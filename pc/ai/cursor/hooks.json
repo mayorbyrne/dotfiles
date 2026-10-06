@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "cmd /c powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.cursor\\hooks\\agent-state.ps1\" -Agent agent -Event sessionStart"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "cmd /c powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.cursor\\hooks\\agent-state.ps1\" -Agent agent -Event beforeSubmitPrompt"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "cmd /c powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.cursor\\hooks\\agent-state.ps1\" -Agent agent -Event preToolUse"
+      }
+    ],
+    "stop": [
+      {
+        "command": "cmd /c powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.cursor\\hooks\\agent-state.ps1\" -Agent agent -Event stop"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "cmd /c powershell -NoProfile -ExecutionPolicy Bypass -File \"%USERPROFILE%\\.cursor\\hooks\\agent-state.ps1\" -Agent agent -Event sessionEnd"
+      }
+    ]
+  }
+}

@@ -116,6 +116,48 @@ function Prepend-AppHistory([string]$name, [string]$command) {
     Save-AppHistory $newHistory
 }
 
+function Normalize-AgentCwd([string]$cwd) {
+    if (-not $cwd) { return "" }
+    return ($cwd -replace '\\', '/').TrimEnd('/').ToLowerInvariant()
+}
+
+function Get-AgentStateMap {
+    $path = Join-Path $env:USERPROFILE ".config\wezterm\agent_state.txt"
+    $map = @{}
+    if (-not (Test-Path $path)) { return $map }
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    foreach ($line in Get-Content $path) {
+        if ($line -match '^\s*#' -or [string]::IsNullOrWhiteSpace($line)) { continue }
+        $parts = $line.Split('|')
+        if ($parts.Count -lt 3) { continue }
+        $updated = 0
+        if ($parts.Count -ge 4) { [void][int64]::TryParse($parts[3], [ref]$updated) }
+        if ($updated -gt 0 -and $updated -lt ($now - 21600)) { continue }
+        $cwd = Normalize-AgentCwd $parts[1]
+        if (-not $map.ContainsKey($cwd)) {
+            $map[$cwd] = [System.Collections.Generic.List[PSCustomObject]]::new()
+        }
+        $map[$cwd].Add([PSCustomObject]@{ Agent = $parts[0]; Status = $parts[2] })
+    }
+    return $map
+}
+
+function Get-AgentsForFolder([string]$folder, $agentMap) {
+    if (-not $folder -or -not $agentMap) { return @() }
+    $cwd = Normalize-AgentCwd (Join-Path $script:projectsRoot $folder)
+    if ($agentMap.ContainsKey($cwd)) { return @($agentMap[$cwd]) }
+    $suffix = "/" + $folder.ToLowerInvariant()
+    foreach ($key in $agentMap.Keys) {
+        if ($key.EndsWith($suffix)) { return @($agentMap[$key]) }
+    }
+    return @()
+}
+
+function Format-AgentPreview($agents) {
+    if (-not $agents -or $agents.Count -eq 0) { return "" }
+    return ($agents | ForEach-Object { "$($_.Agent) $($_.Status)" }) -join "  "
+}
+
 function Test-HasDevDummy([string]$folder) {
     if (-not $folder) { return $false }
     $pkgPath = Join-Path $script:projectsRoot "$folder\package.json"
@@ -165,6 +207,7 @@ if (-not (Ensure-ProjectsRoot)) {
 }
 
 $workspaces = Get-WeztermWorkspaces
+$agentMap = Get-AgentStateMap
 $gitFolders = @()
 if (Test-Path $script:projectsRoot) {
     $gitFolders = Get-ChildItem $script:projectsRoot -Directory | Select-Object -ExpandProperty Name | Sort-Object
@@ -281,8 +324,15 @@ $launchBtn    = $window.FindName("LaunchButton")
 foreach ($ws in $workspaces) {
     $lbi = [System.Windows.Controls.ListBoxItem]::new()
     $lbi.Content = $ws.Name
-    if ($ws.Command -match 'dummy') {
+    $agents = Get-AgentsForFolder $ws.Name $agentMap
+    if ($agents | Where-Object { $_.Status -eq 'working' }) {
+        $lbi.Foreground = [System.Windows.Media.Brushes]::DarkOrange
+    } elseif ($agents | Where-Object { $_.Status -eq 'error' }) {
+        $lbi.Foreground = [System.Windows.Media.Brushes]::IndianRed
+    } elseif ($ws.Command -match 'dummy') {
         $lbi.Foreground = [System.Windows.Media.Brushes]::MediumPurple
+    } elseif ($agents.Count -gt 0) {
+        $lbi.Foreground = [System.Windows.Media.Brushes]::Teal
     }
     $recentList.Items.Add($lbi) | Out-Null
 }
@@ -291,7 +341,14 @@ if ($recentList.Items.Count -gt 0) { $recentList.SelectedIndex = 0 }
 $updateRecentPreview = {
     $name = $recentList.SelectedValue
     $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
-    $recentPreview.Text = if ($ws) { "cmd: $($ws.Command)" } else { "" }
+    if (-not $ws) {
+        $recentPreview.Text = ""
+    } else {
+        $preview = "cmd: $($ws.Command)"
+        $agentText = Format-AgentPreview (Get-AgentsForFolder $name $agentMap)
+        if ($agentText) { $preview = "$preview | $agentText" }
+        $recentPreview.Text = $preview
+    }
     $removeBtn.IsEnabled = $null -ne $name
 }
 $recentList.Add_SelectionChanged($updateRecentPreview)
