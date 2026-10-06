@@ -31,6 +31,7 @@ Then run the installer for your OS:
 | macOS | `bash mac/install/setup.sh` |
 
 Installers also prompt for optional AI CLIs (Cursor `agent`, Codex, Claude). Choices are written to `~/.config/wezterm/ai_clis.txt`, and WezTerm opens a startup tab for each.
+If any are chosen, `npx skills@latest add mattpocock/skills -g` installs those skills globally for the chosen CLIs.
 
 ## AI config
 
