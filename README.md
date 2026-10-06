@@ -105,7 +105,7 @@ Machine drift:
   per-machine overrides go in `~/.config/dotfiles/claude.work.json` instead.
 - The synced `statusLine` runs `statusline.ps1` and is guarded by a file test, so
   it is a no-op on Linux and macOS. Override it in the Claude overlay there.
-- Claude Code and Orca rewrite `~/.claude/settings.json` in place. Those edits
+- Claude Code rewrites `~/.claude/settings.json` in place. Those edits
   stay on the machine. Copy anything worth keeping into the repo file or the
   overlay, then rerun the script.
 - Cursor editor settings live at `%APPDATA%\Cursor\User\settings.json` (Windows),
