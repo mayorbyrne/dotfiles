@@ -90,41 +90,237 @@ function tab_title(tab_info)
   return tab_info.active_pane.title
 end
 
+local AGENT_NAMES = { claude = true, agent = true, codex = true }
+local agent_colors = {
+  working = { bg = elforest.yellow, fg = elforest.bg },
+  error = { bg = elforest.red, fg = elforest.bg },
+  idle = { bg = elforest.cyan, fg = elforest.bg },
+}
+if active_theme == "classic" then
+  agent_colors = {
+    working = { bg = "#ffd900", fg = "#1c1c1c" },
+    error = { bg = "#c04040", fg = "#ffffff" },
+    idle = { bg = "#4aa3a3", fg = "#ffffff" },
+  }
+end
+
+local function normalize_cwd(cwd)
+  cwd = (cwd or ""):gsub("\\", "/"):gsub("/+$", "")
+  if wezterm.target_triple:find("windows") then
+    cwd = cwd:lower()
+  end
+  return cwd
+end
+
+local function strip_bom(text)
+  return (text or ""):gsub("^\239\187\191", "")
+end
+
+local function cwd_from_uri(cwd)
+  if type(cwd) == "userdata" or type(cwd) == "table" then
+    return cwd.file_path or ""
+  end
+  if type(cwd) == "string" then
+    return cwd:gsub("^file://[^/]*/", "/"):gsub("^/([A-Za-z]:)", "%1")
+  end
+  return ""
+end
+
+local function agent_name_from(...)
+  local function match(s)
+    if not s or s == "" then
+      return nil
+    end
+    local lower = s:lower()
+    local base = lower:match("([^/\\]+)$") or lower
+    base = base:gsub("%.exe$", "")
+    local first = base:match("^(%S+)") or base
+    if first == "cursor" or first == "cursor-agent" then
+      return "agent"
+    end
+    if AGENT_NAMES[first] then
+      return first
+    end
+    if lower:find("cursor agent", 1, true) or lower:find("cursor-agent", 1, true) then
+      return "agent"
+    end
+    if first == "claude" or lower:find("claude", 1, true) then
+      return "claude"
+    end
+    if first == "codex" or lower:find("codex", 1, true) then
+      return "codex"
+    end
+    return nil
+  end
+  for i = 1, select("#", ...) do
+    local name = match(select(i, ...))
+    if name then
+      return name
+    end
+  end
+  return nil
+end
+
+local last_agent_state = {}
+local last_agent_state_read = 0
+
+local function load_agent_state()
+  local now = os.time()
+  if now == last_agent_state_read then
+    return last_agent_state
+  end
+  last_agent_state_read = now
+
+  local path = wezterm.home_dir .. "/.config/wezterm/agent_state.txt"
+  local file = io.open(path, "r")
+  local map = {}
+  if not file then
+    last_agent_state = map
+    return map
+  end
+
+  local stale = now - (6 * 60 * 60)
+  for line in file:lines() do
+    line = strip_bom(line):match("^%s*(.-)%s*$")
+    if line and #line > 0 and not line:match("^#") then
+      local name, cwd, status, updated = line:match("^([^|]+)|([^|]+)|([^|]+)|(%d+)$")
+      updated = tonumber(updated) or 0
+      if name and AGENT_NAMES[name] and (updated == 0 or updated >= stale) then
+        map[name .. "|" .. normalize_cwd(cwd)] = status
+      end
+    end
+  end
+  file:close()
+  last_agent_state = map
+  return map
+end
+
+local function lookup_agent_status(name, cwd)
+  local state = load_agent_state()
+  cwd = normalize_cwd(cwd)
+  local exact = state[name .. "|" .. cwd]
+  if exact then
+    return exact
+  end
+  local fallback
+  for key, status in pairs(state) do
+    local key_name, key_cwd = key:match("^([^|]+)|(.+)$")
+    if key_name == name then
+      fallback = status
+      if cwd ~= "" and key_cwd ~= "" then
+        if cwd:sub(1, #key_cwd) == key_cwd or key_cwd:sub(1, #cwd) == cwd then
+          return status
+        end
+      end
+    end
+  end
+  return fallback
+end
+
+local function tab_agent_info(tab)
+  local pane = tab.active_pane
+  local name = agent_name_from(tab_title(tab), pane.title, pane.foreground_process_name)
+  if not name then
+    return nil
+  end
+  local cwd = normalize_cwd(cwd_from_uri(pane.current_working_dir))
+  local status = lookup_agent_status(name, cwd) or "idle"
+  return { name = name, status = status, pane_id = pane.pane_id, cwd = cwd }
+end
+
+local function working_agent_for_cwd(cwd)
+  if not cwd or cwd == "" then
+    return nil
+  end
+  local fallback
+  for key, status in pairs(load_agent_state()) do
+    if status == "working" then
+      local name, key_cwd = key:match("^([^|]+)|(.+)$")
+      if name and key_cwd then
+        if key_cwd == cwd then
+          return name
+        end
+        if cwd:sub(1, #key_cwd) == key_cwd or key_cwd:sub(1, #cwd) == cwd then
+          fallback = name
+        end
+      end
+    end
+  end
+  return fallback
+end
+
+local last_written_panes = ""
+
+local function remembered_pane(name, cwd)
+  local panes = wezterm.GLOBAL.agent_panes
+  if type(panes) ~= "table" then
+    return nil
+  end
+  return panes[tostring(name) .. "|" .. (cwd or "")]
+end
+
+local function remember_agent_pane(name, pane_id, cwd)
+  if not name or pane_id == nil then
+    return
+  end
+  local panes = wezterm.GLOBAL.agent_panes
+  if type(panes) ~= "table" then
+    panes = {}
+  end
+  panes[tostring(name) .. "|" .. (cwd or "")] = pane_id
+  wezterm.GLOBAL.agent_panes = panes
+
+  local lines = {}
+  for key, id in pairs(panes) do
+    table.insert(lines, key .. "|" .. tostring(id))
+  end
+  table.sort(lines)
+  local text = table.concat(lines, "\n")
+  if text == last_written_panes then
+    return
+  end
+  last_written_panes = text
+  local path = wezterm.home_dir .. "/.config/wezterm/agent_panes.txt"
+  local file = io.open(path, "w")
+  if file then
+    file:write(text .. "\n")
+    file:close()
+  end
+end
+
 -- The filled in variant of the < symbol
 local SOLID_LEFT_ARROW = wezterm.nerdfonts.pl_right_hard_divider
 
 -- The filled in variant of the > symbol
 local SOLID_RIGHT_ARROW = wezterm.nerdfonts.pl_left_hard_divider
 
-wezterm.on(
-  'format-tab-title',
-  function(tab, tabs, panes, config, hover, max_width)
-    local title = tab_title(tab)
-    if tab.is_active then
-      return {
-        { Background = { Color = ui.active_bg } },
-        { Foreground = { Color = ui.active_fg } },
-        { Text = '   ' .. title .. '   ' },
-      }
-
-    else
-      return {
-        { Background = { Color = ui.inactive_bg } },
-        { Foreground = { Color = ui.inactive_fg } },
-        { Text = '   ' .. title .. '   ' },
-      }
+wezterm.on("format-tab-title", function(tab, tabs, panes, config, hover, max_width)
+  local title = tab_title(tab)
+  local agent = tab_agent_info(tab)
+  local bg = tab.is_active and ui.active_bg or ui.inactive_bg
+  local fg = tab.is_active and ui.active_fg or ui.inactive_fg
+  if agent then
+    if agent.status == "working" then
+      remember_agent_pane(agent.name, agent.pane_id, agent.cwd)
     end
-    if tab.is_last_active then
-      -- Green color and append '*' to previously active tab.
-      return {
-        { Background = { Color = 'green' } },
-        { Foreground = { Color = 'white' } },
-        { Text = ' ' .. title .. '*' },
-      }
+    local colors = agent_colors[agent.status]
+    if colors then
+      bg = colors.bg
+      fg = colors.fg
     end
-    return title
+  elseif tab.is_active then
+    local cwd = normalize_cwd(cwd_from_uri(tab.active_pane.current_working_dir))
+    local name = working_agent_for_cwd(cwd)
+    if name and not remembered_pane(name, cwd) then
+      remember_agent_pane(name, tab.active_pane.pane_id, cwd)
+    end
   end
-)
+  return {
+    { Background = { Color = bg } },
+    { Foreground = { Color = fg } },
+    { Text = "   " .. title .. "   " },
+  }
+end)
 
 config.font = wezterm.font("FiraCode Nerd Font", { weight = "DemiBold" })
 config.font_size = 14
@@ -140,6 +336,7 @@ config.window_frame = {
 }
 
 config.audible_bell = "Disabled"
+config.status_update_interval = 1000
 
 -- Commands listed in ~/.config/wezterm/ai_clis.txt (written by setup_ai_clis).
 local function load_ai_clis()
@@ -224,31 +421,34 @@ wezterm.on("trigger-workspace", function(cmd)
     args = cmd.args
   end
 
-  local project_dir = load_projects_root() .. "/" .. args[1]
-
-  print(project_dir)
+  local workspace = args[1] or "work"
+  local project_dir = load_projects_root() .. "/" .. workspace
 
   local tab, pane, window = mux.spawn_window({
-    workspace = "work",
+    workspace = workspace,
     cwd = project_dir,
   })
 
+  tab:set_title("nvim")
   pane:send_text("nvim\r\n")
 
   if args[2] then
     local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
+    nodeTab:set_title("server")
     nodePane:send_text(args[2] .. "\r\n")
   else
-    window:spawn_tab({ cwd = project_dir })
+    local shellTab = window:spawn_tab({ cwd = project_dir })
+    shellTab:set_title("shell")
   end
 
   local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
+  gitTab:set_title("lazygit")
   gitPane:send_text("lazygit\r\n")
 
   spawn_ai_cli_tabs(window, project_dir)
 
   tab:activate()
-  mux.set_active_workspace("work")
+  mux.set_active_workspace(workspace)
 
   window:gui_window():maximize()
 end)
@@ -281,18 +481,49 @@ end)
 local last_cwd = ""
 local last_repo = ""
 
+local function apply_activate_request()
+  local path = wezterm.home_dir .. "/.config/wezterm/activate_request.txt"
+  local file = io.open(path, "r")
+  if not file then
+    return
+  end
+  local raw = strip_bom(file:read("*a") or "")
+  file:close()
+  os.remove(path)
+  local id = tonumber(raw and raw:match("(%d+)"))
+  if not id then
+    return
+  end
+  local mux = wezterm.mux
+  for _, mux_win in ipairs(mux.all_windows()) do
+    for _, tab in ipairs(mux_win:tabs()) do
+      for _, p in ipairs(tab:panes()) do
+        if p:pane_id() == id then
+          mux.set_active_workspace(mux_win:get_workspace())
+          p:activate()
+          local gui = mux_win:gui_window()
+          if gui then
+            gui:focus()
+          end
+          return
+        end
+      end
+    end
+  end
+end
+
+wezterm.on("window-focus-changed", function()
+  apply_activate_request()
+end)
+
 wezterm.on("update-right-status", function(window, pane)
+  apply_activate_request()
   local cwd = ""
   local proc = pane:get_foreground_process_info()
   if proc and proc.cwd then
     cwd = proc.cwd
   else
-    local cwd_uri = pane:get_current_working_dir()
-    if type(cwd_uri) == "userdata" or type(cwd_uri) == "table" then
-      cwd = cwd_uri.file_path or ""
-    elseif type(cwd_uri) == "string" then
-      cwd = cwd_uri:gsub("^file://[^/]*/", "/"):gsub("^/([A-Za-z]:)", "%1")
-    end
+    cwd = cwd_from_uri(pane:get_current_working_dir())
   end
 
   local repo_name = ""
