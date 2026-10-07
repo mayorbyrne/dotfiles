@@ -234,8 +234,14 @@ try {
     $appSpecificRemaps = @()
     if ($existingKbm -and $existingKbm.remapShortcuts -and $existingKbm.remapShortcuts.global) {
         foreach ($remap in @($existingKbm.remapShortcuts.global)) {
-            if ($remap -and $remap.originalKeys -ne $hotkeyOriginalKeys -and $remap.originalKeys -ne $hotkeyOriginalKeysLegacy) {
+            if (-not $remap) { continue }
+            if ($remap.originalKeys -ne $hotkeyOriginalKeys -and $remap.originalKeys -ne $hotkeyOriginalKeysLegacy) {
                 $globalRemaps.Add($remap)
+                continue
+            }
+            # A resident hotkey host's trigger.exe opens the launcher in ~0.2s vs ~2.5s for launch.bat.
+            if ($remap.runProgramFilePath -and (Split-Path $remap.runProgramFilePath -Leaf) -eq "trigger.exe" -and (Test-Path $remap.runProgramFilePath)) {
+                $launcherRemap = $remap
             }
         }
     }
