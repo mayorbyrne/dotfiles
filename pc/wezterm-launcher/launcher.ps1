@@ -2,19 +2,23 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName System.Windows.Forms
 
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class Win32Focus {
-    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
-    [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr hWnd);
-    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr pid);
-    [DllImport("user32.dll")] public static extern uint GetCurrentThreadId();
-    [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
-    [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr hWnd);
-}
+# hotkey.ps1 preloads Win32Focus from its prebuilt DLL, and reruns this script
+# on every press, so skip the ~350ms C# compile when the type already exists.
+if (-not ('Win32Focus' -as [type])) {
+    Add-Type @"
+    using System;
+    using System.Runtime.InteropServices;
+    public class Win32Focus {
+        [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr hWnd);
+        [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr pid);
+        [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+        [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+        [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr hWnd);
+    }
 "@
+}
 
 $historyFile = "$env:APPDATA\wezterm-launcher\history.json"
 $configFile  = "$env:APPDATA\wezterm-launcher\config.json"
@@ -44,7 +48,10 @@ function Update-WeztermProjectsRoot([string]$projectsRoot) {
     # WriteAllText with a BOM-less encoding: Windows PowerShell's -Encoding UTF8
     # prepends a BOM, which WezTerm would read as part of the path.
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText((Join-Path $dir "projects_root.txt"), "$luaRoot`n", $utf8NoBom)
+    $path = Join-Path $dir "projects_root.txt"
+    $content = "$luaRoot`n"
+    if ([System.IO.File]::Exists($path) -and [System.IO.File]::ReadAllText($path) -eq $content) { return }
+    [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
 }
 
 function Ensure-ProjectsRoot {
@@ -202,16 +209,13 @@ function Get-WeztermWorkspaces {
     return [System.Collections.Generic.List[PSCustomObject]]($list | Select-Object -First 50)
 }
 
+# exit would take down hotkey.ps1, which runs this script in its own process.
 if (-not (Ensure-ProjectsRoot)) {
-    exit 0
+    return
 }
 
-$workspaces = Get-WeztermWorkspaces
-$agentMap = Get-AgentStateMap
-$gitFolders = @()
-if (Test-Path $script:projectsRoot) {
-    $gitFolders = Get-ChildItem $script:projectsRoot -Directory | Select-Object -ExpandProperty Name | Sort-Object
-}
+$workspaces = [System.Collections.Generic.List[PSCustomObject]]::new()
+$agentMap = @{}
 [xml]$xaml = @"
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -320,24 +324,6 @@ $newPreview   = $window.FindName("NewPreview")
 $dummyCheck   = $window.FindName("DummyCheck")
 $launchBtn    = $window.FindName("LaunchButton")
 
-# ── Recent tab ──────────────────────────────────────────────
-foreach ($ws in $workspaces) {
-    $lbi = [System.Windows.Controls.ListBoxItem]::new()
-    $lbi.Content = $ws.Name
-    $agents = Get-AgentsForFolder $ws.Name $agentMap
-    if ($agents | Where-Object { $_.Status -eq 'working' }) {
-        $lbi.Foreground = [System.Windows.Media.Brushes]::DarkOrange
-    } elseif ($agents | Where-Object { $_.Status -eq 'error' }) {
-        $lbi.Foreground = [System.Windows.Media.Brushes]::IndianRed
-    } elseif ($ws.Command -match 'dummy') {
-        $lbi.Foreground = [System.Windows.Media.Brushes]::MediumPurple
-    } elseif ($agents.Count -gt 0) {
-        $lbi.Foreground = [System.Windows.Media.Brushes]::Teal
-    }
-    $recentList.Items.Add($lbi) | Out-Null
-}
-if ($recentList.Items.Count -gt 0) { $recentList.SelectedIndex = 0 }
-
 $updateRecentPreview = {
     $name = $recentList.SelectedValue
     $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
@@ -352,7 +338,6 @@ $updateRecentPreview = {
     $removeBtn.IsEnabled = $null -ne $name
 }
 $recentList.Add_SelectionChanged($updateRecentPreview)
-& $updateRecentPreview
 
 $removeBtn.Add_Click({
     $lbi  = $recentList.SelectedItem
@@ -365,9 +350,6 @@ $removeBtn.Add_Click({
     $recentPreview.Text = ""
     $removeBtn.IsEnabled = $false
 })
-
-# ── New Workspace tab ────────────────────────────────────────
-foreach ($f in $gitFolders) { $folderList.Items.Add($f) | Out-Null }
 
 $updateNewPreview = {
     $folder = $folderList.SelectedItem
@@ -442,6 +424,7 @@ $launchBtn.Add_Click({
 })
 
 $window.Add_Loaded({
+    if ($HotkeyHostPrewarm) { return }
     $hwnd = (New-Object System.Windows.Interop.WindowInteropHelper($window)).Handle
     $fgHwnd = [Win32Focus]::GetForegroundWindow()
     $fgThread = [Win32Focus]::GetWindowThreadProcessId($fgHwnd, [IntPtr]::Zero)
@@ -452,5 +435,48 @@ $window.Add_Loaded({
     [Win32Focus]::AttachThreadInput($fgThread, $myThread, $false)
     $window.Activate()
 })
+
+$window.Add_ContentRendered({
+    $script:workspaces = Get-WeztermWorkspaces
+    $script:agentMap = Get-AgentStateMap
+
+    foreach ($ws in $workspaces) {
+        $lbi = [System.Windows.Controls.ListBoxItem]::new()
+        $lbi.Content = $ws.Name
+        $agents = Get-AgentsForFolder $ws.Name $agentMap
+        if ($agents | Where-Object { $_.Status -eq 'working' }) {
+            $lbi.Foreground = [System.Windows.Media.Brushes]::DarkOrange
+        } elseif ($agents | Where-Object { $_.Status -eq 'error' }) {
+            $lbi.Foreground = [System.Windows.Media.Brushes]::IndianRed
+        } elseif ($ws.Command -match 'dummy') {
+            $lbi.Foreground = [System.Windows.Media.Brushes]::MediumPurple
+        } elseif ($agents.Count -gt 0) {
+            $lbi.Foreground = [System.Windows.Media.Brushes]::Teal
+        }
+        $recentList.Items.Add($lbi) | Out-Null
+    }
+    if ($recentList.Items.Count -gt 0) { $recentList.SelectedIndex = 0 }
+    & $updateRecentPreview
+
+    foreach ($path in [System.IO.Directory]::EnumerateDirectories($script:projectsRoot)) {
+        $folderList.Items.Add([System.IO.Path]::GetFileName($path)) | Out-Null
+    }
+    $folderList.Items.SortDescriptions.Add([System.ComponentModel.SortDescription]::new('', [System.ComponentModel.ListSortDirection]::Ascending))
+})
+
+# hotkey.ps1 sets $HotkeyHostPrewarm at startup to build the window once
+# offscreen, moving XAML parsing and JIT off the first real press.
+if ($HotkeyHostPrewarm) {
+    $window.WindowStartupLocation = 'Manual'
+    $window.Left          = -32000
+    $window.Top           = -32000
+    $window.Topmost       = $false
+    $window.ShowActivated = $false
+    $window.ShowInTaskbar = $false
+    $window.Show()
+    $window.Dispatcher.Invoke([action]{}, 'ApplicationIdle') | Out-Null
+    $window.Close()
+    return
+}
 
 $window.ShowDialog() | Out-Null

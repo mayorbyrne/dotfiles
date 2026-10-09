@@ -8,7 +8,7 @@ One branch for all machines. Shared configs live in `shared/`; OS-specific overl
 shared/   # wezterm, yazi, starship, lazygit, fonts, tmux, snippets, git-prompt, git setup, AI config
 pc/       # Windows nvim + PowerShell profile + wezterm-launcher + Windows-only AI hooks
 linux/    # Linux nvim + zsh + waybar + wezterm-launcher
-mac/      # macOS nvim + zsh + iTerm2
+mac/      # macOS nvim + zsh + iTerm2 + Hammerspoon hotkeys + wezterm-launcher + script-selector
 ```
 
 Machine-specific edits go in the matching overlay. Do not put OS-only files in `shared/`.
@@ -31,6 +31,7 @@ Then run the installer for your OS:
 | macOS | `bash mac/install/setup.sh` |
 
 Installers also prompt for optional AI CLIs (Cursor `agent`, Codex, Claude). Choices are written to `~/.config/wezterm/ai_clis.txt`, and WezTerm opens a startup tab for each.
+If any are chosen, `npx skills@latest add mattpocock/skills -g` installs those skills globally for the chosen CLIs.
 
 ## AI config
 
@@ -104,7 +105,7 @@ Machine drift:
   per-machine overrides go in `~/.config/dotfiles/claude.work.json` instead.
 - The synced `statusLine` runs `statusline.ps1` and is guarded by a file test, so
   it is a no-op on Linux and macOS. Override it in the Claude overlay there.
-- Claude Code and Orca rewrite `~/.claude/settings.json` in place. Those edits
+- Claude Code rewrites `~/.claude/settings.json` in place. Those edits
   stay on the machine. Copy anything worth keeping into the repo file or the
   overlay, then rerun the script.
 - Cursor editor settings live at `%APPDATA%\Cursor\User\settings.json` (Windows),
