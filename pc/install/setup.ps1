@@ -45,12 +45,32 @@ if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
 Write-Host "Installing packages via Chocolatey..." -ForegroundColor Green
 Write-Host "This may take several minutes. Please be patient..." -ForegroundColor Yellow
 
-$packages = @("git", "neovim", "lazygit", "yazi", "wezterm", "fzf", "ripgrep", "powershell-core", "powertoys", "tree-sitter", "mingw")
+$packages = @("git", "neovim", "yazi", "wezterm", "fzf", "ripgrep", "powershell-core", "powertoys", "tree-sitter", "mingw")
 foreach ($package in $packages) {
     Write-Host "Installing $package..." -ForegroundColor Gray
     choco install -y $package --limit-output
     Start-Sleep -Seconds 3
 }
+
+# scoop bucket add shells out to the git choco just installed
+refreshenv
+
+if (!(Get-Command scoop -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing Scoop..." -ForegroundColor Green
+    # This script runs elevated, and the Scoop installer refuses admin without -RunAsAdmin
+    iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+} else {
+    Write-Host "Scoop already installed" -ForegroundColor Gray
+}
+
+if (Test-Path "$env:ChocolateyInstall\lib\lazygit") {
+    Write-Host "Removing Chocolatey lazygit..." -ForegroundColor Green
+    choco uninstall -y lazygit --limit-output
+}
+
+Write-Host "Installing lazygit via Scoop..." -ForegroundColor Green
+scoop bucket add extras
+scoop install lazygit
 
 if (!(Get-Command nvm -ErrorAction SilentlyContinue)) {
     Write-Host "Installing nvm-windows..." -ForegroundColor Green
