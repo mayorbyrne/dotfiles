@@ -3,6 +3,13 @@
     "CLAUDE_CODE_FORCE_SESSION_PERSISTENCE": "1"
   },
   "model": "opus[1m]",
+  "permissions": {
+    "allow": [
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git show *)"
+    ]
+  },
   "hooks": {
     "PostToolUse": [
       {
