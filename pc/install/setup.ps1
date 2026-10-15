@@ -324,32 +324,20 @@ try {
     }
     Write-JsonFile $kbmSettingsPath $kbmModuleSettings
 
-    $generalSettings = Read-JsonFile $generalSettingsPath
-    if (-not $generalSettings) {
-        $generalSettings = [pscustomobject]@{
-            startup = $true
-            enabled = [pscustomobject]@{ "Keyboard Manager" = $true }
-        }
-    } else {
-        if (-not $generalSettings.enabled) {
-            $generalSettings | Add-Member -NotePropertyName enabled -NotePropertyValue ([pscustomobject]@{}) -Force
-        }
-        $generalSettings.enabled | Add-Member -NotePropertyName "Keyboard Manager" -NotePropertyValue $true -Force
-        $generalSettings | Add-Member -NotePropertyName startup -NotePropertyValue $true -Force
-    }
-    Write-JsonFile $generalSettingsPath $generalSettings
-
     function Enable-KeyboardManager {
         $gs = Read-JsonFile $generalSettingsPath
-        if (-not $gs) { return $false }
+        if (-not $gs) { $gs = [pscustomobject]@{} }
         if (-not $gs.enabled) {
             $gs | Add-Member -NotePropertyName enabled -NotePropertyValue ([pscustomobject]@{}) -Force
         }
         $gs.enabled | Add-Member -NotePropertyName "Keyboard Manager" -NotePropertyValue $true -Force
         $gs | Add-Member -NotePropertyName startup -NotePropertyValue $true -Force
+        # A non-elevated hook never sees keys typed into elevated windows, so hotkeys fall through to Windows there.
+        $gs | Add-Member -NotePropertyName run_elevated -NotePropertyValue $true -Force
         Write-JsonFile $generalSettingsPath $gs
-        return $true
     }
+
+    Enable-KeyboardManager
 
     $powerToysExe = @(
         "C:\Program Files\PowerToys\PowerToys.exe",
@@ -361,15 +349,15 @@ try {
         Get-Process -Name "PowerToys*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 2
         # Re-assert enable after stop (PowerToys may rewrite settings.json on exit/start)
-        Enable-KeyboardManager | Out-Null
-        # Launch via explorer so PowerToys is not elevated (hotkeys fail against non-admin windows otherwise)
+        Enable-KeyboardManager
+        # run_elevated makes PowerToys elevate itself, so the launch token does not matter.
         Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
         Start-Sleep -Seconds 4
         $gsAfter = Read-JsonFile $generalSettingsPath
         if (-not $gsAfter -or -not $gsAfter.enabled.'Keyboard Manager') {
             Get-Process -Name "PowerToys*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
-            Enable-KeyboardManager | Out-Null
+            Enable-KeyboardManager
             Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
             Start-Sleep -Seconds 3
         }
