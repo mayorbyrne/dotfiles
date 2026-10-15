@@ -204,6 +204,28 @@ if (Test-Path $muxTarget) {
 Write-Host "Creating mux.sh symlink..." -ForegroundColor Green
 New-Item -ItemType SymbolicLink -Path $muxTarget -Target $muxSource -Force | Out-Null
 
+Write-Host "Setting up hotkey host..." -ForegroundColor Green
+$hotkeyHostDir = Join-Path $dotfilesDir "pc\hotkey-host"
+$hotkeyHostScript = Join-Path $hotkeyHostDir "hotkey.ps1"
+$triggerExe = Join-Path $hotkeyHostDir "lib\trigger.exe"
+$hotkeyHostArgs = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Sta -File `"$hotkeyHostScript`""
+try {
+    & (Join-Path $hotkeyHostDir "build.ps1")
+
+    $startupLnk = Join-Path ([Environment]::GetFolderPath("Startup")) "WeztermHotkey.lnk"
+    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($startupLnk)
+    $shortcut.TargetPath = "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe"
+    $shortcut.Arguments = $hotkeyHostArgs
+    $shortcut.WorkingDirectory = $hotkeyHostDir
+    $shortcut.Save()
+
+    # Launching the host replaces any running instance.
+    Start-Process powershell.exe -ArgumentList $hotkeyHostArgs -WindowStyle Hidden
+    Write-Host "  Built lib\, added Startup shortcut, started host" -ForegroundColor Green
+} catch {
+    Write-Host "  Warning: hotkey host setup failed: $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
 Write-Host "Configuring PowerToys Win+Shift+R -> wezterm-launcher..." -ForegroundColor Green
 try {
     $powerToysRoot = Join-Path $env:LOCALAPPDATA "Microsoft\PowerToys"
@@ -234,13 +256,15 @@ try {
     # Win+Shift+R as PowerToys UI serializes it (VK_WIN_BOTH=260, VK_SHIFT=16, R=82)
     $hotkeyOriginalKeys = "260;16;82"
     $hotkeyOriginalKeysLegacy = "91;160;82"
+    # trigger.exe wakes the resident host, opening the launcher in ~0.2s vs ~2.5s for launch.bat.
+    $hasTrigger = Test-Path $triggerExe
     $launcherRemap = [pscustomobject]@{
         originalKeys                   = $hotkeyOriginalKeys
         exactMatch                     = $false
         operationType                  = 1
-        runProgramFilePath             = $launcherBat
-        runProgramArgs                 = ""
-        runProgramStartInDir           = $launcherDir
+        runProgramFilePath             = if ($hasTrigger) { $triggerExe } else { $launcherBat }
+        runProgramArgs                 = if ($hasTrigger) { "launcher" } else { "" }
+        runProgramStartInDir           = if ($hasTrigger) { Split-Path $triggerExe -Parent } else { $launcherDir }
         runProgramElevationLevel       = 0
         runProgramAlreadyRunningAction = 1
         runProgramStartWindowType      = 0
@@ -255,14 +279,13 @@ try {
     if ($existingKbm -and $existingKbm.remapShortcuts -and $existingKbm.remapShortcuts.global) {
         foreach ($remap in @($existingKbm.remapShortcuts.global)) {
             if (-not $remap) { continue }
-            if ($remap.originalKeys -ne $hotkeyOriginalKeys -and $remap.originalKeys -ne $hotkeyOriginalKeysLegacy) {
-                $globalRemaps.Add($remap)
-                continue
+            if ($remap.originalKeys -eq $hotkeyOriginalKeys -or $remap.originalKeys -eq $hotkeyOriginalKeysLegacy) { continue }
+            # Hand-made bindings to other host targets (e.g. Win+Shift+P -> scripts) follow trigger.exe to this checkout.
+            if ($hasTrigger -and $remap.runProgramFilePath -and (Split-Path $remap.runProgramFilePath -Leaf) -eq "trigger.exe") {
+                $remap.runProgramFilePath = $triggerExe
+                if ($remap.runProgramStartInDir) { $remap.runProgramStartInDir = Split-Path $triggerExe -Parent }
             }
-            # A resident hotkey host's trigger.exe opens the launcher in ~0.2s vs ~2.5s for launch.bat.
-            if ($remap.runProgramFilePath -and (Split-Path $remap.runProgramFilePath -Leaf) -eq "trigger.exe" -and (Test-Path $remap.runProgramFilePath)) {
-                $launcherRemap = $remap
-            }
+            $globalRemaps.Add($remap)
         }
     }
     if ($existingKbm -and $existingKbm.remapShortcuts -and $existingKbm.remapShortcuts.appSpecific) {

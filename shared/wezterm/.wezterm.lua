@@ -473,7 +473,7 @@ wezterm.on("gui-startup", function(cmd)
     wezterm.emit("trigger-workspace", cmd)
   else
     local screen = fullscreen_cells()
-    local tab, pane, window = mux.spawn_window({
+    local _, _, window = mux.spawn_window({
       width = screen.cols,
       height = screen.rows,
       position = {
@@ -483,10 +483,6 @@ wezterm.on("gui-startup", function(cmd)
       },
     })
 
-    spawn_ai_cli_tabs(window, wezterm.home_dir)
-    tab:activate()
-    -- Maximize after extra tabs exist so the tab bar does not resize
-    -- the pane after PowerShell has already painted the banner.
     window:gui_window():maximize()
   end
 end)

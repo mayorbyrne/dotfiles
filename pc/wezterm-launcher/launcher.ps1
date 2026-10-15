@@ -225,18 +225,213 @@ $agentMap = @{}
     WindowStartupLocation="CenterScreen"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
-    Topmost="True">
+    Topmost="True"
+    Background="#272822"
+    Foreground="#F8F8F2">
     <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="12,5"/>
-            <Setter Property="MinWidth" Value="70"/>
-        </Style>
+
+        <!-- Monokai palette -->
+        <SolidColorBrush x:Key="MkBg"        Color="#272822"/>
+        <SolidColorBrush x:Key="MkBgDark"    Color="#1E1F1C"/>
+        <SolidColorBrush x:Key="MkBgHover"   Color="#3E3D32"/>
+        <SolidColorBrush x:Key="MkSelection" Color="#49483E"/>
+        <SolidColorBrush x:Key="MkFg"        Color="#F8F8F2"/>
+        <SolidColorBrush x:Key="MkComment"   Color="#75715E"/>
+        <SolidColorBrush x:Key="MkGreen"     Color="#A6E22E"/>
+        <SolidColorBrush x:Key="MkBlue"      Color="#66D9EF"/>
+        <SolidColorBrush x:Key="MkOrange"    Color="#FD971F"/>
+        <SolidColorBrush x:Key="MkPurple"    Color="#AE81FF"/>
+        <SolidColorBrush x:Key="MkRed"       Color="#F92672"/>
+        <SolidColorBrush x:Key="MkBorder"    Color="#49483E"/>
+
         <Style TargetType="Label">
-            <Setter Property="Padding" Value="0,4,8,4"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding"     Value="0,4,8,4"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="Foreground"  Value="#66D9EF"/>
         </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background"            Value="#1E1F1C"/>
+            <Setter Property="Foreground"            Value="#F8F8F2"/>
+            <Setter Property="BorderBrush"           Value="#49483E"/>
+            <Setter Property="BorderThickness"       Value="1"/>
+            <Setter Property="CaretBrush"            Value="#F8F8F2"/>
+            <Setter Property="SelectionBrush"        Value="#49483E"/>
+            <Setter Property="Padding"               Value="4,2"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground"            Value="#F8F8F2"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground"            Value="#F8F8F2"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="ListBox">
+            <Setter Property="Background"      Value="#1E1F1C"/>
+            <Setter Property="BorderBrush"     Value="#49483E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground"      Value="#F8F8F2"/>
+            <Setter Property="Padding"         Value="0"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Foreground"  Value="#F8F8F2"/>
+            <Setter Property="Background"  Value="Transparent"/>
+            <Setter Property="Padding"     Value="8,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#3E3D32"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected"   Value="True"/>
+                                    <Condition Property="IsMouseOver"  Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="#49483E"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected"  Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="#49483E"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background"      Value="#272822"/>
+            <Setter Property="BorderBrush"     Value="#49483E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TabPanel Grid.Row="0" IsItemsHost="True"
+                                      Background="#1E1F1C"/>
+                            <Border Grid.Row="1"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1,0,1,1">
+                                <ContentPresenter ContentSource="SelectedContent"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Background"  Value="#1E1F1C"/>
+            <Setter Property="Foreground"  Value="#75715E"/>
+            <Setter Property="BorderBrush" Value="#49483E"/>
+            <Setter Property="Padding"     Value="14,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1,1,1,0"
+                                Margin="0,0,2,0"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"
+                                              TextElement.FontWeight="SemiBold"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBd" Property="Background" Value="#272822"/>
+                                <Setter Property="Foreground" Value="#A6E22E"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBd" Property="Background" Value="#3E3D32"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Variants override BtnHoverBg / BtnPressedBg in Style.Resources instead of copying the template. -->
+        <Style x:Key="DefaultButton" TargetType="Button">
+            <Style.Resources>
+                <SolidColorBrush x:Key="BtnHoverBg"   Color="#75715E"/>
+                <SolidColorBrush x:Key="BtnPressedBg" Color="#3E3D32"/>
+            </Style.Resources>
+            <Setter Property="Padding"          Value="12,5"/>
+            <Setter Property="MinWidth"         Value="70"/>
+            <Setter Property="Background"       Value="#49483E"/>
+            <Setter Property="Foreground"       Value="#F8F8F2"/>
+            <Setter Property="BorderBrush"      Value="#75715E"/>
+            <Setter Property="BorderThickness"  Value="1"/>
+            <Setter Property="Cursor"           Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"
+                                              TextElement.FontWeight="{TemplateBinding FontWeight}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BtnHoverBg}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BtnPressedBg}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" BasedOn="{StaticResource DefaultButton}"/>
+
+        <Style x:Key="LaunchButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButton}">
+            <Style.Resources>
+                <SolidColorBrush x:Key="BtnHoverBg"   Color="#C4E857"/>
+                <SolidColorBrush x:Key="BtnPressedBg" Color="#8AB825"/>
+            </Style.Resources>
+            <Setter Property="Background"       Value="#A6E22E"/>
+            <Setter Property="Foreground"       Value="#272822"/>
+            <Setter Property="BorderBrush"      Value="#A6E22E"/>
+            <Setter Property="FontWeight"       Value="SemiBold"/>
+        </Style>
+
     </Window.Resources>
-    <Grid>
+    <Grid Background="#272822">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -253,12 +448,13 @@ $agentMap = @{}
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <ListBox Grid.Row="0" x:Name="RecentList" FontFamily="Consolas" FontSize="12"
+                             SelectionMode="Extended"
                              SelectedValuePath="Content"/>
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
                         <Button x:Name="RemoveButton" Content="Remove" IsEnabled="False"/>
                     </StackPanel>
                     <TextBlock Grid.Row="2" x:Name="RecentPreview"
-                               FontSize="11" Foreground="#666"
+                               FontSize="11" Foreground="#75715E"
                                TextTrimming="CharacterEllipsis"
                                Margin="0,4,0,2"/>
                 </Grid>
@@ -274,7 +470,8 @@ $agentMap = @{}
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ListBox Grid.Row="0" x:Name="FolderList" FontFamily="Consolas" FontSize="12"/>
+                    <ListBox Grid.Row="0" x:Name="FolderList" FontFamily="Consolas" FontSize="12"
+                             SelectionMode="Extended"/>
 
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
                         <Label Content="Run with:"/>
@@ -289,12 +486,11 @@ $agentMap = @{}
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
                         <Label Content="Port:"/>
-                        <TextBox x:Name="PortBox" Text="8080" Width="70"
-                                 VerticalContentAlignment="Center" Height="24"/>
+                        <TextBox x:Name="PortBox" Text="8080" Width="70" Height="24"/>
                     </StackPanel>
 
                     <TextBlock Grid.Row="3" x:Name="NewPreview"
-                               FontSize="11" Foreground="#666"
+                               FontSize="11" Foreground="#75715E"
                                TextTrimming="CharacterEllipsis"
                                Margin="0,8,0,2"/>
                 </Grid>
@@ -303,7 +499,7 @@ $agentMap = @{}
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8">
             <Button x:Name="CancelButton" Content="Cancel" IsCancel="True" Margin="0,0,8,0"/>
-            <Button x:Name="LaunchButton" Content="Launch" IsDefault="True"/>
+            <Button x:Name="LaunchButton" Content="Launch" IsDefault="True" Style="{StaticResource LaunchButtonStyle}"/>
         </StackPanel>
     </Grid>
 </Window>
@@ -325,28 +521,33 @@ $dummyCheck   = $window.FindName("DummyCheck")
 $launchBtn    = $window.FindName("LaunchButton")
 
 $updateRecentPreview = {
-    $name = $recentList.SelectedValue
-    $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
-    if (-not $ws) {
-        $recentPreview.Text = ""
-    } else {
-        $preview = "cmd: $($ws.Command)"
+    $count = $recentList.SelectedItems.Count
+    if ($count -eq 1) {
+        $name = $recentList.SelectedValue
+        $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
+        $preview = if ($ws) { "cmd: $($ws.Command)" } else { "" }
         $agentText = Format-AgentPreview (Get-AgentsForFolder $name $agentMap)
         if ($agentText) { $preview = "$preview | $agentText" }
         $recentPreview.Text = $preview
+    } elseif ($count -gt 1) {
+        $recentPreview.Text = "$count workspaces selected"
+    } else {
+        $recentPreview.Text = ""
     }
-    $removeBtn.IsEnabled = $null -ne $name
+    $removeBtn.IsEnabled = $count -gt 0
 }
 $recentList.Add_SelectionChanged($updateRecentPreview)
 
 $removeBtn.Add_Click({
-    $lbi  = $recentList.SelectedItem
-    $name = $recentList.SelectedValue
-    if (-not $name) { return }
-    Remove-AppHistory -name $name
-    $toRemove = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
-    if ($toRemove) { $workspaces.Remove($toRemove) | Out-Null }
-    $recentList.Items.Remove($lbi)
+    $selected = @($recentList.SelectedItems)
+    if ($selected.Count -eq 0) { return }
+    foreach ($lbi in $selected) {
+        $name = $lbi.Content
+        Remove-AppHistory -name $name
+        $toRemove = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
+        if ($toRemove) { $workspaces.Remove($toRemove) | Out-Null }
+        $recentList.Items.Remove($lbi)
+    }
     $recentPreview.Text = ""
     $removeBtn.IsEnabled = $false
 })
@@ -394,19 +595,22 @@ $portBox.Add_TextChanged($updateNewPreview)
 # ── Launch ───────────────────────────────────────────────────
 $launchBtn.Add_Click({
     if ($mainTabs.SelectedIndex -eq 0) {
-        $name = $recentList.SelectedValue
-        if (-not $name) {
+        $selected = @($recentList.SelectedItems)
+        if ($selected.Count -eq 0) {
             [System.Windows.MessageBox]::Show("Please select a workspace.", "Wezterm Launcher", "OK", "Warning")
             return
         }
-        $ws  = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
-        $cmd = $ws.Command -replace "``", ""
-        Prepend-AppHistory -name $name -command $ws.Command
-        Start-Process wezterm -ArgumentList "start `"$name`" `"$cmd`""
+        foreach ($lbi in $selected) {
+            $name = $lbi.Content
+            $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
+            $cmd  = $ws.Command -replace "``", ""
+            Prepend-AppHistory -name $name -command $ws.Command
+            Start-Process wezterm -ArgumentList "start `"$name`" `"$cmd`""
+        }
     } else {
-        $folder = $folderList.SelectedItem
-        $port   = $portBox.Text.Trim()
-        if (-not $folder) {
+        $selectedFolders = @($folderList.SelectedItems)
+        $port = $portBox.Text.Trim()
+        if ($selectedFolders.Count -eq 0) {
             [System.Windows.MessageBox]::Show("Please select a folder.", "Wezterm Launcher", "OK", "Warning")
             return
         }
@@ -417,8 +621,10 @@ $launchBtn.Add_Click({
         } else {
             $cmd = "npm run dev ``-- --port=$port"
         }
-        Prepend-AppHistory -name $folder -command $cmd
-        Start-Process wezterm -ArgumentList "start `"$folder`" `"$cmd`""
+        foreach ($folder in $selectedFolders) {
+            Prepend-AppHistory -name $folder -command $cmd
+            Start-Process wezterm -ArgumentList "start `"$folder`" `"$cmd`""
+        }
     }
     $window.Close()
 })
@@ -445,13 +651,13 @@ $window.Add_ContentRendered({
         $lbi.Content = $ws.Name
         $agents = Get-AgentsForFolder $ws.Name $agentMap
         if ($agents | Where-Object { $_.Status -eq 'working' }) {
-            $lbi.Foreground = [System.Windows.Media.Brushes]::DarkOrange
+            $lbi.Foreground = $window.FindResource('MkOrange')
         } elseif ($agents | Where-Object { $_.Status -eq 'error' }) {
-            $lbi.Foreground = [System.Windows.Media.Brushes]::IndianRed
+            $lbi.Foreground = $window.FindResource('MkRed')
         } elseif ($ws.Command -match 'dummy') {
-            $lbi.Foreground = [System.Windows.Media.Brushes]::MediumPurple
+            $lbi.Foreground = $window.FindResource('MkPurple')
         } elseif ($agents.Count -gt 0) {
-            $lbi.Foreground = [System.Windows.Media.Brushes]::Teal
+            $lbi.Foreground = $window.FindResource('MkBlue')
         }
         $recentList.Items.Add($lbi) | Out-Null
     }
