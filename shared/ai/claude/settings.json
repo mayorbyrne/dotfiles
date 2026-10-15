@@ -35,6 +35,16 @@
             "timeout": 10
           }
         ]
+      },
+      {
+        "matcher": "^startup$",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "d=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; r=$(git -C \"$d\" rev-parse --show-toplevel 2>/dev/null) || exit 0; if [ ! -f \"$r/CLAUDE.md\" ] && [ ! -f \"$r/.claude/CLAUDE.md\" ]; then if [ -f \"$r/AGENTS.md\" ]; then m=\"No CLAUDE.md in this repo. AGENTS.md exists, so add a CLAUDE.md containing @AGENTS.md for Claude to read it.\"; else m=\"No CLAUDE.md or AGENTS.md in this repo. Run /init to create one.\"; fi; printf '{\"systemMessage\":\"%s\",\"hookSpecificOutput\":{\"hookEventName\":\"SessionStart\",\"additionalContext\":\"%s\"}}\\n' \"$m\" \"$m\"; fi",
+            "timeout": 10
+          }
+        ]
       }
     ],
     "UserPromptSubmit": [
