@@ -2,19 +2,23 @@ Add-Type -AssemblyName PresentationFramework
 Add-Type -AssemblyName PresentationCore
 Add-Type -AssemblyName System.Windows.Forms
 
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class Win32Focus {
-    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
-    [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr hWnd);
-    [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
-    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr pid);
-    [DllImport("user32.dll")] public static extern uint GetCurrentThreadId();
-    [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
-    [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr hWnd);
-}
+# hotkey.ps1 preloads Win32Focus from its prebuilt DLL, and reruns this script
+# on every press, so skip the ~350ms C# compile when the type already exists.
+if (-not ('Win32Focus' -as [type])) {
+    Add-Type @"
+    using System;
+    using System.Runtime.InteropServices;
+    public class Win32Focus {
+        [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")] public static extern bool BringWindowToTop(IntPtr hWnd);
+        [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr hWnd, IntPtr pid);
+        [DllImport("kernel32.dll")] public static extern uint GetCurrentThreadId();
+        [DllImport("user32.dll")] public static extern bool AttachThreadInput(uint idAttach, uint idAttachTo, bool fAttach);
+        [DllImport("user32.dll")] public static extern IntPtr SetFocus(IntPtr hWnd);
+    }
 "@
+}
 
 $historyFile = "$env:APPDATA\wezterm-launcher\history.json"
 $configFile  = "$env:APPDATA\wezterm-launcher\config.json"
@@ -44,7 +48,10 @@ function Update-WeztermProjectsRoot([string]$projectsRoot) {
     # WriteAllText with a BOM-less encoding: Windows PowerShell's -Encoding UTF8
     # prepends a BOM, which WezTerm would read as part of the path.
     $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText((Join-Path $dir "projects_root.txt"), "$luaRoot`n", $utf8NoBom)
+    $path = Join-Path $dir "projects_root.txt"
+    $content = "$luaRoot`n"
+    if ([System.IO.File]::Exists($path) -and [System.IO.File]::ReadAllText($path) -eq $content) { return }
+    [System.IO.File]::WriteAllText($path, $content, $utf8NoBom)
 }
 
 function Ensure-ProjectsRoot {
@@ -116,6 +123,48 @@ function Prepend-AppHistory([string]$name, [string]$command) {
     Save-AppHistory $newHistory
 }
 
+function Normalize-AgentCwd([string]$cwd) {
+    if (-not $cwd) { return "" }
+    return ($cwd -replace '\\', '/').TrimEnd('/').ToLowerInvariant()
+}
+
+function Get-AgentStateMap {
+    $path = Join-Path $env:USERPROFILE ".config\wezterm\agent_state.txt"
+    $map = @{}
+    if (-not (Test-Path $path)) { return $map }
+    $now = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    foreach ($line in Get-Content $path) {
+        if ($line -match '^\s*#' -or [string]::IsNullOrWhiteSpace($line)) { continue }
+        $parts = $line.Split('|')
+        if ($parts.Count -lt 3) { continue }
+        $updated = 0
+        if ($parts.Count -ge 4) { [void][int64]::TryParse($parts[3], [ref]$updated) }
+        if ($updated -gt 0 -and $updated -lt ($now - 21600)) { continue }
+        $cwd = Normalize-AgentCwd $parts[1]
+        if (-not $map.ContainsKey($cwd)) {
+            $map[$cwd] = [System.Collections.Generic.List[PSCustomObject]]::new()
+        }
+        $map[$cwd].Add([PSCustomObject]@{ Agent = $parts[0]; Status = $parts[2] })
+    }
+    return $map
+}
+
+function Get-AgentsForFolder([string]$folder, $agentMap) {
+    if (-not $folder -or -not $agentMap) { return @() }
+    $cwd = Normalize-AgentCwd (Join-Path $script:projectsRoot $folder)
+    if ($agentMap.ContainsKey($cwd)) { return @($agentMap[$cwd]) }
+    $suffix = "/" + $folder.ToLowerInvariant()
+    foreach ($key in $agentMap.Keys) {
+        if ($key.EndsWith($suffix)) { return @($agentMap[$key]) }
+    }
+    return @()
+}
+
+function Format-AgentPreview($agents) {
+    if (-not $agents -or $agents.Count -eq 0) { return "" }
+    return ($agents | ForEach-Object { "$($_.Agent) $($_.Status)" }) -join "  "
+}
+
 function Test-HasDevDummy([string]$folder) {
     if (-not $folder) { return $false }
     $pkgPath = Join-Path $script:projectsRoot "$folder\package.json"
@@ -160,15 +209,13 @@ function Get-WeztermWorkspaces {
     return [System.Collections.Generic.List[PSCustomObject]]($list | Select-Object -First 50)
 }
 
+# exit would take down hotkey.ps1, which runs this script in its own process.
 if (-not (Ensure-ProjectsRoot)) {
-    exit 0
+    return
 }
 
-$workspaces = Get-WeztermWorkspaces
-$gitFolders = @()
-if (Test-Path $script:projectsRoot) {
-    $gitFolders = Get-ChildItem $script:projectsRoot -Directory | Select-Object -ExpandProperty Name | Sort-Object
-}
+$workspaces = [System.Collections.Generic.List[PSCustomObject]]::new()
+$agentMap = @{}
 [xml]$xaml = @"
 <Window
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
@@ -178,18 +225,213 @@ if (Test-Path $script:projectsRoot) {
     WindowStartupLocation="CenterScreen"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
-    Topmost="True">
+    Topmost="True"
+    Background="#272822"
+    Foreground="#F8F8F2">
     <Window.Resources>
-        <Style TargetType="Button">
-            <Setter Property="Padding" Value="12,5"/>
-            <Setter Property="MinWidth" Value="70"/>
-        </Style>
+
+        <!-- Monokai palette -->
+        <SolidColorBrush x:Key="MkBg"        Color="#272822"/>
+        <SolidColorBrush x:Key="MkBgDark"    Color="#1E1F1C"/>
+        <SolidColorBrush x:Key="MkBgHover"   Color="#3E3D32"/>
+        <SolidColorBrush x:Key="MkSelection" Color="#49483E"/>
+        <SolidColorBrush x:Key="MkFg"        Color="#F8F8F2"/>
+        <SolidColorBrush x:Key="MkComment"   Color="#75715E"/>
+        <SolidColorBrush x:Key="MkGreen"     Color="#A6E22E"/>
+        <SolidColorBrush x:Key="MkBlue"      Color="#66D9EF"/>
+        <SolidColorBrush x:Key="MkOrange"    Color="#FD971F"/>
+        <SolidColorBrush x:Key="MkPurple"    Color="#AE81FF"/>
+        <SolidColorBrush x:Key="MkRed"       Color="#F92672"/>
+        <SolidColorBrush x:Key="MkBorder"    Color="#49483E"/>
+
         <Style TargetType="Label">
-            <Setter Property="Padding" Value="0,4,8,4"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Padding"     Value="0,4,8,4"/>
+            <Setter Property="FontWeight"  Value="SemiBold"/>
+            <Setter Property="Foreground"  Value="#66D9EF"/>
         </Style>
+
+        <Style TargetType="TextBox">
+            <Setter Property="Background"            Value="#1E1F1C"/>
+            <Setter Property="Foreground"            Value="#F8F8F2"/>
+            <Setter Property="BorderBrush"           Value="#49483E"/>
+            <Setter Property="BorderThickness"       Value="1"/>
+            <Setter Property="CaretBrush"            Value="#F8F8F2"/>
+            <Setter Property="SelectionBrush"        Value="#49483E"/>
+            <Setter Property="Padding"               Value="4,2"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="RadioButton">
+            <Setter Property="Foreground"            Value="#F8F8F2"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="CheckBox">
+            <Setter Property="Foreground"            Value="#F8F8F2"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+
+        <Style TargetType="ListBox">
+            <Setter Property="Background"      Value="#1E1F1C"/>
+            <Setter Property="BorderBrush"     Value="#49483E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Foreground"      Value="#F8F8F2"/>
+            <Setter Property="Padding"         Value="0"/>
+            <Setter Property="ScrollViewer.HorizontalScrollBarVisibility" Value="Disabled"/>
+        </Style>
+
+        <Style TargetType="ListBoxItem">
+            <Setter Property="Foreground"  Value="#F8F8F2"/>
+            <Setter Property="Background"  Value="Transparent"/>
+            <Setter Property="Padding"     Value="8,4"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ListBoxItem">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter TextElement.Foreground="{TemplateBinding Foreground}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="#3E3D32"/>
+                            </Trigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected"   Value="True"/>
+                                    <Condition Property="IsMouseOver"  Value="False"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="#49483E"/>
+                            </MultiTrigger>
+                            <MultiTrigger>
+                                <MultiTrigger.Conditions>
+                                    <Condition Property="IsSelected"  Value="True"/>
+                                    <Condition Property="IsMouseOver" Value="True"/>
+                                </MultiTrigger.Conditions>
+                                <Setter TargetName="Bd" Property="Background" Value="#49483E"/>
+                            </MultiTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabControl">
+            <Setter Property="Background"      Value="#272822"/>
+            <Setter Property="BorderBrush"     Value="#49483E"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding"         Value="0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabControl">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <TabPanel Grid.Row="0" IsItemsHost="True"
+                                      Background="#1E1F1C"/>
+                            <Border Grid.Row="1"
+                                    Background="{TemplateBinding Background}"
+                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                    BorderThickness="1,0,1,1">
+                                <ContentPresenter ContentSource="SelectedContent"/>
+                            </Border>
+                        </Grid>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="TabItem">
+            <Setter Property="Background"  Value="#1E1F1C"/>
+            <Setter Property="Foreground"  Value="#75715E"/>
+            <Setter Property="BorderBrush" Value="#49483E"/>
+            <Setter Property="Padding"     Value="14,6"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TabItem">
+                        <Border x:Name="TabBd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="1,1,1,0"
+                                Margin="0,0,2,0"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter ContentSource="Header"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"
+                                              TextElement.FontWeight="SemiBold"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter TargetName="TabBd" Property="Background" Value="#272822"/>
+                                <Setter Property="Foreground" Value="#A6E22E"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="TabBd" Property="Background" Value="#3E3D32"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Variants override BtnHoverBg / BtnPressedBg in Style.Resources instead of copying the template. -->
+        <Style x:Key="DefaultButton" TargetType="Button">
+            <Style.Resources>
+                <SolidColorBrush x:Key="BtnHoverBg"   Color="#75715E"/>
+                <SolidColorBrush x:Key="BtnPressedBg" Color="#3E3D32"/>
+            </Style.Resources>
+            <Setter Property="Padding"          Value="12,5"/>
+            <Setter Property="MinWidth"         Value="70"/>
+            <Setter Property="Background"       Value="#49483E"/>
+            <Setter Property="Foreground"       Value="#F8F8F2"/>
+            <Setter Property="BorderBrush"      Value="#75715E"/>
+            <Setter Property="BorderThickness"  Value="1"/>
+            <Setter Property="Cursor"           Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Bd"
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="3"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"
+                                              TextElement.Foreground="{TemplateBinding Foreground}"
+                                              TextElement.FontWeight="{TemplateBinding FontWeight}"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BtnHoverBg}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Bd" Property="Background" Value="{DynamicResource BtnPressedBg}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.35"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style TargetType="Button" BasedOn="{StaticResource DefaultButton}"/>
+
+        <Style x:Key="LaunchButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButton}">
+            <Style.Resources>
+                <SolidColorBrush x:Key="BtnHoverBg"   Color="#C4E857"/>
+                <SolidColorBrush x:Key="BtnPressedBg" Color="#8AB825"/>
+            </Style.Resources>
+            <Setter Property="Background"       Value="#A6E22E"/>
+            <Setter Property="Foreground"       Value="#272822"/>
+            <Setter Property="BorderBrush"      Value="#A6E22E"/>
+            <Setter Property="FontWeight"       Value="SemiBold"/>
+        </Style>
+
     </Window.Resources>
-    <Grid>
+    <Grid Background="#272822">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
@@ -206,12 +448,13 @@ if (Test-Path $script:projectsRoot) {
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     <ListBox Grid.Row="0" x:Name="RecentList" FontFamily="Consolas" FontSize="12"
+                             SelectionMode="Extended"
                              SelectedValuePath="Content"/>
                     <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
                         <Button x:Name="RemoveButton" Content="Remove" IsEnabled="False"/>
                     </StackPanel>
                     <TextBlock Grid.Row="2" x:Name="RecentPreview"
-                               FontSize="11" Foreground="#666"
+                               FontSize="11" Foreground="#75715E"
                                TextTrimming="CharacterEllipsis"
                                Margin="0,4,0,2"/>
                 </Grid>
@@ -227,7 +470,8 @@ if (Test-Path $script:projectsRoot) {
                         <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
 
-                    <ListBox Grid.Row="0" x:Name="FolderList" FontFamily="Consolas" FontSize="12"/>
+                    <ListBox Grid.Row="0" x:Name="FolderList" FontFamily="Consolas" FontSize="12"
+                             SelectionMode="Extended"/>
 
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,10,0,0">
                         <Label Content="Run with:"/>
@@ -242,12 +486,11 @@ if (Test-Path $script:projectsRoot) {
 
                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
                         <Label Content="Port:"/>
-                        <TextBox x:Name="PortBox" Text="8080" Width="70"
-                                 VerticalContentAlignment="Center" Height="24"/>
+                        <TextBox x:Name="PortBox" Text="8080" Width="70" Height="24"/>
                     </StackPanel>
 
                     <TextBlock Grid.Row="3" x:Name="NewPreview"
-                               FontSize="11" Foreground="#666"
+                               FontSize="11" Foreground="#75715E"
                                TextTrimming="CharacterEllipsis"
                                Margin="0,8,0,2"/>
                 </Grid>
@@ -256,7 +499,7 @@ if (Test-Path $script:projectsRoot) {
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8">
             <Button x:Name="CancelButton" Content="Cancel" IsCancel="True" Margin="0,0,8,0"/>
-            <Button x:Name="LaunchButton" Content="Launch" IsDefault="True"/>
+            <Button x:Name="LaunchButton" Content="Launch" IsDefault="True" Style="{StaticResource LaunchButtonStyle}"/>
         </StackPanel>
     </Grid>
 </Window>
@@ -277,40 +520,37 @@ $newPreview   = $window.FindName("NewPreview")
 $dummyCheck   = $window.FindName("DummyCheck")
 $launchBtn    = $window.FindName("LaunchButton")
 
-# ── Recent tab ──────────────────────────────────────────────
-foreach ($ws in $workspaces) {
-    $lbi = [System.Windows.Controls.ListBoxItem]::new()
-    $lbi.Content = $ws.Name
-    if ($ws.Command -match 'dummy') {
-        $lbi.Foreground = [System.Windows.Media.Brushes]::MediumPurple
-    }
-    $recentList.Items.Add($lbi) | Out-Null
-}
-if ($recentList.Items.Count -gt 0) { $recentList.SelectedIndex = 0 }
-
 $updateRecentPreview = {
-    $name = $recentList.SelectedValue
-    $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
-    $recentPreview.Text = if ($ws) { "cmd: $($ws.Command)" } else { "" }
-    $removeBtn.IsEnabled = $null -ne $name
+    $count = $recentList.SelectedItems.Count
+    if ($count -eq 1) {
+        $name = $recentList.SelectedValue
+        $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
+        $preview = if ($ws) { "cmd: $($ws.Command)" } else { "" }
+        $agentText = Format-AgentPreview (Get-AgentsForFolder $name $agentMap)
+        if ($agentText) { $preview = "$preview | $agentText" }
+        $recentPreview.Text = $preview
+    } elseif ($count -gt 1) {
+        $recentPreview.Text = "$count workspaces selected"
+    } else {
+        $recentPreview.Text = ""
+    }
+    $removeBtn.IsEnabled = $count -gt 0
 }
 $recentList.Add_SelectionChanged($updateRecentPreview)
-& $updateRecentPreview
 
 $removeBtn.Add_Click({
-    $lbi  = $recentList.SelectedItem
-    $name = $recentList.SelectedValue
-    if (-not $name) { return }
-    Remove-AppHistory -name $name
-    $toRemove = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
-    if ($toRemove) { $workspaces.Remove($toRemove) | Out-Null }
-    $recentList.Items.Remove($lbi)
+    $selected = @($recentList.SelectedItems)
+    if ($selected.Count -eq 0) { return }
+    foreach ($lbi in $selected) {
+        $name = $lbi.Content
+        Remove-AppHistory -name $name
+        $toRemove = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
+        if ($toRemove) { $workspaces.Remove($toRemove) | Out-Null }
+        $recentList.Items.Remove($lbi)
+    }
     $recentPreview.Text = ""
     $removeBtn.IsEnabled = $false
 })
-
-# ── New Workspace tab ────────────────────────────────────────
-foreach ($f in $gitFolders) { $folderList.Items.Add($f) | Out-Null }
 
 $updateNewPreview = {
     $folder = $folderList.SelectedItem
@@ -355,19 +595,22 @@ $portBox.Add_TextChanged($updateNewPreview)
 # ── Launch ───────────────────────────────────────────────────
 $launchBtn.Add_Click({
     if ($mainTabs.SelectedIndex -eq 0) {
-        $name = $recentList.SelectedValue
-        if (-not $name) {
+        $selected = @($recentList.SelectedItems)
+        if ($selected.Count -eq 0) {
             [System.Windows.MessageBox]::Show("Please select a workspace.", "Wezterm Launcher", "OK", "Warning")
             return
         }
-        $ws  = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
-        $cmd = $ws.Command -replace "``", ""
-        Prepend-AppHistory -name $name -command $ws.Command
-        Start-Process wezterm -ArgumentList "start `"$name`" `"$cmd`""
+        foreach ($lbi in $selected) {
+            $name = $lbi.Content
+            $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
+            $cmd  = $ws.Command -replace "``", ""
+            Prepend-AppHistory -name $name -command $ws.Command
+            Start-Process wezterm -ArgumentList "start `"$name`" `"$cmd`""
+        }
     } else {
-        $folder = $folderList.SelectedItem
-        $port   = $portBox.Text.Trim()
-        if (-not $folder) {
+        $selectedFolders = @($folderList.SelectedItems)
+        $port = $portBox.Text.Trim()
+        if ($selectedFolders.Count -eq 0) {
             [System.Windows.MessageBox]::Show("Please select a folder.", "Wezterm Launcher", "OK", "Warning")
             return
         }
@@ -378,13 +621,16 @@ $launchBtn.Add_Click({
         } else {
             $cmd = "npm run dev ``-- --port=$port"
         }
-        Prepend-AppHistory -name $folder -command $cmd
-        Start-Process wezterm -ArgumentList "start `"$folder`" `"$cmd`""
+        foreach ($folder in $selectedFolders) {
+            Prepend-AppHistory -name $folder -command $cmd
+            Start-Process wezterm -ArgumentList "start `"$folder`" `"$cmd`""
+        }
     }
     $window.Close()
 })
 
 $window.Add_Loaded({
+    if ($HotkeyHostPrewarm) { return }
     $hwnd = (New-Object System.Windows.Interop.WindowInteropHelper($window)).Handle
     $fgHwnd = [Win32Focus]::GetForegroundWindow()
     $fgThread = [Win32Focus]::GetWindowThreadProcessId($fgHwnd, [IntPtr]::Zero)
@@ -395,5 +641,48 @@ $window.Add_Loaded({
     [Win32Focus]::AttachThreadInput($fgThread, $myThread, $false)
     $window.Activate()
 })
+
+$window.Add_ContentRendered({
+    $script:workspaces = Get-WeztermWorkspaces
+    $script:agentMap = Get-AgentStateMap
+
+    foreach ($ws in $workspaces) {
+        $lbi = [System.Windows.Controls.ListBoxItem]::new()
+        $lbi.Content = $ws.Name
+        $agents = Get-AgentsForFolder $ws.Name $agentMap
+        if ($agents | Where-Object { $_.Status -eq 'working' }) {
+            $lbi.Foreground = $window.FindResource('MkOrange')
+        } elseif ($agents | Where-Object { $_.Status -eq 'error' }) {
+            $lbi.Foreground = $window.FindResource('MkRed')
+        } elseif ($ws.Command -match 'dummy') {
+            $lbi.Foreground = $window.FindResource('MkPurple')
+        } elseif ($agents.Count -gt 0) {
+            $lbi.Foreground = $window.FindResource('MkBlue')
+        }
+        $recentList.Items.Add($lbi) | Out-Null
+    }
+    if ($recentList.Items.Count -gt 0) { $recentList.SelectedIndex = 0 }
+    & $updateRecentPreview
+
+    foreach ($path in [System.IO.Directory]::EnumerateDirectories($script:projectsRoot)) {
+        $folderList.Items.Add([System.IO.Path]::GetFileName($path)) | Out-Null
+    }
+    $folderList.Items.SortDescriptions.Add([System.ComponentModel.SortDescription]::new('', [System.ComponentModel.ListSortDirection]::Ascending))
+})
+
+# hotkey.ps1 sets $HotkeyHostPrewarm at startup to build the window once
+# offscreen, moving XAML parsing and JIT off the first real press.
+if ($HotkeyHostPrewarm) {
+    $window.WindowStartupLocation = 'Manual'
+    $window.Left          = -32000
+    $window.Top           = -32000
+    $window.Topmost       = $false
+    $window.ShowActivated = $false
+    $window.ShowInTaskbar = $false
+    $window.Show()
+    $window.Dispatcher.Invoke([action]{}, 'ApplicationIdle') | Out-Null
+    $window.Close()
+    return
+}
 
 $window.ShowDialog() | Out-Null

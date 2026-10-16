@@ -1,0 +1,17 @@
+# Targets served by the resident host (hotkey.ps1).
+#
+# One "name = script path" per line. The name is what trigger.exe takes as its
+# argument, and it also names the wakeup event, so keep it short and stable.
+# Lines starting with # are ignored.
+#
+# Paths may use %VARS% and may be relative to this folder. A target whose script
+# is missing on this machine is skipped, so machine-specific entries are fine.
+#
+# Each script must cooperate with prewarming: guard its inline Add-Type behind a
+# type-exists check, skip its focus-stealing Loaded handler when
+# $HotkeyHostPrewarm is set, and show itself offscreen instead of calling
+# ShowDialog in that mode. See ..\wezterm-launcher\launcher.ps1 for the
+# reference implementation.
+
+launcher = ..\wezterm-launcher\launcher.ps1
+scripts  = %USERPROFILE%\scripts\windows\script-selector.ps1

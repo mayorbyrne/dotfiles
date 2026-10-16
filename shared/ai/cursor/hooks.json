@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "hooks": {
+    "sessionStart": [
+      {
+        "command": "./hooks/agent-state.sh agent sessionStart"
+      }
+    ],
+    "beforeSubmitPrompt": [
+      {
+        "command": "./hooks/agent-state.sh agent beforeSubmitPrompt"
+      }
+    ],
+    "preToolUse": [
+      {
+        "command": "./hooks/agent-state.sh agent preToolUse"
+      }
+    ],
+    "stop": [
+      {
+        "command": "./hooks/agent-state.sh agent stop"
+      }
+    ],
+    "sessionEnd": [
+      {
+        "command": "./hooks/agent-state.sh agent sessionEnd"
+      }
+    ]
+  }
+}

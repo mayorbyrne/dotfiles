@@ -235,3 +235,13 @@ handler calls is already defined above it.
   periods not an ellipsis character.
 - Glyphs are fine in user-facing markup, where they are content rather than prose.
 - Comments explain why, not what.
+
+## /init and agent instruction files
+
+When running /init, or otherwise creating a project instruction file:
+
+- Write the content to `AGENTS.md` at the repo root, so Codex and other agents read it too.
+- Make `CLAUDE.md` a one-line import: `@AGENTS.md`.
+- Keep `AGENTS.md` tool-neutral. Title it `# AGENTS.md` and open with "This file provides guidance to AI coding agents (Claude Code, Codex, and others) working in this repository."
+- If a `CLAUDE.md` with real content already exists, move its content into `AGENTS.md` and replace it with the import line.
+- If an `AGENTS.md` already exists, improve it in place and add the `CLAUDE.md` import if missing.

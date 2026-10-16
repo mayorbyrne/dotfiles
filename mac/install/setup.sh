@@ -60,7 +60,7 @@ done
 
 # Install cask applications
 echo "Installing GUI applications..."
-CASKS=("wezterm" "karabiner-elements")
+CASKS=("wezterm" "karabiner-elements" "hammerspoon")
 
 for cask in "${CASKS[@]}"; do
     if brew list --cask "$cask" &> /dev/null; then
@@ -94,100 +94,26 @@ npm install -g @githubnext/github-copilot-cli
 # Create symlinks for configurations
 echo "Creating configuration symlinks..."
 
-# Neovim
-NVIM_TARGET="$HOME/.config/nvim"
-NVIM_SOURCE="$DOTFILES_DIR/mac/nvim/.config/nvim"
+# Skips a missing source, replaces whatever sits at the target.
+link_config() {
+    local source="$1" target="$2"
+    [ -e "$source" ] || return 0
+    mkdir -p "$(dirname "$target")"
+    rm -rf "$target"
+    echo "Linking $target"
+    ln -s "$source" "$target"
+}
 
-if [ -L "$NVIM_TARGET" ] || [ -d "$NVIM_TARGET" ]; then
-    rm -rf "$NVIM_TARGET"
-fi
-
-mkdir -p "$HOME/.config"
-echo "Creating nvim symlink..."
-ln -sf "$NVIM_SOURCE" "$NVIM_TARGET"
-
-# Wezterm
-WEZTERM_TARGET="$HOME/.wezterm.lua"
-WEZTERM_SOURCE="$DOTFILES_DIR/shared/wezterm/.wezterm.lua"
-
-if [ -L "$WEZTERM_TARGET" ] || [ -f "$WEZTERM_TARGET" ]; then
-    rm -f "$WEZTERM_TARGET"
-fi
-
-echo "Creating wezterm config symlink..."
-ln -sf "$WEZTERM_SOURCE" "$WEZTERM_TARGET"
-
-# Lazygit
-LAZYGIT_TARGET="$HOME/Library/Application Support/lazygit/config.yml"
-LAZYGIT_SOURCE="$DOTFILES_DIR/shared/lazygit/Library/Application Support/lazygit/config.yml"
-
-mkdir -p "$HOME/Library/Application Support/lazygit"
-
-if [ -L "$LAZYGIT_TARGET" ] || [ -f "$LAZYGIT_TARGET" ]; then
-    rm -f "$LAZYGIT_TARGET"
-fi
-
-echo "Creating lazygit config symlink..."
-ln -sf "$LAZYGIT_SOURCE" "$LAZYGIT_TARGET"
-
-# Yazi
-YAZI_TARGET="$HOME/.config/yazi"
-YAZI_SOURCE="$DOTFILES_DIR/shared/yazi/.config/yazi"
-
-if [ -L "$YAZI_TARGET" ] || [ -d "$YAZI_TARGET" ]; then
-    rm -rf "$YAZI_TARGET"
-fi
-
-echo "Creating yazi config symlink..."
-ln -sf "$YAZI_SOURCE" "$YAZI_TARGET"
-
-# Starship
-STARSHIP_TARGET="$HOME/.config/starship.toml"
-STARSHIP_SOURCE="$DOTFILES_DIR/shared/starship/.config/starship.toml"
-
-if [ -L "$STARSHIP_TARGET" ] || [ -f "$STARSHIP_TARGET" ]; then
-    rm -f "$STARSHIP_TARGET"
-fi
-
-echo "Creating starship config symlink..."
-ln -sf "$STARSHIP_SOURCE" "$STARSHIP_TARGET"
-
-# Zsh configuration
-ZSH_TARGET="$HOME/.zshrc"
-ZSH_SOURCE="$DOTFILES_DIR/mac/zsh/.zshrc"
-
-if [ -f "$ZSH_SOURCE" ]; then
-    if [ -L "$ZSH_TARGET" ] || [ -f "$ZSH_TARGET" ]; then
-        rm -f "$ZSH_TARGET"
-    fi
-    echo "Creating zsh config symlink..."
-    ln -sf "$ZSH_SOURCE" "$ZSH_TARGET"
-fi
-
-# Git prompt
-GIT_PROMPT_TARGET="$HOME/.git-prompt.sh"
-GIT_PROMPT_SOURCE="$DOTFILES_DIR/shared/git-prompt.sh"
-
-if [ -f "$GIT_PROMPT_SOURCE" ]; then
-    if [ -L "$GIT_PROMPT_TARGET" ] || [ -f "$GIT_PROMPT_TARGET" ]; then
-        rm -f "$GIT_PROMPT_TARGET"
-    fi
-    echo "Creating git-prompt.sh symlink..."
-    ln -sf "$GIT_PROMPT_SOURCE" "$GIT_PROMPT_TARGET"
-fi
-
-# mux.sh
-MUX_TARGET="$HOME/.config/scripts/mux.sh"
-MUX_SOURCE="$DOTFILES_DIR/shared/scripts/.config/scripts/mux.sh"
-
-if [ -f "$MUX_SOURCE" ]; then
-    mkdir -p "$HOME/.config/scripts"
-    if [ -L "$MUX_TARGET" ] || [ -f "$MUX_TARGET" ]; then
-        rm -f "$MUX_TARGET"
-    fi
-    echo "Creating mux.sh symlink..."
-    ln -sf "$MUX_SOURCE" "$MUX_TARGET"
-fi
+link_config "$DOTFILES_DIR/mac/nvim/.config/nvim" "$HOME/.config/nvim"
+link_config "$DOTFILES_DIR/shared/wezterm/.wezterm.lua" "$HOME/.wezterm.lua"
+link_config "$DOTFILES_DIR/shared/lazygit/Library/Application Support/lazygit/config.yml" "$HOME/Library/Application Support/lazygit/config.yml"
+link_config "$DOTFILES_DIR/shared/yazi/.config/yazi" "$HOME/.config/yazi"
+link_config "$DOTFILES_DIR/shared/starship/.config/starship.toml" "$HOME/.config/starship.toml"
+link_config "$DOTFILES_DIR/mac/zsh/.zshrc" "$HOME/.zshrc"
+link_config "$DOTFILES_DIR/shared/git-prompt.sh" "$HOME/.git-prompt.sh"
+link_config "$DOTFILES_DIR/shared/scripts/.config/scripts/mux.sh" "$HOME/.config/scripts/mux.sh"
+# Binds alt+shift+r (wezterm-launcher) and alt+shift+p (script-selector).
+link_config "$DOTFILES_DIR/mac/hammerspoon/init.lua" "$HOME/.hammerspoon/init.lua"
 
 # Install FiraCode Nerd Font
 echo "Installing FiraCode Nerd Font..."

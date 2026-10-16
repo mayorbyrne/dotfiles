@@ -9,6 +9,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import gi
@@ -138,6 +139,52 @@ def list_project_folders(projects_root: str) -> list[str]:
     return sorted(entry.name for entry in root.iterdir() if entry.is_dir() and not entry.name.startswith("."))
 
 
+def normalize_agent_cwd(cwd: str) -> str:
+    return cwd.replace("\\", "/").rstrip("/").lower()
+
+
+def load_agent_state() -> dict[str, list[dict[str, str]]]:
+    path = Path.home() / ".config" / "wezterm" / "agent_state.txt"
+    state: dict[str, list[dict[str, str]]] = {}
+    if not path.is_file():
+        return state
+    now = int(time.time())
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return state
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        parts = line.split("|")
+        if len(parts) < 3:
+            continue
+        updated = int(parts[3]) if len(parts) > 3 and parts[3].isdigit() else 0
+        if updated and updated < now - 21600:
+            continue
+        cwd = normalize_agent_cwd(parts[1])
+        state.setdefault(cwd, []).append({"agent": parts[0], "status": parts[2]})
+    return state
+
+
+def agents_for_folder(projects_root: str, folder: str | None, agent_map: dict[str, list[dict[str, str]]]) -> list[dict[str, str]]:
+    if not folder:
+        return []
+    cwd = normalize_agent_cwd(str(Path(projects_root) / folder))
+    if cwd in agent_map:
+        return agent_map[cwd]
+    suffix = "/" + folder.lower()
+    for key, agents in agent_map.items():
+        if key.endswith(suffix):
+            return agents
+    return []
+
+
+def format_agent_preview(agents: list[dict[str, str]]) -> str:
+    return "  ".join(f"{item['agent']} {item['status']}" for item in agents)
+
+
 def has_dev_dummy(projects_root: str, folder: str | None) -> bool:
     if not folder:
         return False
@@ -186,6 +233,7 @@ class LauncherWindow(Gtk.Window):
         super().__init__(title="Wezterm Launcher")
         self.projects_root = projects_root
         self.workspaces = load_history()
+        self.agent_map = load_agent_state()
         self.set_default_size(460, 530)
         self.set_resizable(False)
         self.set_keep_above(True)
@@ -242,6 +290,7 @@ class LauncherWindow(Gtk.Window):
         renderer = Gtk.CellRendererText()
         renderer.props.family = "monospace"
         column = Gtk.TreeViewColumn("Name", renderer, text=0)
+        column.set_cell_data_func(renderer, self.color_recent_row)
         self.recent_tree.append_column(column)
         self.recent_tree.connect("cursor-changed", lambda *_: self.update_recent_preview())
         self.recent_tree.connect("row-activated", lambda *_: self.on_launch())
@@ -351,7 +400,27 @@ class LauncherWindow(Gtk.Window):
         if selected is None:
             self.recent_preview.set_text("")
             return
-        self.recent_preview.set_text(f"cmd: {selected[1]}")
+        preview = f"cmd: {selected[1]}"
+        agent_text = format_agent_preview(agents_for_folder(self.projects_root, selected[0], self.agent_map))
+        if agent_text:
+            preview = f"{preview} | {agent_text}"
+        self.recent_preview.set_text(preview)
+
+    def color_recent_row(self, _column, cell, model, tree_iter, _data) -> None:
+        name = model[tree_iter][0]
+        command = model[tree_iter][1]
+        agents = agents_for_folder(self.projects_root, name, self.agent_map)
+        statuses = {item["status"] for item in agents}
+        if "working" in statuses:
+            cell.set_property("foreground", "#c47d00")
+        elif "error" in statuses:
+            cell.set_property("foreground", "#c04040")
+        elif "dummy" in command:
+            cell.set_property("foreground", "#7a4ea3")
+        elif agents:
+            cell.set_property("foreground", "#2a7a74")
+        else:
+            cell.set_property("foreground", None)
 
     def update_dummy_visibility(self) -> None:
         folder = self.selected_folder()

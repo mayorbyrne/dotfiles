@@ -45,12 +45,32 @@ if (!(Get-Command choco -ErrorAction SilentlyContinue)) {
 Write-Host "Installing packages via Chocolatey..." -ForegroundColor Green
 Write-Host "This may take several minutes. Please be patient..." -ForegroundColor Yellow
 
-$packages = @("git", "neovim", "lazygit", "yazi", "wezterm", "fzf", "ripgrep", "powershell-core", "powertoys")
+$packages = @("git", "neovim", "yazi", "wezterm", "fzf", "ripgrep", "powershell-core", "powertoys", "tree-sitter", "mingw")
 foreach ($package in $packages) {
     Write-Host "Installing $package..." -ForegroundColor Gray
     choco install -y $package --limit-output
     Start-Sleep -Seconds 3
 }
+
+# scoop bucket add shells out to the git choco just installed
+refreshenv
+
+if (!(Get-Command scoop -ErrorAction SilentlyContinue)) {
+    Write-Host "Installing Scoop..." -ForegroundColor Green
+    # This script runs elevated, and the Scoop installer refuses admin without -RunAsAdmin
+    iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+} else {
+    Write-Host "Scoop already installed" -ForegroundColor Gray
+}
+
+if (Test-Path "$env:ChocolateyInstall\lib\lazygit") {
+    Write-Host "Removing Chocolatey lazygit..." -ForegroundColor Green
+    choco uninstall -y lazygit --limit-output
+}
+
+Write-Host "Installing lazygit via Scoop..." -ForegroundColor Green
+scoop bucket add extras
+scoop install lazygit
 
 if (!(Get-Command nvm -ErrorAction SilentlyContinue)) {
     Write-Host "Installing nvm-windows..." -ForegroundColor Green
@@ -184,6 +204,28 @@ if (Test-Path $muxTarget) {
 Write-Host "Creating mux.sh symlink..." -ForegroundColor Green
 New-Item -ItemType SymbolicLink -Path $muxTarget -Target $muxSource -Force | Out-Null
 
+Write-Host "Setting up hotkey host..." -ForegroundColor Green
+$hotkeyHostDir = Join-Path $dotfilesDir "pc\hotkey-host"
+$hotkeyHostScript = Join-Path $hotkeyHostDir "hotkey.ps1"
+$triggerExe = Join-Path $hotkeyHostDir "lib\trigger.exe"
+$hotkeyHostArgs = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Sta -File `"$hotkeyHostScript`""
+try {
+    & (Join-Path $hotkeyHostDir "build.ps1")
+
+    $startupLnk = Join-Path ([Environment]::GetFolderPath("Startup")) "WeztermHotkey.lnk"
+    $shortcut = (New-Object -ComObject WScript.Shell).CreateShortcut($startupLnk)
+    $shortcut.TargetPath = "$env:WINDIR\System32\WindowsPowerShell\v1.0\powershell.exe"
+    $shortcut.Arguments = $hotkeyHostArgs
+    $shortcut.WorkingDirectory = $hotkeyHostDir
+    $shortcut.Save()
+
+    # Launching the host replaces any running instance.
+    Start-Process powershell.exe -ArgumentList $hotkeyHostArgs -WindowStyle Hidden
+    Write-Host "  Built lib\, added Startup shortcut, started host" -ForegroundColor Green
+} catch {
+    Write-Host "  Warning: hotkey host setup failed: $($_.Exception.Message)" -ForegroundColor Yellow
+}
+
 Write-Host "Configuring PowerToys Win+Shift+R -> wezterm-launcher..." -ForegroundColor Green
 try {
     $powerToysRoot = Join-Path $env:LOCALAPPDATA "Microsoft\PowerToys"
@@ -214,13 +256,15 @@ try {
     # Win+Shift+R as PowerToys UI serializes it (VK_WIN_BOTH=260, VK_SHIFT=16, R=82)
     $hotkeyOriginalKeys = "260;16;82"
     $hotkeyOriginalKeysLegacy = "91;160;82"
+    # trigger.exe wakes the resident host, opening the launcher in ~0.2s vs ~2.5s for launch.bat.
+    $hasTrigger = Test-Path $triggerExe
     $launcherRemap = [pscustomobject]@{
         originalKeys                   = $hotkeyOriginalKeys
         exactMatch                     = $false
         operationType                  = 1
-        runProgramFilePath             = $launcherBat
-        runProgramArgs                 = ""
-        runProgramStartInDir           = $launcherDir
+        runProgramFilePath             = if ($hasTrigger) { $triggerExe } else { $launcherBat }
+        runProgramArgs                 = if ($hasTrigger) { "launcher" } else { "" }
+        runProgramStartInDir           = if ($hasTrigger) { Split-Path $triggerExe -Parent } else { $launcherDir }
         runProgramElevationLevel       = 0
         runProgramAlreadyRunningAction = 1
         runProgramStartWindowType      = 0
@@ -234,9 +278,14 @@ try {
     $appSpecificRemaps = @()
     if ($existingKbm -and $existingKbm.remapShortcuts -and $existingKbm.remapShortcuts.global) {
         foreach ($remap in @($existingKbm.remapShortcuts.global)) {
-            if ($remap -and $remap.originalKeys -ne $hotkeyOriginalKeys -and $remap.originalKeys -ne $hotkeyOriginalKeysLegacy) {
-                $globalRemaps.Add($remap)
+            if (-not $remap) { continue }
+            if ($remap.originalKeys -eq $hotkeyOriginalKeys -or $remap.originalKeys -eq $hotkeyOriginalKeysLegacy) { continue }
+            # Hand-made bindings to other host targets (e.g. Win+Shift+P -> scripts) follow trigger.exe to this checkout.
+            if ($hasTrigger -and $remap.runProgramFilePath -and (Split-Path $remap.runProgramFilePath -Leaf) -eq "trigger.exe") {
+                $remap.runProgramFilePath = $triggerExe
+                if ($remap.runProgramStartInDir) { $remap.runProgramStartInDir = Split-Path $triggerExe -Parent }
             }
+            $globalRemaps.Add($remap)
         }
     }
     if ($existingKbm -and $existingKbm.remapShortcuts -and $existingKbm.remapShortcuts.appSpecific) {
@@ -275,32 +324,20 @@ try {
     }
     Write-JsonFile $kbmSettingsPath $kbmModuleSettings
 
-    $generalSettings = Read-JsonFile $generalSettingsPath
-    if (-not $generalSettings) {
-        $generalSettings = [pscustomobject]@{
-            startup = $true
-            enabled = [pscustomobject]@{ "Keyboard Manager" = $true }
-        }
-    } else {
-        if (-not $generalSettings.enabled) {
-            $generalSettings | Add-Member -NotePropertyName enabled -NotePropertyValue ([pscustomobject]@{}) -Force
-        }
-        $generalSettings.enabled | Add-Member -NotePropertyName "Keyboard Manager" -NotePropertyValue $true -Force
-        $generalSettings | Add-Member -NotePropertyName startup -NotePropertyValue $true -Force
-    }
-    Write-JsonFile $generalSettingsPath $generalSettings
-
     function Enable-KeyboardManager {
         $gs = Read-JsonFile $generalSettingsPath
-        if (-not $gs) { return $false }
+        if (-not $gs) { $gs = [pscustomobject]@{} }
         if (-not $gs.enabled) {
             $gs | Add-Member -NotePropertyName enabled -NotePropertyValue ([pscustomobject]@{}) -Force
         }
         $gs.enabled | Add-Member -NotePropertyName "Keyboard Manager" -NotePropertyValue $true -Force
         $gs | Add-Member -NotePropertyName startup -NotePropertyValue $true -Force
+        # A non-elevated hook never sees keys typed into elevated windows, so hotkeys fall through to Windows there.
+        $gs | Add-Member -NotePropertyName run_elevated -NotePropertyValue $true -Force
         Write-JsonFile $generalSettingsPath $gs
-        return $true
     }
+
+    Enable-KeyboardManager
 
     $powerToysExe = @(
         "C:\Program Files\PowerToys\PowerToys.exe",
@@ -312,15 +349,15 @@ try {
         Get-Process -Name "PowerToys*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
         Start-Sleep -Seconds 2
         # Re-assert enable after stop (PowerToys may rewrite settings.json on exit/start)
-        Enable-KeyboardManager | Out-Null
-        # Launch via explorer so PowerToys is not elevated (hotkeys fail against non-admin windows otherwise)
+        Enable-KeyboardManager
+        # run_elevated makes PowerToys elevate itself, so the launch token does not matter.
         Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
         Start-Sleep -Seconds 4
         $gsAfter = Read-JsonFile $generalSettingsPath
         if (-not $gsAfter -or -not $gsAfter.enabled.'Keyboard Manager') {
             Get-Process -Name "PowerToys*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
             Start-Sleep -Seconds 2
-            Enable-KeyboardManager | Out-Null
+            Enable-KeyboardManager
             Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
             Start-Sleep -Seconds 3
         }

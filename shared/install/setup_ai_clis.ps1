@@ -41,6 +41,21 @@ if (Ask-YesNo "Install Codex CLI?") {
     Write-Host "Skipping Codex CLI" -ForegroundColor Gray
 }
 
+$skillAgentByCli = @{ agent = "cursor"; claude = "claude-code"; codex = "codex" }
+
+if ($selected.Count -gt 0) {
+    if (Get-Command npx -ErrorAction SilentlyContinue) {
+        Write-Host "Installing mattpocock/skills globally..." -ForegroundColor Green
+        $agentArgs = $selected | ForEach-Object { "-a"; $skillAgentByCli[$_] }
+        npx -y skills@latest add mattpocock/skills -g -y -s '*' @agentArgs
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "  skills install failed. Rerun: npx skills@latest add mattpocock/skills -g" -ForegroundColor Yellow
+        }
+    } else {
+        Write-Host "npx not found. Skipping skills. Later run: npx skills@latest add mattpocock/skills -g" -ForegroundColor Yellow
+    }
+}
+
 $configDir = Join-Path $env:USERPROFILE ".config\wezterm"
 $configFile = Join-Path $configDir "ai_clis.txt"
 

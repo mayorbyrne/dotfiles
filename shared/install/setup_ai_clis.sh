@@ -63,6 +63,28 @@ else
     echo "Skipping Codex CLI"
 fi
 
+skill_agent_for_cli() {
+    case "$1" in
+        agent) echo "cursor" ;;
+        claude) echo "claude-code" ;;
+        *) echo "$1" ;;
+    esac
+}
+
+if [ "${#SELECTED[@]}" -gt 0 ]; then
+    if command -v npx > /dev/null 2>&1; then
+        echo "Installing mattpocock/skills globally..."
+        AGENT_ARGS=()
+        for cmd in "${SELECTED[@]}"; do
+            AGENT_ARGS+=(-a "$(skill_agent_for_cli "$cmd")")
+        done
+        npx -y skills@latest add mattpocock/skills -g -y -s '*' "${AGENT_ARGS[@]}" \
+            || echo "  skills install failed. Rerun: npx skills@latest add mattpocock/skills -g"
+    else
+        echo "npx not found. Skipping skills. Later run: npx skills@latest add mattpocock/skills -g"
+    fi
+fi
+
 CONFIG_DIR="$HOME/.config/wezterm"
 CONFIG_FILE="$CONFIG_DIR/ai_clis.txt"
 mkdir -p "$CONFIG_DIR"

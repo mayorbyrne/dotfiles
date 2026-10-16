@@ -136,7 +136,7 @@ Handled in the shipped config:
 
 Still open:
 
-- Claude Code and Orca rewrite `~/.claude/settings.json` in place. Those edits
+- Claude Code rewrites `~/.claude/settings.json` in place. Those edits
   stay local until copied into the repo file or the overlay.
 
 ## Plugins
