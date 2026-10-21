@@ -83,13 +83,20 @@ def _lua_str(value):
     return "'" + value.replace("\\", "\\\\").replace("'", "\\'") + "'"
 
 
-def _osascript(script, detach=False):
-    subprocess.Popen(
-        ["osascript", "-e", script],
-        start_new_session=detach,
+def spawn(argv, **kwargs):
+    # Hammerspoon's hs.task waits for EOF on our stdout/stderr; a child holding
+    # those pipes blocks the hotkey until it exits, so never let one inherit them.
+    return subprocess.Popen(
+        argv,
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
+        **kwargs,
     )
+
+
+def _osascript(script, detach=False):
+    spawn(["osascript", "-e", script], start_new_session=detach)
 
 
 def activate_pid(pid, wait=0.0, tries=40, delay=0.25):
@@ -137,7 +144,7 @@ def run_script(name):
 
     if is_gui_script(path):
         argv = [sys.executable, str(path)] if path.suffix == ".py" else ["/bin/bash", str(path)]
-        proc = subprocess.Popen(argv, cwd=str(SCRIPTS_DIR), start_new_session=True)
+        proc = spawn(argv, cwd=str(SCRIPTS_DIR), start_new_session=True)
         # The .sh wrappers `exec` python, so the pid stays valid across the swap.
         # wait: let the selector quit first so the child wins the front spot.
         activate_pid(proc.pid, wait=1.0)
@@ -165,11 +172,11 @@ def run_script(name):
             "start",
             "--always-new-process",
         ]
-        subprocess.Popen(cmd, start_new_session=True)
+        spawn(cmd, start_new_session=True)
         _osascript('delay 1\ntell application "WezTerm" to activate', detach=True)
     else:
         script = inner.replace("\\", "\\\\").replace('"', '\\"')
-        subprocess.Popen(
+        spawn(
             [
                 "osascript",
                 "-e",
