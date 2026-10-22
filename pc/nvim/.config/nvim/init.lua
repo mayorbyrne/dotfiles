@@ -588,9 +588,33 @@ require("lazy").setup({
       no_indent_langs = { ruby = true, html = true, vue = true },
     },
     config = function(_, opts)
-      -- tree-sitter build defaults to cl.exe, MSVC is not installed here
-      if vim.env.CC == nil and vim.fn.executable("cl") == 0 and vim.fn.executable("gcc") == 1 then
-        vim.env.CC = "gcc"
+      -- tree-sitter defaults to cl.exe on Windows
+      if vim.env.CC == nil and vim.fn.executable("gcc") == 1 then
+        vim.env.CC = vim.fn.exepath("gcc")
+      end
+      if vim.fn.has("win32") == 1 then
+        local ts_log = require("nvim-treesitter.log")
+        local orig_error = ts_log.Logger.error
+        local warned = false
+        function ts_log.Logger:error(m, ...)
+          local msg = orig_error(self, m, ...)
+          -- gcc < 14's ld rejects the \\?\ output paths tree-sitter's cc crate uses
+          if
+            not warned
+            and type(msg) == "string"
+            and msg:find("cannot open output file", 1, true)
+            and msg:find("parser.so", 1, true)
+          then
+            warned = true
+            vim.api.nvim_echo({
+              {
+                "gcc is too old to build treesitter parsers. Run ~/.dotfiles/pc/install/setup.bat as Administrator.",
+                "ErrorMsg",
+              },
+            }, true, {})
+          end
+          return msg
+        end
       end
       local ts = require("nvim-treesitter")
       ts.install(opts.parsers)

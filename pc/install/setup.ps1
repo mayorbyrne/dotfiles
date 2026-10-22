@@ -14,6 +14,129 @@ trap {
 
 $ErrorActionPreference = "Stop"
 
+function Get-GccVersion {
+    param([Parameter(Mandatory = $true)][string]$GccPath)
+    try {
+        $raw = & $GccPath -dumpversion 2>$null
+        if ("$raw" -match '^(\d+)\.(\d+)(?:\.(\d+))?') {
+            $patch = if ($Matches[3]) { $Matches[3] } else { "0" }
+            return [version]"$($Matches[1]).$($Matches[2]).$patch"
+        }
+    } catch {
+    }
+    return [version]"0.0.0"
+}
+
+function Remove-EnvPathEntries {
+    param(
+        [Parameter(Mandatory = $true)][ValidateSet("Machine", "User")][string]$Scope,
+        [Parameter(Mandatory = $true)][string[]]$Entries
+    )
+    $current = [Environment]::GetEnvironmentVariable("Path", $Scope)
+    if ([string]::IsNullOrEmpty($current)) {
+        return
+    }
+    $remove = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    foreach ($entry in $Entries) {
+        if ($entry) { [void]$remove.Add($entry.TrimEnd("\")) }
+    }
+    $kept = $current -split ";" | Where-Object { $_ -and -not $remove.Contains($_.TrimEnd("\")) }
+    [Environment]::SetEnvironmentVariable("Path", ($kept -join ";"), $Scope)
+}
+
+function Add-EnvPathEntry {
+    param(
+        [Parameter(Mandatory = $true)][ValidateSet("Machine", "User")][string]$Scope,
+        [Parameter(Mandatory = $true)][string]$Entry
+    )
+    $current = [Environment]::GetEnvironmentVariable("Path", $Scope)
+    $parts = @()
+    if ($current) {
+        $parts = $current -split ";" | Where-Object { $_ }
+    }
+    $already = $parts | Where-Object { $_.TrimEnd("\") -eq $Entry.TrimEnd("\") }
+    if (-not $already) {
+        [Environment]::SetEnvironmentVariable("Path", ($Entry + ";" + ($parts -join ";")), $Scope)
+    }
+}
+
+# Chocolatey mingw extracts to $ProgramData\mingw64\mingw64\bin. If that folder
+# already holds an older toolchain (13.2 from 2023 is common), the package's
+# Move-Item nests the new one under install\mingw64 and then PATHs the leftover.
+function Repair-MingwToolchain {
+    Write-Host "Ensuring MinGW gcc is current and on PATH..." -ForegroundColor Green
+    choco upgrade -y mingw --limit-output
+
+    $searchRoots = @(
+        "$env:ProgramData\mingw64",
+        "$env:ChocolateyInstall\lib\mingw\tools"
+    ) | Where-Object { $_ -and (Test-Path $_) }
+
+    $gccs = foreach ($root in $searchRoots) {
+        Get-ChildItem -Path $root -Filter gcc.exe -Recurse -ErrorAction SilentlyContinue
+    }
+    if (-not $gccs) {
+        throw "mingw is installed but gcc.exe was not found under $env:ProgramData\mingw64"
+    }
+
+    $best = $gccs | ForEach-Object {
+        [pscustomobject]@{ File = $_; Version = (Get-GccVersion $_.FullName) }
+    } | Sort-Object Version -Descending | Select-Object -First 1
+
+    $bestBin = $best.File.DirectoryName
+    $canonicalRoot = Join-Path $env:ProgramData "mingw64"
+    $canonicalBin = Join-Path $canonicalRoot "mingw64\bin"
+    $canonicalGcc = Join-Path $canonicalBin "gcc.exe"
+
+    if ($bestBin -ne $canonicalBin) {
+        $bestMingw64 = Split-Path $bestBin -Parent
+        if ((Test-Path $canonicalGcc) -and ((Get-GccVersion $canonicalGcc) -lt $best.Version)) {
+            Write-Host "  Removing leftover MinGW $(Get-GccVersion $canonicalGcc) at $canonicalBin" -ForegroundColor Gray
+            Remove-Item -LiteralPath (Join-Path $canonicalRoot "mingw64") -Recurse -Force
+        }
+        if (-not (Test-Path $canonicalGcc)) {
+            try {
+                Write-Host "  Moving MinGW $($best.Version) to $canonicalBin" -ForegroundColor Gray
+                New-Item -ItemType Directory -Path $canonicalRoot -Force | Out-Null
+                Move-Item -LiteralPath $bestMingw64 -Destination (Join-Path $canonicalRoot "mingw64")
+                $bestBin = $canonicalBin
+                $installLeftover = Join-Path $canonicalRoot "install"
+                if (Test-Path $installLeftover) {
+                    Remove-Item -LiteralPath $installLeftover -Recurse -Force -ErrorAction SilentlyContinue
+                }
+            } catch {
+                Write-Host "  Could not relocate MinGW; will PATH $bestBin instead: $($_.Exception.Message)" -ForegroundColor Yellow
+            }
+        }
+    }
+
+    $mingwBins = @($bestBin)
+    if (Test-Path $canonicalRoot) {
+        $mingwBins += @(
+            Get-ChildItem -Path $canonicalRoot -Filter gcc.exe -Recurse -ErrorAction SilentlyContinue |
+                ForEach-Object { $_.DirectoryName }
+        )
+    }
+    $mingwBins = $mingwBins | Where-Object { $_ } | Select-Object -Unique
+
+    foreach ($scope in @("Machine", "User")) {
+        Remove-EnvPathEntries -Scope $scope -Entries $mingwBins
+    }
+    Add-EnvPathEntry -Scope "Machine" -Entry $bestBin
+
+    $sessionParts = $env:Path -split ";" | Where-Object {
+        $_ -and ($mingwBins -notcontains $_.TrimEnd("\"))
+    }
+    $env:Path = $bestBin + ";" + ($sessionParts -join ";")
+
+    $activeGcc = (Get-Command gcc.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1).Source
+    $activeVer = if ($activeGcc) { Get-GccVersion $activeGcc } else { [version]"0.0.0" }
+    Write-Host "  Using gcc $activeVer ($activeGcc)" -ForegroundColor Green
+    if ($activeVer -lt [version]"14.0.0") {
+        Write-Host "  Warning: gcc older than 14 cannot compile nvim-treesitter parsers (ld rejects \\?\ paths)" -ForegroundColor Yellow
+    }
+}
+
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
     Write-Host "Restarting as Administrator..." -ForegroundColor Yellow
     Start-Sleep -Seconds 2
@@ -54,6 +177,7 @@ foreach ($package in $packages) {
 
 # scoop bucket add shells out to the git choco just installed
 refreshenv
+Repair-MingwToolchain
 
 if (!(Get-Command scoop -ErrorAction SilentlyContinue)) {
     Write-Host "Installing Scoop..." -ForegroundColor Green
