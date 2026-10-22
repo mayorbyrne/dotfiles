@@ -106,6 +106,13 @@ if (Test-Path $nvimTarget) {
 Write-Host "Creating nvim symlink..." -ForegroundColor Green
 New-Item -ItemType SymbolicLink -Path $nvimTarget -Target $nvimSource -Force | Out-Null
 
+Write-Host "Installing nvim plugins from lazy-lock.json..." -ForegroundColor Green
+nvim --headless "+Lazy! restore" +qa
+
+Write-Host "Building treesitter parsers..." -ForegroundColor Green
+# force: an unforced install can report success yet write no parsers
+nvim --headless -c "lua require('nvim-treesitter').install(require('lazy.core.config').plugins['nvim-treesitter'].opts.parsers, { force = true, summary = true }):wait(900000)" +qa
+
 # PowerShell profile for both PowerShell 5 and PowerShell 6+
 $psProfileSource = "$dotfilesDir\pc\powershell\Microsoft.PowerShell_profile.ps1"
 

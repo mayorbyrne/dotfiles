@@ -43,5 +43,8 @@ Set-Alias -Name grh -Value git-reset-hard
 function git-commit-no-verify { git commit --no-verify }
 Set-Alias -Name gcv -Value git-commit-no-verify
 
+# system32\bash.exe is the WSL launcher and wins on PATH
+Set-Alias -Name bash -Value "C:\Program Files\Git\bin\bash.exe"
+
 # Strip NO_COLOR inherited from a parent process (it disables color in lazygit, etc)
 Remove-Item Env:NO_COLOR -ErrorAction SilentlyContinue
