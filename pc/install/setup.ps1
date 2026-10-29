@@ -235,30 +235,13 @@ try {
 
 Write-Host "Configuring PowerToys Win+Shift+R -> wezterm-launcher..." -ForegroundColor Green
 try {
-    $powerToysRoot = Join-Path $env:LOCALAPPDATA "Microsoft\PowerToys"
+    $powerToysDir = Join-Path $dotfilesDir "pc\powertoys"
+    . (Join-Path $powerToysDir "PowerToysSettings.ps1")
     $kbmDir = Join-Path $powerToysRoot "Keyboard Manager"
     $kbmSettingsPath = Join-Path $kbmDir "settings.json"
     $kbmDefaultPath = Join-Path $kbmDir "default.json"
-    $generalSettingsPath = Join-Path $powerToysRoot "settings.json"
     $launcherBat = Join-Path $dotfilesDir "pc\wezterm-launcher\launch.bat"
     $launcherDir = Split-Path $launcherBat -Parent
-
-    function Read-JsonFile([string]$path) {
-        if (-not (Test-Path $path)) { return $null }
-        if ((Get-Item $path).Length -le 0) { return $null }
-        $raw = Get-Content -Path $path -Raw -ErrorAction Stop
-        if ([string]::IsNullOrWhiteSpace($raw)) { return $null }
-        return $raw | ConvertFrom-Json -ErrorAction Stop
-    }
-
-    function Write-JsonFile([string]$path, $object) {
-        $dir = Split-Path $path -Parent
-        if (-not (Test-Path $dir)) {
-            New-Item -ItemType Directory -Path $dir -Force | Out-Null
-        }
-        $json = $object | ConvertTo-Json -Depth 10
-        [System.IO.File]::WriteAllText($path, $json)
-    }
 
     # Win+Shift+R as PowerToys UI serializes it (VK_WIN_BOTH=260, VK_SHIFT=16, R=82)
     $hotkeyOriginalKeys = "260;16;82"
@@ -331,51 +314,19 @@ try {
     }
     Write-JsonFile $kbmSettingsPath $kbmModuleSettings
 
-    function Enable-KeyboardManager {
-        $gs = Read-JsonFile $generalSettingsPath
-        if (-not $gs) { $gs = [pscustomobject]@{} }
-        if (-not $gs.enabled) {
-            $gs | Add-Member -NotePropertyName enabled -NotePropertyValue ([pscustomobject]@{}) -Force
-        }
-        $gs.enabled | Add-Member -NotePropertyName "Keyboard Manager" -NotePropertyValue $true -Force
-        $gs | Add-Member -NotePropertyName startup -NotePropertyValue $true -Force
-        # A non-elevated hook never sees keys typed into elevated windows, so hotkeys fall through to Windows there.
-        $gs | Add-Member -NotePropertyName run_elevated -NotePropertyValue $true -Force
-        Write-JsonFile $generalSettingsPath $gs
+    & (Join-Path $powerToysDir "register-guard.ps1")
+
+    Restart-PowerToys
+    Start-Sleep -Seconds 4
+    if (-not (Test-KeyboardManagerEnabled)) {
+        Restart-PowerToys
+        Start-Sleep -Seconds 3
     }
-
-    Enable-KeyboardManager
-
-    $powerToysExe = @(
-        "C:\Program Files\PowerToys\PowerToys.exe",
-        "${env:ProgramFiles}\PowerToys\PowerToys.exe",
-        "${env:LOCALAPPDATA}\PowerToys\PowerToys.exe"
-    ) | Where-Object { Test-Path $_ } | Select-Object -First 1
-
-    if ($powerToysExe) {
-        Get-Process -Name "PowerToys*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-        Start-Sleep -Seconds 2
-        # Re-assert enable after stop (PowerToys may rewrite settings.json on exit/start)
-        Enable-KeyboardManager
-        # run_elevated makes PowerToys elevate itself, so the launch token does not matter.
-        Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
-        Start-Sleep -Seconds 4
-        $gsAfter = Read-JsonFile $generalSettingsPath
-        if (-not $gsAfter -or -not $gsAfter.enabled.'Keyboard Manager') {
-            Get-Process -Name "PowerToys*" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
-            Start-Sleep -Seconds 2
-            Enable-KeyboardManager
-            Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
-            Start-Sleep -Seconds 3
-        }
-        $engine = Get-Process -Name "PowerToys.KeyboardManagerEngine" -ErrorAction SilentlyContinue
-        if ($engine) {
-            Write-Host "  Keyboard Manager on; Win+Shift+R -> wezterm-launcher" -ForegroundColor Green
-        } else {
-            Write-Host "  PowerToys started but Keyboard Manager engine not seen yet - open PowerToys settings and enable Keyboard Manager" -ForegroundColor Yellow
-        }
+    $engine = Get-Process -Name "PowerToys.KeyboardManagerEngine" -ErrorAction SilentlyContinue
+    if ($engine) {
+        Write-Host "  Keyboard Manager on; Win+Shift+R -> wezterm-launcher; logon guard registered" -ForegroundColor Green
     } else {
-        Write-Host "  PowerToys installed but executable not found yet - sign out/in or start PowerToys, then enable Keyboard Manager" -ForegroundColor Yellow
+        Write-Host "  PowerToys started but Keyboard Manager engine not seen yet - open PowerToys settings and enable Keyboard Manager" -ForegroundColor Yellow
     }
 } catch {
     Write-Host "  Warning: PowerToys hotkey setup failed: $($_.Exception.Message)" -ForegroundColor Yellow

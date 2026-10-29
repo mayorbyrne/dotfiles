@@ -209,6 +209,13 @@ function Get-WeztermWorkspaces {
     return [System.Collections.Generic.List[PSCustomObject]]($list | Select-Object -First 50)
 }
 
+function Start-Workspace([string]$name, [string]$cmd, [bool]$claudeChrome) {
+    $wezArgs = "start `"$name`" `"$cmd`""
+    # .wezterm.lua reads this as args[3]; kept out of history so it never sticks.
+    if ($claudeChrome) { $wezArgs += " claude-chrome" }
+    Start-Process wezterm -ArgumentList $wezArgs
+}
+
 # exit would take down hotkey.ps1, which runs this script in its own process.
 if (-not (Ensure-ProjectsRoot)) {
     return
@@ -498,6 +505,8 @@ $agentMap = @{}
         </TabControl>
 
         <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8">
+            <CheckBox x:Name="ChromeCheck" Content="claude --chrome"
+                      VerticalAlignment="Center" Margin="0,0,16,0"/>
             <Button x:Name="CancelButton" Content="Cancel" IsCancel="True" Margin="0,0,8,0"/>
             <Button x:Name="LaunchButton" Content="Launch" IsDefault="True" Style="{StaticResource LaunchButtonStyle}"/>
         </StackPanel>
@@ -518,6 +527,7 @@ $radioNpm     = $window.FindName("RadioNpm")
 $portBox      = $window.FindName("PortBox")
 $newPreview   = $window.FindName("NewPreview")
 $dummyCheck   = $window.FindName("DummyCheck")
+$chromeCheck  = $window.FindName("ChromeCheck")
 $launchBtn    = $window.FindName("LaunchButton")
 
 $updateRecentPreview = {
@@ -605,7 +615,7 @@ $launchBtn.Add_Click({
             $ws   = $workspaces | Where-Object { $_.Name -eq $name } | Select-Object -First 1
             $cmd  = $ws.Command -replace "``", ""
             Prepend-AppHistory -name $name -command $ws.Command
-            Start-Process wezterm -ArgumentList "start `"$name`" `"$cmd`""
+            Start-Workspace -name $name -cmd $cmd -claudeChrome $chromeCheck.IsChecked
         }
     } else {
         $selectedFolders = @($folderList.SelectedItems)
@@ -623,7 +633,7 @@ $launchBtn.Add_Click({
         }
         foreach ($folder in $selectedFolders) {
             Prepend-AppHistory -name $folder -command $cmd
-            Start-Process wezterm -ArgumentList "start `"$folder`" `"$cmd`""
+            Start-Workspace -name $folder -cmd $cmd -claudeChrome $chromeCheck.IsChecked
         }
     }
     $window.Close()
