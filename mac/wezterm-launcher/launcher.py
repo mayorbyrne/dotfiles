@@ -7,7 +7,7 @@ from pathlib import Path
 
 RECENT_FILE = Path.home() / ".workspace_launcher_recent.json"
 DOCS_DIR = Path.home() / "Documents"
-WEZTERM = "/Applications/WezTerm.app/Contents/MacOS/wezterm"
+WEZTERM_APP = "/Applications/WezTerm.app"
 
 PORT_DEFAULTS = {"webdev": "8080", "npm": "5173"}
 
@@ -34,11 +34,16 @@ def save_recent(workspace, inner_cmd):
 
 
 def run_cmd(workspace, inner_cmd):
-    cmd = [WEZTERM, "start", "--always-new-process", workspace, inner_cmd]
     log_path = Path.home() / "launcher_debug.log"
+    # Via LaunchServices so WezTerm, not Hammerspoon, is the responsible app for macOS privacy checks.
+    cmd = [
+        "open", "-n", "-a", WEZTERM_APP,
+        "--stdout", str(log_path), "--stderr", str(log_path),
+        "--args", "start", "--always-new-process", workspace, inner_cmd,
+    ]
     with open(log_path, "w") as log:
         log.write("ARGS:\n" + "\n".join(f"  [{i}] {a}" for i, a in enumerate(cmd)) + "\n\n")
-        subprocess.Popen(cmd, stdout=log, stderr=log)
+    subprocess.Popen(cmd)
     subprocess.Popen(["bash", "-c", 'sleep 1 && osascript -e \'tell application "WezTerm" to activate\''])
 
 

@@ -128,7 +128,8 @@ case "$OS_TYPE" in
         echo "https://github.com/GitCredentialManager/git-credential-manager/releases"
         
         if command -v git-credential-manager &> /dev/null; then
-            git-credential-manager configure
+            # `configure` writes GCM's absolute exe path, which breaks when Git for Windows moves it (mingw64 -> ucrt64).
+            git config --global credential.helper manager
             echo "Git Credential Manager configured"
         fi
         ;;

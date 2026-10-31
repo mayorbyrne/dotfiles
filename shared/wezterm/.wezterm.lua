@@ -406,11 +406,15 @@ local function load_projects_root()
   return root
 end
 
-local function spawn_ai_cli_tabs(window, cwd)
+local function spawn_ai_cli_tabs(window, cwd, claude_chrome)
   for _, cmd in ipairs(load_ai_clis()) do
     local tab, pane = window:spawn_tab({ cwd = cwd })
     tab:set_title(cmd)
-    pane:send_text(cmd .. "\r\n")
+    if claude_chrome and cmd:match("^%S+") == "claude" then
+      pane:send_text(cmd .. " --chrome\r\n")
+    else
+      pane:send_text(cmd .. "\r\n")
+    end
   end
 end
 
@@ -458,7 +462,8 @@ wezterm.on("trigger-workspace", function(cmd)
   gitTab:set_title("lazygit")
   gitPane:send_text("lazygit\r\n")
 
-  spawn_ai_cli_tabs(window, project_dir)
+  -- wezterm-launcher appends this when its "claude --chrome" box is checked.
+  spawn_ai_cli_tabs(window, project_dir, args[3] == "claude-chrome")
 
   tab:activate()
   mux.set_active_workspace(workspace)
