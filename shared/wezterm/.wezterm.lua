@@ -406,14 +406,19 @@ local function load_projects_root()
   return root
 end
 
-local function spawn_ai_cli_tabs(window, cwd, claude_chrome)
+-- resume_cmd (e.g. "claude --resume <id>") replaces the tab whose CLI it names.
+local function spawn_ai_cli_tabs(window, cwd, claude_chrome, resume_cmd)
+  local resume_cli = resume_cmd and resume_cmd:match("^%S+")
   for _, cmd in ipairs(load_ai_clis()) do
     local tab, pane = window:spawn_tab({ cwd = cwd })
+    local cli = cmd:match("^%S+")
     tab:set_title(cmd)
-    if claude_chrome and cmd:match("^%S+") == "claude" then
-      pane:send_text(cmd .. " --chrome\r\n")
+    if cli == resume_cli then
+      pane:send_text(resume_cmd .. "\r")
+    elseif claude_chrome and cli == "claude" then
+      pane:send_text(cmd .. " --chrome\r")
     else
-      pane:send_text(cmd .. "\r\n")
+      pane:send_text(cmd .. "\r")
     end
   end
 end
@@ -440,6 +445,18 @@ wezterm.on("trigger-workspace", function(cmd)
 
   local workspace = args[1] or "work"
   local project_dir = load_projects_root() .. "/" .. workspace
+  -- "@root" opens the projects root itself with only nvim and the agents.
+  local is_root = workspace == "@root"
+  if is_root then
+    project_dir = load_projects_root()
+    workspace = project_dir:gsub("[/\\]+$", ""):match("([^/\\]+)$") or "root"
+  -- An absolute path (recap resume) opens that dir, named by its last segment.
+  elseif workspace:match("^/") or workspace:match("^%a:[/\\]") then
+    project_dir = workspace
+    workspace = workspace:gsub("[/\\]+$", ""):match("([^/\\]+)$") or "work"
+  end
+  local server_cmd = args[2] ~= "" and args[2] or nil
+  local resume_cmd = args[4] ~= "" and args[4] or nil
 
   local tab, pane, window = mux.spawn_window({
     workspace = workspace,
@@ -447,23 +464,26 @@ wezterm.on("trigger-workspace", function(cmd)
   })
 
   tab:set_title("nvim")
-  pane:send_text("nvim\r\n")
+  pane:send_text("nvim\r")
 
-  if args[2] then
-    local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
-    nodeTab:set_title("server")
-    nodePane:send_text(args[2] .. "\r\n")
-  else
-    local shellTab = window:spawn_tab({ cwd = project_dir })
-    shellTab:set_title("shell")
+  if not is_root then
+    if server_cmd then
+      local nodeTab, nodePane = window:spawn_tab({ cwd = project_dir })
+      nodeTab:set_title("server")
+      nodePane:send_text(server_cmd .. "\r")
+    else
+      local shellTab = window:spawn_tab({ cwd = project_dir })
+      shellTab:set_title("shell")
+    end
+
+    local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
+    gitTab:set_title("lazygit")
+    gitPane:send_text("lazygit\r")
   end
 
-  local gitTab, gitPane = window:spawn_tab({ cwd = project_dir })
-  gitTab:set_title("lazygit")
-  gitPane:send_text("lazygit\r\n")
-
-  -- wezterm-launcher appends this when its "claude --chrome" box is checked.
-  spawn_ai_cli_tabs(window, project_dir, args[3] == "claude-chrome")
+  -- wezterm-launcher appends args[3] when its "claude --chrome" box is checked.
+  -- args[4] comes from the recap viewer's Launch button.
+  spawn_ai_cli_tabs(window, project_dir, args[3] == "claude-chrome", resume_cmd)
 
   tab:activate()
   mux.set_active_workspace(workspace)
@@ -549,6 +569,8 @@ wezterm.on("update-right-status", function(window, pane)
       if success then
         local root = stdout:gsub("%s+$", "")
         repo_name = root:match("([^\\/]+)$") or ""
+      elseif normalize_cwd(cwd) == normalize_cwd(load_projects_root()) then
+        repo_name = "git root"
       end
       last_cwd = cwd
       last_repo = repo_name

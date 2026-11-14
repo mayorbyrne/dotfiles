@@ -7,6 +7,8 @@ A lightweight GTK GUI launcher for [WezTerm](https://wezfurlong.org/wezterm/) wo
 - **First-run setup** — asks where your projects live and saves it to `~/.config/wezterm/projects_root.txt` so WezTerm workspace launches use the same root.
 - **Recent tab** — lists workspaces from launcher history.
 - **New Workspace tab** — browses folders under your projects root and launches a WezTerm workspace with a chosen dev server command.
+- **Open projects root** button: opens the projects root itself with only nvim and the agent tabs (no server, shell, or lazygit). Not added to history.
+- **claude --chrome** checkbox: starts the claude tab with `--chrome` and starts Chrome/Chromium first if it is not running. Applies to every launch path, never saved to history.
 - **Command preview** — shows the exact `wezterm start` command before you launch it.
 - **Run-mode options**:
   - `webdev` — runs `webdev serve web:<port>` (default port `8080`)

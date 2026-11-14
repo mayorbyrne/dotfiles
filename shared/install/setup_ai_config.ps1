@@ -207,6 +207,34 @@ function Initialize-CodexConfig {
     Write-Host "  Seeded $target" -ForegroundColor Gray
 }
 
+# Seeding skips existing configs, so top-level keys from the base are prepended when missing.
+function Add-CodexTopLevelKeys {
+    $target = Join-Path $codexDir "config.toml"
+    $lines = Get-Content -LiteralPath (Join-Path $sharedAi "codex\config.toml") | Where-Object { $_ -match '^[A-Za-z_]+ *=' }
+    foreach ($line in $lines) {
+        $key = ($line -split ' *=')[0]
+        $content = Get-Content -LiteralPath $target -Raw
+        if ($content -match "(?m)^$key *=") {
+            continue
+        }
+        Write-Utf8File $target ($line + "`n" + $content)
+        Write-Host "  Added $key to $target" -ForegroundColor Gray
+    }
+}
+
+# cli-config.json is Cursor-managed (auth, model, permissions). Only our keys are merged in.
+function Merge-CursorCliConfig {
+    $target = Join-Path $cursorDir "cli-config.json"
+    if (Test-Path $target) {
+        $config = Get-Content -LiteralPath $target -Raw | ConvertFrom-Json
+    } else {
+        New-Item -ItemType Directory -Force -Path $cursorDir | Out-Null
+        $config = '{"version":1,"editor":{"vimMode":false},"permissions":{"allow":[],"deny":[]}}' | ConvertFrom-Json
+    }
+    Merge-JsonObject $config (Get-Content -LiteralPath (Join-Path $sharedAi "cursor\cli-config.json") -Raw | ConvertFrom-Json)
+    Install-GeneratedFile $target ($config | ConvertTo-Json -Depth 100)
+}
+
 Write-Host "Linking AI config (Claude Code, Codex, Cursor)..." -ForegroundColor Green
 
 $claudeDir = Join-Path $env:USERPROFILE ".claude"
@@ -223,6 +251,8 @@ $workScope = Read-WorkScope
 
 Write-ClaudeSettings
 Initialize-CodexConfig
+Add-CodexTopLevelKeys
+Merge-CursorCliConfig
 
 foreach ($target in @(
     (Join-Path $claudeDir "CLAUDE.md"),

@@ -209,10 +209,18 @@ function Get-WeztermWorkspaces {
     return [System.Collections.Generic.List[PSCustomObject]]($list | Select-Object -First 50)
 }
 
+function Ensure-ChromeRunning {
+    if (Get-Process chrome -ErrorAction SilentlyContinue) { return }
+    try { Start-Process chrome -ErrorAction Stop } catch {}
+}
+
 function Start-Workspace([string]$name, [string]$cmd, [bool]$claudeChrome) {
     $wezArgs = "start `"$name`" `"$cmd`""
     # .wezterm.lua reads this as args[3]; kept out of history so it never sticks.
-    if ($claudeChrome) { $wezArgs += " claude-chrome" }
+    if ($claudeChrome) {
+        $wezArgs += " claude-chrome"
+        Ensure-ChromeRunning
+    }
     Start-Process wezterm -ArgumentList $wezArgs
 }
 
@@ -228,7 +236,7 @@ $agentMap = @{}
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Title="Wezterm Launcher"
-    Width="460" Height="530"
+    Width="460" Height="570"
     WindowStartupLocation="CenterScreen"
     ResizeMode="NoResize"
     ShowInTaskbar="True"
@@ -440,11 +448,15 @@ $agentMap = @{}
     </Window.Resources>
     <Grid Background="#272822">
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <TabControl Grid.Row="0" x:Name="MainTabs" Margin="8,8,8,0">
+        <Button Grid.Row="0" x:Name="RootButton" Margin="8,8,8,0" HorizontalAlignment="Stretch"
+                ToolTip="nvim + agents in the projects root. Port ignored, claude --chrome honored."/>
+
+        <TabControl Grid.Row="1" x:Name="MainTabs" Margin="8,8,8,0">
 
             <!-- ── Recent ── -->
             <TabItem Header="Recent">
@@ -504,7 +516,7 @@ $agentMap = @{}
             </TabItem>
         </TabControl>
 
-        <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8">
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="8">
             <CheckBox x:Name="ChromeCheck" Content="claude --chrome"
                       VerticalAlignment="Center" Margin="0,0,16,0"/>
             <Button x:Name="CancelButton" Content="Cancel" IsCancel="True" Margin="0,0,8,0"/>
@@ -529,6 +541,14 @@ $newPreview   = $window.FindName("NewPreview")
 $dummyCheck   = $window.FindName("DummyCheck")
 $chromeCheck  = $window.FindName("ChromeCheck")
 $launchBtn    = $window.FindName("LaunchButton")
+$rootBtn      = $window.FindName("RootButton")
+
+$rootBtn.Content = "Open projects root ($script:projectsRoot)"
+$rootBtn.Add_Click({
+    # .wezterm.lua maps "@root" to the projects root with only nvim and the agents.
+    Start-Workspace -name "@root" -cmd "" -claudeChrome $chromeCheck.IsChecked
+    $window.Close()
+})
 
 $updateRecentPreview = {
     $count = $recentList.SelectedItems.Count

@@ -57,6 +57,6 @@ function Restart-PowerToys {
     Start-Sleep -Seconds 2
     # PowerToys may rewrite settings.json on exit, so enable after the stop.
     Enable-KeyboardManager
-    # run_elevated makes PowerToys elevate itself, so the launch token does not matter.
-    Start-Process explorer.exe -ArgumentList "`"$powerToysExe`""
+    # Launch from the guard's elevated token: a non-elevated start with run_elevated needs a UAC prompt, and PowerToys exits if it times out.
+    Start-Process $powerToysExe
 }

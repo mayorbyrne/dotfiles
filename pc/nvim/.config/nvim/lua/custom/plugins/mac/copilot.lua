@@ -15,6 +15,7 @@ return {
     },
     build = "make tiktoken",       -- Only on MacOS or Linux
     opts = {
+      model = "auto",
       debug = true,                -- Enable debug mode
       prompts = {
         Commit = {

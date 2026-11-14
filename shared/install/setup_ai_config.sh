@@ -166,6 +166,39 @@ seed_codex_config() {
     echo "  Seeded $target"
 }
 
+# Seeding skips existing configs, so top-level keys from the base are prepended when missing.
+ensure_codex_top_level_keys() {
+    local target="$codex_dir/config.toml"
+    local line key
+
+    grep -E '^[A-Za-z_]+ *=' "$shared_ai/codex/config.toml" | while IFS= read -r line; do
+        key="${line%% =*}"
+        if [ -z "$key" ] || grep -q "^$key *=" "$target"; then
+            continue
+        fi
+        { echo "$line"; cat "$target"; } > "$target.tmp-$stamp"
+        mv "$target.tmp-$stamp" "$target"
+        echo "  Added $key to $target"
+    done
+}
+
+# cli-config.json is Cursor-managed (auth, model, permissions). Only our keys are merged in.
+merge_cursor_cli_config() {
+    local base="$shared_ai/cursor/cli-config.json"
+    local target="$cursor_dir/cli-config.json"
+    local merged="$target.tmp-$stamp"
+    local minimal='{"version":1,"editor":{"vimMode":false},"permissions":{"allow":[],"deny":[]}}'
+
+    mkdir -p "$cursor_dir"
+    if [ -f "$target" ]; then
+        jq -s '.[0] * .[1]' "$target" "$base" > "$merged"
+    else
+        echo "$minimal" | jq -s '.[0] * .[1]' - "$base" > "$merged"
+    fi
+
+    install_generated "$merged" "$target"
+}
+
 if ! command -v jq > /dev/null 2>&1; then
     echo "ERROR: jq is required. Install it and rerun." >&2
     exit 1
@@ -187,6 +220,8 @@ work_scope="$(read_work_scope)"
 
 write_claude_settings
 seed_codex_config
+ensure_codex_top_level_keys
+merge_cursor_cli_config
 
 install_agents "$claude_dir/CLAUDE.md"
 link_config "$shared_ai/claude/keybindings.json" "$claude_dir/keybindings.json"

@@ -33,7 +33,13 @@ def save_recent(workspace, inner_cmd):
         json.dump(recent[:30], f)
 
 
-def run_cmd(workspace, inner_cmd):
+def ensure_chrome_running():
+    if subprocess.run(["pgrep", "-x", "Google Chrome"], capture_output=True).returncode == 0:
+        return
+    subprocess.Popen(["open", "-g", "-a", "Google Chrome"])
+
+
+def run_cmd(workspace, inner_cmd, claude_chrome=False):
     log_path = Path.home() / "launcher_debug.log"
     # Via LaunchServices so WezTerm, not Hammerspoon, is the responsible app for macOS privacy checks.
     cmd = [
@@ -41,6 +47,10 @@ def run_cmd(workspace, inner_cmd):
         "--stdout", str(log_path), "--stderr", str(log_path),
         "--args", "start", "--always-new-process", workspace, inner_cmd,
     ]
+    # .wezterm.lua reads this as args[3]; kept out of recents so it never sticks.
+    if claude_chrome:
+        cmd.append("claude-chrome")
+        ensure_chrome_running()
     with open(log_path, "w") as log:
         log.write("ARGS:\n" + "\n".join(f"  [{i}] {a}" for i, a in enumerate(cmd)) + "\n\n")
     subprocess.Popen(cmd)
@@ -64,6 +74,17 @@ class LauncherApp:
         style.map("Dimmed.TButton", foreground=[("disabled", "gray")])
 
     def _build_ui(self):
+        ttk.Button(
+            self.root,
+            text=f"Open projects root ({DOCS_DIR})",
+            command=self._launch_root,
+        ).pack(fill="x", padx=12, pady=(12, 0))
+
+        self.chrome_var = tk.BooleanVar(value=False)
+        ttk.Checkbutton(self.root, text="claude --chrome", variable=self.chrome_var).pack(
+            side="bottom", anchor="e", padx=12, pady=(0, 12)
+        )
+
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill="both", expand=True, padx=12, pady=12)
 
@@ -121,12 +142,7 @@ class LauncherApp:
             self._show_error("Select a recent entry first.")
             return
         entry = load_recent()[sel[0]]
-        try:
-            run_cmd(entry["workspace"], entry["cmd"])
-        except Exception as e:
-            self._show_error(str(e))
-            return
-        self.root.destroy()
+        self._run_and_close(entry["workspace"], entry["cmd"])
 
     def _on_recent_select(self, _event):
         if self.recent_listbox.curselection():
@@ -236,13 +252,20 @@ class LauncherApp:
         else:
             inner_cmd = f"webdev serve web:{port}"
 
+        self._run_and_close(workspace, inner_cmd)
+
+    def _launch_root(self):
+        # .wezterm.lua maps "@root" to the projects root with only nvim and the agents.
+        self._run_and_close("@root", "", remember=False)
+
+    def _run_and_close(self, workspace, inner_cmd, remember=True):
         try:
-            run_cmd(workspace, inner_cmd)
+            run_cmd(workspace, inner_cmd, self.chrome_var.get())
         except Exception as e:
             self._show_error(str(e))
             return
-
-        save_recent(workspace, inner_cmd)
+        if remember:
+            save_recent(workspace, inner_cmd)
         self.root.destroy()
 
     def _show_error(self, msg):

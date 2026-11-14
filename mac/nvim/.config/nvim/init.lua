@@ -517,6 +517,8 @@ require("lazy").setup({
 
   {
     "nvim-treesitter/nvim-treesitter",
+    -- main is a rewrite with a different API and needs the tree-sitter CLI
+    branch = "master",
     build = ":TSUpdate",
     opts = {
       ensure_installed = {
@@ -552,7 +554,7 @@ require("lazy").setup({
     },
     config = function(_, opts)
       require("nvim-treesitter.install").prefer_git = true
-      require("nvim-treesitter").setup(opts)
+      require("nvim-treesitter.configs").setup(opts)
     end,
   },
 

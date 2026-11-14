@@ -22,6 +22,8 @@ CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / 
 CONFIG_FILE = CONFIG_DIR / "config.json"
 HISTORY_FILE = CONFIG_DIR / "history.json"
 HISTORY_LIMIT = 50
+CHROME_PROCESSES = ("chrome", "chromium")
+CHROME_COMMANDS = ("google-chrome-stable", "google-chrome", "chromium", "chromium-browser")
 
 
 def load_json(path: Path, default):
@@ -220,12 +222,36 @@ def show_message(text: str, message_type: Gtk.MessageType = Gtk.MessageType.INFO
     dialog.destroy()
 
 
-def launch_wezterm(workspace: str, command: str) -> None:
+def ensure_chrome_running() -> None:
+    for name in CHROME_PROCESSES:
+        if subprocess.run(["pgrep", "-x", name], capture_output=True).returncode == 0:
+            return
+    browser = next((cmd for cmd in CHROME_COMMANDS if shutil.which(cmd)), None)
+    if browser:
+        subprocess.Popen(
+            [browser],
+            start_new_session=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+
+
+def start_workspace(workspace: str, command: str, claude_chrome: bool) -> bool:
     if not shutil.which("wezterm"):
         show_message("wezterm was not found on PATH.", Gtk.MessageType.ERROR)
-        return
-    prepend_history(workspace, command)
-    subprocess.Popen(["wezterm", "start", workspace, command], start_new_session=True)
+        return False
+    args = ["wezterm", "start", workspace, command]
+    # .wezterm.lua reads this as args[3]; kept out of history so it never sticks.
+    if claude_chrome:
+        args.append("claude-chrome")
+        ensure_chrome_running()
+    subprocess.Popen(args, start_new_session=True)
+    return True
+
+
+def launch_wezterm(workspace: str, command: str, claude_chrome: bool) -> None:
+    if start_workspace(workspace, command, claude_chrome):
+        prepend_history(workspace, command)
 
 
 class LauncherWindow(Gtk.Window):
@@ -234,7 +260,7 @@ class LauncherWindow(Gtk.Window):
         self.projects_root = projects_root
         self.workspaces = load_history()
         self.agent_map = load_agent_state()
-        self.set_default_size(460, 530)
+        self.set_default_size(460, 570)
         self.set_resizable(False)
         self.set_keep_above(True)
         self.set_position(Gtk.WindowPosition.CENTER)
@@ -243,7 +269,16 @@ class LauncherWindow(Gtk.Window):
         outer = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
         self.add(outer)
 
+        root_btn = Gtk.Button(label=f"Open projects root ({projects_root})")
+        root_btn.set_tooltip_text("nvim + agents in the projects root. Port ignored, claude --chrome honored.")
+        root_btn.set_margin_top(8)
+        root_btn.set_margin_start(8)
+        root_btn.set_margin_end(8)
+        root_btn.connect("clicked", self.on_launch_root)
+        outer.pack_start(root_btn, False, False, 0)
+
         self.notebook = Gtk.Notebook()
+        self.notebook.set_margin_top(8)
         outer.pack_start(self.notebook, True, True, 0)
 
         self._build_recent_tab()
@@ -256,6 +291,9 @@ class LauncherWindow(Gtk.Window):
         button_row.set_margin_end(8)
         button_row.set_halign(Gtk.Align.END)
         outer.pack_start(button_row, False, False, 0)
+
+        self.chrome_check = Gtk.CheckButton(label="claude --chrome")
+        button_row.pack_start(self.chrome_check, False, False, 0)
 
         cancel_btn = Gtk.Button(label="Cancel")
         cancel_btn.connect("clicked", lambda *_: self.destroy())
@@ -271,6 +309,8 @@ class LauncherWindow(Gtk.Window):
 
         if self.recent_store:
             self.recent_tree.set_cursor(Gtk.TreePath.new_first())
+        # Otherwise the root button, first in the window, takes initial focus.
+        self.recent_tree.grab_focus()
         self.update_recent_preview()
         self.update_new_preview()
 
@@ -470,14 +510,20 @@ class LauncherWindow(Gtk.Window):
             return True
         return False
 
+    def on_launch_root(self, *_args) -> None:
+        # .wezterm.lua maps "@root" to the projects root with only nvim and the agents.
+        if start_workspace("@root", "", self.chrome_check.get_active()):
+            self.destroy()
+
     def on_launch(self, *_args) -> None:
+        claude_chrome = self.chrome_check.get_active()
         if self.notebook.get_current_page() == 0:
             selected = self.selected_recent()
             if selected is None:
                 show_message("Please select a workspace.", Gtk.MessageType.WARNING)
                 return
             name, command = selected
-            launch_wezterm(name, command)
+            launch_wezterm(name, command, claude_chrome)
         else:
             folder = self.selected_folder()
             if not folder:
@@ -485,7 +531,7 @@ class LauncherWindow(Gtk.Window):
                 return
             port = self.port_entry.get_text().strip() or "8080"
             command = build_dev_command(self.current_mode(), port, self.dummy_check.get_active())
-            launch_wezterm(folder, command)
+            launch_wezterm(folder, command, claude_chrome)
         self.destroy()
 
 
