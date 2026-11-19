@@ -15,7 +15,7 @@ sudo pacman -Sy
 
 # Install essential packages
 echo "Installing essential packages..."
-ESSENTIAL_PACKAGES=("base-devel" "git" "curl" "wget" "unzip" "zsh" "python-gobject" "gtk3")
+ESSENTIAL_PACKAGES=("base-devel" "git" "curl" "wget" "unzip" "zsh" "python" "python-gobject" "gtk3")
 
 for package in "${ESSENTIAL_PACKAGES[@]}"; do
     if pacman -Q "$package" &> /dev/null; then

@@ -1,0 +1,26 @@
+{
+    "global": [
+        {
+            "originalKeys": "162;164;70",
+            "exactMatch": false,
+            "operationType": 0,
+            "newRemapKeys": "91;38"
+        }
+    ],
+    "appSpecific": [
+        {
+            "originalKeys": "164;37",
+            "exactMatch": false,
+            "operationType": 0,
+            "newRemapKeys": "162;37",
+            "targetApp": "slack"
+        },
+        {
+            "originalKeys": "164;39",
+            "exactMatch": false,
+            "operationType": 0,
+            "newRemapKeys": "162;39",
+            "targetApp": "slack"
+        }
+    ]
+}

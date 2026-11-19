@@ -47,6 +47,7 @@ PACKAGES=(
     "ripgrep"
     "starship"
     "jq"
+    "python"
 )
 
 for package in "${PACKAGES[@]}"; do

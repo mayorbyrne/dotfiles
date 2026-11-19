@@ -350,12 +350,14 @@ require("lazy").setup({
       -- Install formatters/tools via Mason
       local mason_registry = require("mason-registry")
       local tools = { "stylua", "prettier", "prettierd" }
-      for _, tool in ipairs(tools) do
-        local p = mason_registry.get_package(tool)
-        if not p:is_installed() then
-          p:install()
+      mason_registry.refresh(function()
+        for _, tool in ipairs(tools) do
+          local ok, p = pcall(mason_registry.get_package, tool)
+          if ok and not p:is_installed() then
+            p:install()
+          end
         end
-      end
+      end)
 
       require("mason-lspconfig").setup({
         ensure_installed = {
