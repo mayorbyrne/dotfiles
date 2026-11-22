@@ -20,6 +20,18 @@ fi
 
 # Add deno completions to search path
 if [[ ":$FPATH:" != *":/Users/Q1524/.zsh/completions:"* ]]; then export FPATH="/Users/Q1524/.zsh/completions:$FPATH"; fi
+
+HISTFILE="${HISTFILE:-$HOME/.zsh_history}"
+HISTSIZE=10000
+SAVEHIST=10000
+setopt SHARE_HISTORY
+setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_SPACE
+
+autoload -Uz compinit && compinit
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}'
+zstyle ':completion:*' menu yes select
+
 alias gs="git status"
 alias gfp="git fetch -p"
 alias grh="git reset --hard"
