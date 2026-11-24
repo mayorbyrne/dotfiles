@@ -125,4 +125,14 @@ This sets user and credentials, and adds an `[include]` of
 and per-machine ones in `~/.gitconfig`. Rerunning is safe; the include is only
 added once.
 
+Then configure Azure DevOps:
+
+- Windows: `shared/install/setup_azure.ps1`
+- Linux / macOS: `bash shared/install/setup_azure.sh`
+
+This prompts for the organization URL and default project (`az devops`
+defaults), the repo directory and required PR reviewers (written to
+`config.sh` in `~/scripts`), and a personal access token. Nothing it asks for
+is stored in this repo. Rerunning offers the current values as defaults.
+
 Existing machines that already cloned this repo need a re-run of their installer (or manual recreation of symlinks) after pulling this layout — old paths like `.dotfiles/nvim` no longer exist.

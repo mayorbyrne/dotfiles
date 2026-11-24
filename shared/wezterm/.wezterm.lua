@@ -493,12 +493,17 @@ end)
 
 wezterm.on("gui-startup", function(cmd)
   cmd = cmd or {}
+  local args = cmd.args
+  -- an .exe is a program to run directly, not a workspace name
+  local is_program = args and args[1]:lower():match("%.exe$")
 
-  if cmd.args then
+  if args and not is_program then
     wezterm.emit("trigger-workspace", cmd)
   else
     local screen = fullscreen_cells()
     local _, _, window = mux.spawn_window({
+      args = is_program and args or nil,
+      cwd = is_program and cmd.cwd or nil,
       width = screen.cols,
       height = screen.rows,
       position = {

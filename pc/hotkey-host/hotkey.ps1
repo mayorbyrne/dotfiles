@@ -17,8 +17,9 @@
     Setup: pc\install\setup.ps1 builds lib\, adds the WeztermHotkey Startup
     shortcut, and points PowerToys at lib\trigger.exe:
       Win+Shift+R  ->  trigger.exe launcher
-      Win+Shift+P  ->  trigger.exe scripts (only if bound by hand; setup
-                       repoints any existing trigger.exe binding)
+      Win+Shift+P  ->  trigger.exe scripts
+    Hand-made bindings to other targets are repointed at this checkout's
+    trigger.exe.
 
     Target scripts are invoked in their own scope, so edits to them take effect on
     the next press. Only changes to this file or to src\ need a rebuild or a
